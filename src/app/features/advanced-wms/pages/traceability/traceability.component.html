@@ -1,0 +1,45 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Traceability</h1>
+      <p class="muted">Lot/seri hareketini kabulden sevkiyata kadar izler</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">Veriler yüklenemedi.</div>
+    }
+    @case ('success') {
+      <div class="toolbar">
+        <select [value]="selectedLot()" (change)="selectLot($any($event.target).value)">
+          @for (lot of lots(); track lot) {
+            <option [value]="lot">{{ lot }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="panel">
+        <h2>{{ selectedLot() }} — Zaman Çizelgesi</h2>
+        @if (events().length) {
+          <ul class="timeline">
+            @for (e of events(); track e.id) {
+              <li>
+                <span class="status-pill" [class]="stageTone(e.stage)">{{ e.stage }}</span>
+                <div class="timeline__body">
+                  <div class="timeline__desc">{{ e.description }}</div>
+                  <div class="muted small">{{ e.date }} · {{ e.referenceId }} · {{ e.actor }}</div>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="state state--empty">Bu lot için hareket kaydı yok.</div>
+        }
+      </div>
+    }
+  }
+</div>

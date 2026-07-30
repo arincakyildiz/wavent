@@ -1,0 +1,61 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Audit Log</h1>
+      <p class="muted">Stok, görev, dalga ve override geçmişi</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Geçmiş yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      <div class="toolbar">
+        <input
+          type="search"
+          placeholder="Kullanıcı, işlem türü veya hedef kayıt ara..."
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+        <span class="spacer"></span>
+        <span class="muted small">{{ filtered().length }} olay</span>
+      </div>
+
+      @if (filtered().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Zaman</th>
+              <th>Kullanıcı</th>
+              <th>İşlem Türü</th>
+              <th>Hedef Kayıt</th>
+              <th>Eski Değer</th>
+              <th>Yeni Değer</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of filtered(); track e.id) {
+              <tr>
+                <td>{{ e.date }}</td>
+                <td>{{ e.actor }}</td>
+                <td>{{ e.actionType }}</td>
+                <td>{{ e.targetType }} · {{ e.targetId }}</td>
+                <td class="muted small">{{ e.oldValue ?? '—' }}</td>
+                <td>{{ e.newValue ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Filtreyle eşleşen kayıt bulunamadı.</div>
+      }
+    }
+  }
+</div>

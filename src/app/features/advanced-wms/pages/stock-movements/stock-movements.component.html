@@ -1,0 +1,105 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Stock Movements</h1>
+      <p class="muted">Kaynak/hedef, miktar, neden ve referans bilgisiyle tüm stok hareketleri</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Hareketler yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-card__label">Toplam Hareket</div>
+          <div class="kpi-card__value">{{ rows().length }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Giriş (adet)</div>
+          <div class="kpi-card__value positive">+{{ inboundTotal() }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Çıkış (adet)</div>
+          <div class="kpi-card__value negative">{{ outboundTotal() }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Net Değişim</div>
+          <div class="kpi-card__value">{{ inboundTotal() + outboundTotal() }}</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input
+          type="search"
+          placeholder="SKU veya referans ara..."
+          [value]="search()"
+          (input)="onSearch($any($event.target).value)"
+        />
+        <select [value]="typeFilter()" (change)="onTypeChange($any($event.target).value)">
+          <option value="all">Tüm tipler</option>
+          <option value="receipt">Receipt</option>
+          <option value="putaway">Putaway</option>
+          <option value="pick">Pick</option>
+          <option value="adjustment">Adjustment</option>
+          <option value="cycle-count">Cycle Count</option>
+          <option value="shipment">Shipment</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted small">{{ filtered().length }} hareket</span>
+      </div>
+
+      @if (pageRows().length) {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>SKU</th>
+                <th>Lot</th>
+                <th>Miktar</th>
+                <th>Kaynak</th>
+                <th>Hedef</th>
+                <th>Tip</th>
+                <th>Referans</th>
+                <th>Kullanıcı</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of pageRows(); track r.id) {
+                <tr>
+                  <td>{{ r.date }}</td>
+                  <td>{{ r.sku }}</td>
+                  <td>{{ r.lot ?? '—' }}</td>
+                  <td [class]="r.quantity < 0 ? 'negative' : 'positive'">
+                    {{ r.quantity > 0 ? '+' : '' }}{{ r.quantity }}
+                  </td>
+                  <td>{{ r.fromLocation ?? '—' }}</td>
+                  <td>{{ r.toLocation ?? '—' }}</td>
+                  <td><span class="status-pill" [class]="typeTone(r.type)">{{ r.type }}</span></td>
+                  <td>{{ r.reasonCode }}</td>
+                  <td>{{ r.performedBy }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <span>Sayfa {{ page() }} / {{ totalPages() }}</span>
+          <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+          <button type="button" [disabled]="page() === totalPages()" (click)="nextPage()">Sonraki ›</button>
+        </div>
+      } @else {
+        <div class="state state--empty">Filtreyle eşleşen hareket bulunamadı.</div>
+      }
+    }
+  }
+</div>

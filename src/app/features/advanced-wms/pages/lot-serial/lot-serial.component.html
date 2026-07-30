@@ -1,0 +1,103 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Lot / Serial</h1>
+      <p class="muted">Lot ve seri zorunluluğu, SKT yaklaşan, bloke ve geri çağrılan stoklar</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Lot/seri kayıtları yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-card__label">Toplam Kayıt</div>
+          <div class="kpi-card__value">{{ rows().length }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">SKT Yaklaşan</div>
+          <div class="kpi-card__value">{{ expiringCount() }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Bloke / Geri Çağrılan</div>
+          <div class="kpi-card__value">{{ blockedCount() }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Seri Takipli</div>
+          <div class="kpi-card__value">{{ serialCount() }}</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input
+          type="search"
+          placeholder="Lot, seri no veya SKU ara..."
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+        <select [value]="healthFilter()" (change)="healthFilter.set($any($event.target).value)">
+          <option value="all">Tüm durumlar</option>
+          <option value="ok">Uygun</option>
+          <option value="expiring">SKT Yaklaşıyor</option>
+          <option value="blocked">Bloke</option>
+          <option value="recalled">Geri Çağrıldı</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted small">{{ filtered().length }} kayıt</span>
+      </div>
+
+      @if (filtered().length) {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Lot</th>
+                <th>Seri No</th>
+                <th>SKU</th>
+                <th>Ürün</th>
+                <th>Depo</th>
+                <th>Miktar</th>
+                <th>SKT</th>
+                <th>Kalan Gün</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of filtered(); track r.id) {
+                <tr>
+                  <td>{{ r.lot }}</td>
+                  <td>{{ r.serial ?? '—' }}</td>
+                  <td>{{ r.sku }}</td>
+                  <td>{{ r.skuName }}</td>
+                  <td>{{ r.warehouseCode }}</td>
+                  <td>{{ r.quantity }}</td>
+                  <td>{{ r.expiryDate ?? '—' }}</td>
+                  <td>
+                    @if (r.daysToExpiry === undefined) {
+                      <span class="muted small">—</span>
+                    } @else {
+                      <span [class]="r.daysToExpiry < 0 ? 'negative' : r.daysToExpiry <= 15 ? '' : 'positive'">
+                        {{ r.daysToExpiry }}
+                      </span>
+                    }
+                  </td>
+                  <td><span class="status-pill" [class]="healthTone(r.health)">{{ healthLabel(r.health) }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="state state--empty">Filtreyle eşleşen kayıt bulunamadı.</div>
+      }
+    }
+  }
+</div>

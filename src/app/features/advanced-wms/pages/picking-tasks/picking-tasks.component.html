@@ -1,0 +1,80 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Picking Tasks</h1>
+      <p class="muted">Single, batch ve zone picking görevleri</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Görevler yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-card__label">Total Tasks</div>
+          <div class="kpi-card__value">{{ tasks().length }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Exceptions</div>
+          <div class="kpi-card__value">{{ exceptionCount() }}</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+          <option value="all">Tüm durumlar</option>
+          <option value="pending">Pending</option>
+          <option value="in-progress">In Progress</option>
+          <option value="exception">Exception</option>
+          <option value="completed">Completed</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted small">{{ filtered().length }} görev</span>
+      </div>
+
+      @if (filtered().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Dalga</th>
+              <th>Tip</th>
+              <th>Atanan</th>
+              <th>Lokasyon</th>
+              <th>İlerleme</th>
+              <th>Durum</th>
+              <th>İstisna</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of filtered(); track t.id) {
+              <tr>
+                <td>{{ t.waveName }}</td>
+                <td>{{ t.type }}</td>
+                <td>{{ t.assignedTo ?? '—' }}</td>
+                <td>{{ t.locationCount }}</td>
+                <td>
+                  <div class="progress-bar">
+                    <span [style.width.%]="progressPct(t)" class="tone-success"></span>
+                  </div>
+                  <span class="muted small">{{ t.pickedLines }}/{{ t.lineCount }}</span>
+                </td>
+                <td><span class="status-pill" [class]="statusTone(t.status)">{{ t.status }}</span></td>
+                <td class="muted small">{{ t.exceptionReason ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Filtreyle eşleşen görev bulunamadı.</div>
+      }
+    }
+  }
+</div>

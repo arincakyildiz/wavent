@@ -1,0 +1,63 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Cycle Counts</h1>
+      <p class="muted">Sayım kapsamı, beklenen, sayılan ve fark</p>
+    </div>
+    <button class="btn btn--primary" type="button">+ New Count</button>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Sayımlar yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      @if (rows().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Kod</th>
+              <th>Depo</th>
+              <th>Kapsam</th>
+              <th>Beklenen</th>
+              <th>Sayılan</th>
+              <th>Fark</th>
+              <th>2. Sayım</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of rows(); track r.id) {
+              <tr>
+                <td>{{ r.code }}</td>
+                <td>{{ r.warehouseCode }}</td>
+                <td>{{ r.scopeLabel }}</td>
+                <td>{{ r.expectedQuantity }}</td>
+                <td>{{ r.countedQuantity }}</td>
+                <td [class]="variance(r) < 0 ? 'negative' : variance(r) > 0 ? 'positive' : ''">
+                  {{ variance(r) > 0 ? '+' : '' }}{{ variance(r) }}
+                </td>
+                <td>
+                  @if (r.requiresSecondCount) {
+                    <span class="status-pill tone-warning">Gerekli</span>
+                  } @else {
+                    <span class="muted small">—</span>
+                  }
+                </td>
+                <td><span class="status-pill" [class]="statusTone(r.status)">{{ r.status }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Sayım bulunamadı.</div>
+      }
+    }
+  }
+</div>

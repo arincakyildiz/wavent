@@ -1,0 +1,73 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Waves</h1>
+      <p class="muted">Rota, taşıyıcı kesim saati, öncelik, hacim ve bölgeye göre dalga planlama</p>
+    </div>
+    <button class="btn btn--primary" type="button">+ Create Wave</button>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Dalgalar yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      <div class="toolbar">
+        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+          <option value="all">Tüm durumlar</option>
+          <option value="draft">Draft</option>
+          <option value="planned">Planned</option>
+          <option value="released">Released</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted small">{{ filtered().length }} dalga</span>
+      </div>
+
+      @if (filtered().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Dalga</th>
+              <th>Depo</th>
+              <th>Bölge</th>
+              <th>Taşıyıcı</th>
+              <th>Cut-off</th>
+              <th>Sipariş</th>
+              <th>Kapasite</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of filtered(); track w.id) {
+              <tr class="clickable" (click)="open(w.id)">
+                <td>{{ w.name }}</td>
+                <td>{{ w.warehouseCode }}</td>
+                <td>{{ w.zone ?? '—' }}</td>
+                <td>{{ w.carrier ?? '—' }}</td>
+                <td>{{ w.cutOffTime }}</td>
+                <td>{{ w.orderCount }}</td>
+                <td>
+                  <div class="progress-bar">
+                    <span [style.width.%]="w.capacityUsedPct" [class]="capacityTone(w.capacityUsedPct)"></span>
+                  </div>
+                  <span class="muted small">{{ w.capacityUsedPct }}%</span>
+                </td>
+                <td><span class="status-pill" [class]="statusTone(w.status)">{{ w.status }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Filtreyle eşleşen dalga bulunamadı.</div>
+      }
+    }
+  }
+</div>

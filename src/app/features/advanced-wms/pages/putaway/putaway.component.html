@@ -1,0 +1,64 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Putaway</h1>
+      <p class="muted">Ürün ve lokasyon kısıtlarına göre puanlanmış öneriler</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Öneriler yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      @if (suggestions().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Lot</th>
+              <th>Miktar</th>
+              <th>Önerilen Lokasyon</th>
+              <th>Skor</th>
+              <th>Gerekçeler</th>
+              <th>Durum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of suggestions(); track s.id) {
+              <tr>
+                <td>{{ s.sku }}</td>
+                <td>{{ s.lot ?? '—' }}</td>
+                <td>{{ s.quantity }}</td>
+                <td>{{ s.suggestedLocationPath }}</td>
+                <td><span class="status-pill" [class]="scoreTone(s.score)">{{ s.score }}</span></td>
+                <td class="muted small">{{ s.reasons.join(' · ') }}</td>
+                <td>
+                  @if (s.accepted) {
+                    <span class="status-pill tone-success">Kabul edildi</span>
+                  } @else {
+                    <span class="status-pill tone-neutral">Bekliyor</span>
+                  }
+                </td>
+                <td>
+                  @if (!s.accepted) {
+                    <button class="btn" type="button" (click)="accept(s)">Kabul Et</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Bekleyen putaway önerisi yok.</div>
+      }
+    }
+  }
+</div>

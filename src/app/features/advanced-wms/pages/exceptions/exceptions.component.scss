@@ -1,0 +1,15 @@
+.resolve-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  input {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-size: 12px;
+    min-width: 180px;
+  }
+}

@@ -1,0 +1,96 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Control Tower</h1>
+      <p class="muted">On-hand, available, reserved, quarantine, damaged ve in-transit miktarlar gerçek zamanlı</p>
+    </div>
+
+    <div class="page__actions">
+      <span class="live-pill" [class.live-pill--paused]="!streaming()">
+        <span class="live-pill__dot"></span>
+        {{ streaming() ? 'Live' : 'Paused' }}
+      </span>
+      <button class="btn" type="button" (click)="toggleStream()">
+        {{ streaming() ? 'Akışı durdur' : 'Akışı başlat' }}
+      </button>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Kontrol kulesi verileri yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      @if (snapshot(); as data) {
+        <div class="kpi-row">
+          @for (b of data.buckets; track b.label) {
+            <div class="kpi-card kpi-card--rich">
+              <div class="kpi-card__head">
+                <span class="icon-tile" [class]="'tone-' + b.tone">
+                  <app-icon [name]="b.icon" [size]="19" />
+                </span>
+                <div>
+                  <div class="kpi-card__label">{{ b.label }}</div>
+                  <div class="kpi-card__value">{{ b.value | number }}</div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="grid-2">
+          <section class="panel">
+            <div class="panel__head">
+              <h2>Aktif Uyarılar</h2>
+              <span class="status-pill tone-danger">{{ data.alerts.length }}</span>
+            </div>
+            <ul class="feed">
+              @for (a of data.alerts; track a.id) {
+                <li>
+                  <span class="icon-tile icon-tile--sm" [class]="'tone-' + a.tone">
+                    <app-icon [name]="a.icon" [size]="15" />
+                  </span>
+                  <div class="feed__body">
+                    <div class="feed__title">{{ a.title }}</div>
+                    <div class="muted small">{{ a.detail }}</div>
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="panel">
+            <div class="panel__head">
+              <h2>Canlı Görev Akışı</h2>
+              <span class="muted small">son {{ events().length }} olay</span>
+            </div>
+            @if (events().length) {
+              <ul class="feed">
+                @for (e of events(); track e.id) {
+                  <li class="feed__row-enter">
+                    <span class="icon-tile icon-tile--sm" [class]="'tone-' + e.tone">
+                      <app-icon [name]="e.icon" [size]="15" />
+                    </span>
+                    <div class="feed__body">
+                      <div class="feed__title">{{ e.label }}</div>
+                      <div class="muted small">{{ e.detail }}</div>
+                    </div>
+                    <span class="muted small feed__meta">{{ clock(e) }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="state state--empty">Olay bekleniyor...</div>
+            }
+          </section>
+        </div>
+      }
+    }
+  }
+</div>

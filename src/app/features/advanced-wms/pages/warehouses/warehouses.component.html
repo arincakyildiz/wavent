@@ -1,0 +1,95 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Warehouses</h1>
+      <p class="muted">Depo topolojisi ve kapasite genel bakışı</p>
+    </div>
+    <button class="btn btn--primary" type="button">+ Add Warehouse</button>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Depolar yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-card__label">Total Warehouses</div>
+          <div class="kpi-card__value">{{ warehouses().length }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Active</div>
+          <div class="kpi-card__value">{{ activeCount() }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Avg. Capacity Used</div>
+          <div class="kpi-card__value">{{ totalCapacityPct() }}%</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input
+          type="search"
+          placeholder="Depo, kod veya şehir ara..."
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+          <option value="all">Tüm durumlar</option>
+          <option value="active">Aktif</option>
+          <option value="inactive">Pasif</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted small">{{ filtered().length }} depo</span>
+      </div>
+
+      @if (filtered().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Kod</th>
+              <th>Depo Adı</th>
+              <th>Şehir / Ülke</th>
+              <th>Çalışma Saatleri</th>
+              <th>Lokasyon</th>
+              <th>Envanter (adet)</th>
+              <th>Kapasite</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of filtered(); track w.id) {
+              <tr>
+                <td>{{ w.code }}</td>
+                <td>{{ w.name }}</td>
+                <td>{{ w.city }}, {{ w.country }}</td>
+                <td>{{ w.operatingHours.open }} – {{ w.operatingHours.close }}</td>
+                <td>{{ w.locationCount | number }}</td>
+                <td>{{ w.inventoryUnits | number }}</td>
+                <td>
+                  <div class="progress-bar">
+                    <span [style.width.%]="w.capacityUsedPct" [class]="capacityTone(w.capacityUsedPct)"></span>
+                  </div>
+                  <span class="muted small">{{ w.capacityUsedPct }}%</span>
+                </td>
+                <td>
+                  <span class="status-pill" [class]="w.isActive ? 'tone-success' : 'tone-neutral'">
+                    {{ w.isActive ? 'Aktif' : 'Pasif' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Filtreyle eşleşen depo bulunamadı.</div>
+      }
+    }
+  }
+</div>

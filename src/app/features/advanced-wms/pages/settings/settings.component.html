@@ -1,0 +1,125 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Settings</h1>
+      <p class="muted">Rol, iş kuralı eşikleri ve görünüm ayarları</p>
+    </div>
+    @if (saved()) {
+      <span class="status-pill tone-success">Kaydedildi</span>
+    }
+  </div>
+
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel__head">
+        <h2>Aktif Rol</h2>
+        <span class="muted small">demo kullanıcı: {{ currentUser().name }}</span>
+      </div>
+      <p class="muted small">
+        Rol değiştirmek uygulamayı o rolün gözünden önizler. Yetki kısıtları route ve işlem seviyesinde
+        uygulandığında bu seçim doğrudan erişimi etkiler.
+      </p>
+      <div class="option-list">
+        @for (r of roles; track r.value) {
+          <label class="option" [class.option--active]="currentUser().role === r.value">
+            <input
+              type="radio"
+              name="role"
+              [value]="r.value"
+              [checked]="currentUser().role === r.value"
+              (change)="setRole(r.value)"
+            />
+            <span class="option__body">
+              <span class="option__label">{{ r.label }}</span>
+              <span class="muted small">{{ r.description }}</span>
+            </span>
+          </label>
+        }
+      </div>
+    </section>
+
+    <div class="stack">
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Görünüm</h2>
+        </div>
+        <div class="segmented">
+          <button
+            type="button"
+            [class.segmented__btn--active]="theme() === 'dark'"
+            class="segmented__btn"
+            (click)="setTheme('dark')"
+          >
+            Koyu
+          </button>
+          <button
+            type="button"
+            [class.segmented__btn--active]="theme() === 'light'"
+            class="segmented__btn"
+            (click)="setTheme('light')"
+          >
+            Açık
+          </button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Eşikler</h2>
+        </div>
+        <div class="field">
+          <label for="variance">Sayım farkı eşiği (%)</label>
+          <input
+            id="variance"
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            [value]="varianceThreshold()"
+            (input)="updateVariance($any($event.target).value)"
+          />
+          <span class="muted small">Bu oranın üzerindeki farklarda ikinci sayım zorunlu olur.</span>
+        </div>
+        <div class="field">
+          <label for="tolerance">Paket ağırlık toleransı (kg)</label>
+          <input
+            id="tolerance"
+            type="number"
+            min="0"
+            max="10"
+            step="0.05"
+            [value]="weightTolerance()"
+            (input)="updateTolerance($any($event.target).value)"
+          />
+          <span class="muted small">Tolerans dışı paketler supervisor onayına düşer.</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel rules">
+    <div class="panel__head">
+      <h2>İş Kuralları</h2>
+    </div>
+    <div class="rule-list">
+      @for (rule of rules(); track rule.key) {
+        <div class="rule">
+          <div class="rule__body">
+            <div class="rule__label">{{ rule.label }}</div>
+            <div class="muted small">{{ rule.description }}</div>
+          </div>
+          <button
+            type="button"
+            class="switch"
+            [class.switch--on]="rule.enabled"
+            [attr.aria-pressed]="rule.enabled"
+            [attr.aria-label]="rule.label"
+            (click)="toggleRule(rule.key)"
+          >
+            <span class="switch__knob"></span>
+          </button>
+        </div>
+      }
+    </div>
+  </section>
+</div>

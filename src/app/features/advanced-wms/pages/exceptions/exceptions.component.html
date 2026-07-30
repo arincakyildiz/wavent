@@ -1,0 +1,83 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Exceptions</h1>
+      <p class="muted">İstisna, kanıt, karar ve yeniden atama akışı</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        İstisnalar yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      <div class="toolbar">
+        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+          <option value="all">Tüm durumlar</option>
+          <option value="open">Open</option>
+          <option value="investigating">Investigating</option>
+          <option value="resolved">Resolved</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted small">{{ filtered().length }} istisna</span>
+      </div>
+
+      @if (filtered().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tür</th>
+              <th>Önem</th>
+              <th>Referans</th>
+              <th>Sahip</th>
+              <th>Ne zaman</th>
+              <th>Durum</th>
+              <th>Çözüm</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of filtered(); track e.id) {
+              <tr>
+                <td>{{ e.type }}</td>
+                <td>
+                  <span class="dot" [class]="'severity-' + e.severity"></span>
+                  {{ e.severity }}
+                </td>
+                <td>{{ e.referenceType }} · {{ e.referenceId }}</td>
+                <td>{{ e.owner ?? '—' }}</td>
+                <td>{{ e.createdAgo }}</td>
+                <td><span class="status-pill" [class]="statusTone(e.status)">{{ e.status }}</span></td>
+                <td>
+                  @if (e.status === 'resolved') {
+                    <span class="muted small">{{ e.resolutionNote }}</span>
+                  } @else if (resolvingId() === e.id) {
+                    <div class="resolve-form">
+                      <input
+                        type="text"
+                        placeholder="Çözüm gerekçesi..."
+                        [value]="noteDraft()"
+                        (input)="noteDraft.set($any($event.target).value)"
+                      />
+                      <button class="btn btn--primary" type="button" (click)="confirmResolve(e.id)">Kaydet</button>
+                      <button class="btn" type="button" (click)="cancelResolve()">Vazgeç</button>
+                    </div>
+                  } @else {
+                    <button class="btn" type="button" (click)="startResolve(e.id)">Çöz</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Filtreyle eşleşen istisna bulunamadı.</div>
+      }
+    }
+  }
+</div>

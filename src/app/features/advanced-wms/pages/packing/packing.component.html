@@ -1,0 +1,65 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Packing</h1>
+      <p class="muted">Paket içerik doğrulama, ağırlık toleransı ve etiket simülasyonu</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Paketler yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      @if (packages().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Sipariş</th>
+              <th>Ürün Sayısı</th>
+              <th>Ağırlık</th>
+              <th>İçerik Doğrulama</th>
+              <th>Durum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of packages(); track p.id) {
+              <tr>
+                <td>{{ p.orderNumber }}</td>
+                <td>{{ p.itemCount }}</td>
+                <td>
+                  {{ p.weightKg }} kg
+                  @if (!p.weightOk) {
+                    <span class="status-pill tone-danger">Tolerans dışı (±{{ p.toleranceKg }} kg)</span>
+                  }
+                </td>
+                <td>
+                  @if (p.contentVerified) {
+                    <span class="status-pill tone-success">Doğrulandı</span>
+                  } @else {
+                    <span class="status-pill tone-warning">Bekliyor</span>
+                  }
+                </td>
+                <td><span class="status-pill" [class]="statusTone(p.status)">{{ p.status }}</span></td>
+                <td>
+                  @if (!p.weightOk) {
+                    <button class="btn" type="button" (click)="approveWeight(p)">Supervisor Onayı</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Paket bulunamadı.</div>
+      }
+    }
+  }
+</div>

@@ -1,0 +1,94 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h1>Reservations</h1>
+      <p class="muted">Sipariş satırı için lot/lokasyon rezervasyonu (FEFO/FIFO)</p>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">
+        Rezervasyonlar yüklenemedi.
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-card__label">Total Allocations</div>
+          <div class="kpi-card__value">{{ rows().length }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Partial</div>
+          <div class="kpi-card__value">{{ partialCount() }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Backorder</div>
+          <div class="kpi-card__value">{{ backorderCount() }}</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <select [value]="filter()" (change)="filter.set($any($event.target).value)">
+          <option value="all">Tümü</option>
+          <option value="partial">Kısmi Rezervasyon</option>
+          <option value="backorder">Backorder</option>
+          <option value="override">Manuel Override</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted small">{{ filtered().length }} kayıt</span>
+      </div>
+
+      @if (filtered().length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Sipariş</th>
+              <th>SKU</th>
+              <th>Lot</th>
+              <th>Lokasyon</th>
+              <th>Miktar</th>
+              <th>Strateji</th>
+              <th>Durum</th>
+              <th>Gerekçe</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of filtered(); track r.id) {
+              <tr>
+                <td>{{ r.orderNumber }}</td>
+                <td>{{ r.sku }}</td>
+                <td>{{ r.lot ?? '—' }}</td>
+                <td>{{ r.locationPath }}</td>
+                <td>{{ r.quantity }}</td>
+                <td><span class="status-pill tone-info">{{ r.strategy }}</span></td>
+                <td>
+                  @if (r.isBackorder) {
+                    <span class="status-pill tone-danger">Backorder</span>
+                  } @else if (r.isPartial) {
+                    <span class="status-pill tone-warning">Kısmi</span>
+                  } @else {
+                    <span class="status-pill tone-success">Tam</span>
+                  }
+                </td>
+                <td>
+                  @if (r.overrideReason) {
+                    <span class="muted small">{{ r.overrideReason }}</span>
+                  } @else {
+                    <span class="muted small">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="state state--empty">Filtreyle eşleşen rezervasyon bulunamadı.</div>
+      }
+    }
+  }
+</div>

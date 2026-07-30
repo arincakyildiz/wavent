@@ -1,0 +1,82 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <button class="btn" type="button" (click)="back()">‹ Waves</button>
+      @if (wave(); as w) {
+        <h1 class="mt">{{ w.name }}</h1>
+        <p class="muted">
+          {{ w.warehouseCode }} @if (w.zone) { · Bölge {{ w.zone }} } · {{ w.carrier }} · Cut-off {{ w.cutOffTime }}
+        </p>
+      }
+    </div>
+    @if (wave(); as w) {
+      <div class="header-actions">
+        <span class="status-pill" [class]="statusTone(w.status)">{{ w.status }}</span>
+        @if (w.status === 'planned') {
+          <button class="btn btn--primary" type="button" [disabled]="releasing()" (click)="releaseWave()">
+            {{ releasing() ? 'Yayınlanıyor...' : 'Dalgayı Yayınla' }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error">Dalga bulunamadı.</div>
+    }
+    @case ('success') {
+      @if (wave(); as w) {
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-card__label">Siparişler</div>
+            <div class="kpi-card__value">{{ w.orderCount }}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">Kapasite Kullanımı</div>
+            <div class="kpi-card__value">{{ w.capacityUsedPct }}%</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">Risk Altındaki Sipariş</div>
+            <div class="kpi-card__value">{{ riskyCount() }}</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Sipariş Satırları ve Yayınlama Sonuçları</h2>
+          @if (orders().length) {
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Sipariş</th>
+                  <th>Öncelik</th>
+                  <th>Rota</th>
+                  <th>Satır</th>
+                  <th>Durum</th>
+                  <th>Neden</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (o of orders(); track o.orderNumber) {
+                  <tr>
+                    <td>{{ o.orderNumber }}</td>
+                    <td>{{ o.priority }}</td>
+                    <td>{{ o.route }}</td>
+                    <td>{{ o.lineCount }}</td>
+                    <td><span class="status-pill" [class]="orderTone(o.status)">{{ o.status }}</span></td>
+                    <td class="muted small">{{ o.reason ?? '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="state state--empty">Bu dalgada sipariş bulunamadı.</div>
+          }
+        </div>
+      }
+    }
+  }
+</div>
