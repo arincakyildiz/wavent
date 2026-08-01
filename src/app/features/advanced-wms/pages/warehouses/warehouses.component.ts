@@ -1,59 +1,139 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { WarehousesService, WarehouseSummary } from '../../data-access/warehouses.service';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of, switchMap } from 'rxjs';
+import { AuditService } from '../../../../core/observability/audit.service';
+import { NotificationService } from '../../../../core/observability/notification.service';
+import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { describeError } from '../../../../core/api/api-error';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { SortableDirective } from '../../../../shared/directives/sortable.directive';
+import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
+import { WarehouseFormComponent } from '../../components/warehouse-form/warehouse-form.component';
+import { WarehouseSummary, WarehousesService } from '../../data-access/warehouses.service';
 
-type LoadState = 'loading' | 'success' | 'error';
-type StatusFilter = 'all' | 'active' | 'inactive';
+const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-warehouses',
-  imports: [DecimalPipe],
+  imports: [
+    DecimalPipe,
+    IconComponent,
+    SortableDirective,
+    HasPermissionDirective,
+    WarehouseFormComponent,
+  ],
   templateUrl: './warehouses.component.html',
   styleUrl: './warehouses.component.scss',
 })
 export class WarehousesComponent {
   private readonly warehousesService = inject(WarehousesService);
+  private readonly scope = inject(WarehouseScopeService);
+  private readonly notifications = inject(NotificationService);
+  private readonly audit = inject(AuditService);
 
-  readonly state = signal<LoadState>('loading');
-  readonly warehouses = signal<WarehouseSummary[]>([]);
   readonly search = signal('');
-  readonly statusFilter = signal<StatusFilter>('all');
+  readonly statusFilter = signal('all');
+  readonly page = signal(1);
+  readonly sort = signal<SortState | null>({ key: 'code', direction: 'asc' });
+  readonly formOpen = signal(false);
+  readonly reloadToken = signal(0);
 
-  readonly filtered = computed(() => {
-    const term = this.search().trim().toLowerCase();
-    const status = this.statusFilter();
-    return this.warehouses().filter((w) => {
-      const matchesTerm =
-        !term ||
-        w.name.toLowerCase().includes(term) ||
-        w.code.toLowerCase().includes(term) ||
-        w.city.toLowerCase().includes(term);
-      const matchesStatus = status === 'all' || (status === 'active') === w.isActive;
-      return matchesTerm && matchesStatus;
-    });
+  private readonly query = computed<ListQuery>(() => ({
+    search: this.search(),
+    page: this.page(),
+    pageSize: PAGE_SIZE,
+    sort: this.sort(),
+    filters: { status: this.statusFilter() },
+  }));
+
+  private readonly request = computed(() => ({
+    scope: this.scope.activeCodes(),
+    query: this.query(),
+    token: this.reloadToken(),
+  }));
+
+  private readonly result = toSignal(
+    toObservable(this.request).pipe(
+      switchMap(({ scope, query }) =>
+        this.warehousesService.query(scope, query).pipe(
+          catchError((err) => {
+            this.errorMessage.set(describeError(err));
+            return of(null);
+          }),
+        ),
+      ),
+    ),
+    { initialValue: undefined },
+  );
+
+  readonly errorMessage = signal<string | null>(null);
+
+  readonly rows = computed(() => this.result()?.rows ?? []);
+  readonly total = computed(() => this.result()?.total ?? 0);
+  readonly totalPages = computed(() => this.result()?.totalPages ?? 1);
+  readonly loading = computed(() => this.result() === undefined && !this.errorMessage());
+
+  readonly activeCount = computed(() => this.rows().filter((w) => w.isActive).length);
+  readonly avgCapacity = computed(() => {
+    const rows = this.rows();
+    if (!rows.length) return 0;
+    return Math.round(rows.reduce((s, w) => s + w.capacityUsedPct, 0) / rows.length);
   });
-
-  readonly totalCapacityPct = computed(() => {
-    const list = this.warehouses();
-    if (!list.length) return 0;
-    return Math.round(list.reduce((sum, w) => sum + w.capacityUsedPct, 0) / list.length);
-  });
-
-  readonly activeCount = computed(() => this.warehouses().filter((w) => w.isActive).length);
 
   constructor() {
-    this.load();
+    bindQueryParams([
+      { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
+      { param: 'status', signal: this.statusFilter, defaultValue: 'all', parse: parseString },
+      { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+    ]);
+
+    // Clear a stale error once a fresh result lands.
+    effect(() => {
+      if (this.result()) this.errorMessage.set(null);
+    });
   }
 
-  load(): void {
-    this.state.set('loading');
-    this.warehousesService.list().subscribe({
-      next: (list) => {
-        this.warehouses.set(list);
-        this.state.set('success');
-      },
-      error: () => this.state.set('error'),
+  onSearch(term: string): void {
+    this.search.set(term);
+    this.page.set(1);
+  }
+
+  onStatus(value: string): void {
+    this.statusFilter.set(value);
+    this.page.set(1);
+  }
+
+  onSort(state: SortState): void {
+    this.sort.set(state);
+    this.page.set(1);
+  }
+
+  reload(): void {
+    this.errorMessage.set(null);
+    this.reloadToken.update((n) => n + 1);
+  }
+
+  prevPage(): void {
+    this.page.update((p) => Math.max(1, p - 1));
+  }
+
+  nextPage(): void {
+    this.page.update((p) => Math.min(this.totalPages(), p + 1));
+  }
+
+  onCreated(created: WarehouseSummary): void {
+    this.formOpen.set(false);
+    this.audit.record({
+      actionType: 'Warehouse Created',
+      targetType: 'Warehouse',
+      targetId: created.code,
+      newValue: `${created.name} (${created.city})`,
     });
+    this.notifications.success('Depo oluşturuldu', `${created.code} — ${created.name}`);
+    this.reload();
   }
 
   capacityTone(pct: number): string {

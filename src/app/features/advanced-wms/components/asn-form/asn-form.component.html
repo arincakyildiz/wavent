@@ -1,0 +1,70 @@
+<app-form-dialog
+  title="Yeni ASN"
+  subtitle="Beklenen kabul kaydı oluşturur; satırlar kabul sırasında eklenir."
+  (dismissed)="dismissed.emit()"
+>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">ASN No <span class="req">*</span></span>
+        <input
+          formControlName="number"
+          type="text"
+          placeholder="ASN-4901"
+          autocomplete="off"
+          [class.invalid]="invalid('number')"
+        />
+        @if (numberControl.pending) {
+          <span class="field__hint">Numara kontrol ediliyor...</span>
+        } @else if (invalid('number')) {
+          <span class="field__error" role="alert">
+            @if (numberControl.hasError('notUnique')) {
+              Bu numara zaten kayıtlı.
+            } @else {
+              Format: ASN- ve 4 rakam (örn. ASN-4901).
+            }
+          </span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field__label">Tedarikçi <span class="req">*</span></span>
+        <select formControlName="supplierName">
+          @for (s of suppliers; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Depo <span class="req">*</span></span>
+        <select formControlName="warehouseCode">
+          @for (w of warehouses(); track w.code) {
+            <option [value]="w.code">{{ w.code }} — {{ w.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Beklenen Tarih <span class="req">*</span></span>
+        <input formControlName="expectedDate" type="date" [class.invalid]="invalid('expectedDate')" />
+        @if (form.controls.expectedDate.hasError('pastDate')) {
+          <span class="field__error" role="alert">Beklenen tarih geçmişte olamaz.</span>
+        }
+      </label>
+    </div>
+
+    @if (submitError()) {
+      <div class="form__error" role="alert">{{ submitError() }}</div>
+    }
+
+    <div class="form__actions">
+      <button class="btn" type="button" (click)="dismissed.emit()">Vazgeç</button>
+      <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
+        {{ submitting() ? 'Kaydediliyor...' : 'ASN Oluştur' }}
+      </button>
+    </div>
+  </form>
+</app-form-dialog>

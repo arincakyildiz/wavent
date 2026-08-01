@@ -1,49 +1,82 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { MockApiService } from '../../../core/api/mock-api.service';
-import { CycleCountStatus } from '../models/entities';
+import { ApiError } from '../../../core/api/api-error';
+import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
+import { CycleCountRec, db } from './mock-data';
+import { VARIANCE_THRESHOLD_PCT, requiresSecondCount, variancePct } from './selectors';
 
-export interface CycleCountRow {
-  id: string;
+export interface CycleCountRow extends CycleCountRec {
+  variance: number;
+  variancePct: number;
+  requiresSecondCount: boolean;
+}
+
+export interface CycleCountDraft {
   code: string;
   warehouseCode: string;
   scopeLabel: string;
   expectedQuantity: number;
-  countedQuantity: number;
-  status: CycleCountStatus;
-  requiresSecondCount: boolean;
 }
 
-const VARIANCE_THRESHOLD_PCT = 2;
-
-const RAW: Omit<CycleCountRow, 'id' | 'requiresSecondCount'>[] = [
-  { code: 'CC-118', warehouseCode: 'NYC-01', scopeLabel: 'A/01/01 - A/01/05', expectedQuantity: 5700, countedQuantity: 5670, status: 'closed' },
-  { code: 'CC-119', warehouseCode: 'NYC-01', scopeLabel: 'SKU-1006', expectedQuantity: 12400, countedQuantity: 11800, status: 'variance-review' },
-  { code: 'CC-120', warehouseCode: 'IST-01', scopeLabel: 'C/01/01 - C/01/02', expectedQuantity: 430, countedQuantity: 425, status: 'closed' },
-  { code: 'CC-121', warehouseCode: 'AMS-01', scopeLabel: 'A/03/01 - A/03/02', expectedQuantity: 820, countedQuantity: 640, status: 'in-progress' },
-  { code: 'CC-122', warehouseCode: 'DXB-01', scopeLabel: 'HZ/01/01', expectedQuantity: 90, countedQuantity: 90, status: 'scheduled' },
-];
-
-function variancePct(expected: number, counted: number): number {
-  if (!expected) return 0;
-  return Math.abs((expected - counted) / expected) * 100;
+function toRow(c: CycleCountRec, thresholdPct: number): CycleCountRow {
+  return {
+    ...c,
+    variance: c.countedQuantity - c.expectedQuantity,
+    variancePct: Math.round(variancePct(c.expectedQuantity, c.countedQuantity) * 10) / 10,
+    requiresSecondCount: requiresSecondCount(c.expectedQuantity, c.countedQuantity, thresholdPct),
+  };
 }
 
-const MOCK_CYCLE_COUNTS: CycleCountRow[] = RAW.map((r, i) => ({
-  id: `cc-${i + 1}`,
-  ...r,
-  requiresSecondCount: variancePct(r.expectedQuantity, r.countedQuantity) > VARIANCE_THRESHOLD_PCT,
-}));
+const ACCESSOR = (row: CycleCountRow, key: string): unknown =>
+  (row as unknown as Record<string, unknown>)[key];
 
 @Injectable({ providedIn: 'root' })
 export class CycleCountsService {
   private readonly api = inject(MockApiService);
 
-  list(): Observable<CycleCountRow[]> {
-    return this.api.simulate(MOCK_CYCLE_COUNTS, { delayMs: 350 });
-  }
-}
+  query(
+    scope: string[],
+    query: ListQuery,
+    thresholdPct = VARIANCE_THRESHOLD_PCT,
+  ): Observable<ListResult<CycleCountRow>> {
+    const source = db.cycleCounts
+      .filter((c) => !scope.length || scope.includes(c.warehouseCode))
+      .map((c) => toRow(c, thresholdPct));
 
-export function cycleVariance(row: CycleCountRow): number {
-  return row.countedQuantity - row.expectedQuantity;
+    return this.api.simulate(source, { delayMs: 320 }).pipe(
+      map((rows) =>
+        runQuery(rows, query, {
+          accessor: ACCESSOR,
+          searchable: (r) => [r.code, r.scopeLabel, r.warehouseCode],
+        }),
+      ),
+    );
+  }
+
+  isCodeAvailable(code: string): Observable<boolean> {
+    const taken = db.cycleCounts.some((c) => c.code.toLowerCase() === code.trim().toLowerCase());
+    return this.api.simulate(!taken, { delayMs: 360 });
+  }
+
+  create(draft: CycleCountDraft): Observable<CycleCountRow> {
+    return this.api.simulate(draft, { delayMs: 480, kind: 'write' }).pipe(
+      map((d) => {
+        if (db.cycleCounts.some((c) => c.code.toLowerCase() === d.code.toLowerCase())) {
+          throw new ApiError('conflict', `${d.code} kodu zaten kullanılıyor.`);
+        }
+        const record: CycleCountRec = {
+          id: `cc-${db.cycleCounts.length + 1}`,
+          code: d.code.toUpperCase(),
+          warehouseCode: d.warehouseCode,
+          scopeLabel: d.scopeLabel,
+          expectedQuantity: d.expectedQuantity,
+          countedQuantity: d.expectedQuantity,
+          status: 'scheduled',
+        };
+        db.cycleCounts.unshift(record);
+        return toRow(record, VARIANCE_THRESHOLD_PCT);
+      }),
+    );
+  }
 }

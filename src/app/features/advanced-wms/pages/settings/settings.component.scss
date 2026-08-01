@@ -104,6 +104,28 @@
   }
 }
 
+.option__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fault-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
 .rules {
   margin-top: 16px;
 }

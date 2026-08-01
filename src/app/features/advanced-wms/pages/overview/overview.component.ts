@@ -1,14 +1,21 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { interval } from 'rxjs';
-import { DashboardService, DashboardSummary } from '../../data-access/dashboard.service';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
+import { catchError, interval, of, switchMap } from 'rxjs';
+import { describeError } from '../../../../core/api/api-error';
+import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { SparklineComponent } from '../../../../shared/components/sparkline/sparkline.component';
 import { DonutChartComponent } from '../../../../shared/components/donut-chart/donut-chart.component';
 import { BarChartComponent } from '../../../../shared/components/bar-chart/bar-chart.component';
 import { WorldMapComponent } from '../../../../shared/components/world-map/world-map.component';
-
-type LoadState = 'loading' | 'success' | 'error';
+import { bindQueryParams, parseString } from '../../../../shared/utils/query-params';
+import {
+  DashboardService,
+  DashboardSummary,
+  PERIOD_LABELS,
+  Period,
+} from '../../data-access/dashboard.service';
 
 const TONE_HEX: Record<string, string> = {
   info: '#3b82f6',
@@ -27,20 +34,60 @@ const TONE_HEX: Record<string, string> = {
 })
 export class OverviewComponent {
   private readonly dashboard = inject(DashboardService);
+  private readonly scope = inject(WarehouseScopeService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly state = signal<LoadState>('loading');
-  readonly summary = signal<DashboardSummary | null>(null);
+  readonly period = signal<Period>('today');
+  readonly periodLabels = PERIOD_LABELS;
+  readonly periods: Period[] = ['today', '7d', '30d'];
+
+  readonly scopeLabel = this.scope.label;
+  readonly warehouses = this.scope.permitted;
+  readonly selectedScope = this.scope.selected;
+  readonly canChooseScope = this.scope.canChoose;
+
   readonly lastUpdated = signal(new Date());
-  readonly warehouseFilter = signal('all');
-  readonly period = signal('May 20, 2024');
+  readonly errorMessage = signal<string | null>(null);
+  private readonly reloadToken = signal(0);
+
+  private readonly summaryResult = toSignal(
+    toObservable(
+      computed(() => ({
+        scope: this.scope.activeCodes(),
+        period: this.period(),
+        token: this.reloadToken(),
+      })),
+    ).pipe(
+      switchMap(({ scope, period }) => {
+        this.errorMessage.set(null);
+        return this.dashboard.getSummary(scope, period).pipe(
+          catchError((err) => {
+            this.errorMessage.set(describeError(err));
+            return of(null);
+          }),
+        );
+      }),
+    ),
+    { initialValue: undefined },
+  );
+
+  readonly summary = computed<DashboardSummary | null>(() => this.summaryResult() ?? null);
+  readonly loading = computed(() => this.summaryResult() === undefined && !this.errorMessage());
 
   readonly waveTotal = computed(() =>
     (this.summary()?.waveSegments ?? []).reduce((sum, s) => sum + s.value, 0),
   );
 
   constructor() {
-    this.load();
+    bindQueryParams([
+      {
+        param: 'period',
+        signal: this.period,
+        defaultValue: 'today' as Period,
+        parse: (raw) => (['today', '7d', '30d'].includes(raw) ? (raw as Period) : 'today'),
+      },
+    ]);
 
     // Keeps the "Live" footer honest — the control tower clock ticks on its own.
     interval(1000)
@@ -48,16 +95,17 @@ export class OverviewComponent {
       .subscribe(() => this.lastUpdated.set(new Date()));
   }
 
-  load(): void {
-    this.state.set('loading');
-    this.dashboard.getSummary().subscribe({
-      next: (summary) => {
-        this.summary.set(summary);
-        this.lastUpdated.set(new Date());
-        this.state.set('success');
-      },
-      error: () => this.state.set('error'),
-    });
+  reload(): void {
+    this.reloadToken.update((n) => n + 1);
+    this.lastUpdated.set(new Date());
+  }
+
+  selectScope(code: string): void {
+    this.scope.select(code);
+  }
+
+  go(link: string): void {
+    this.router.navigateByUrl(link);
   }
 
   toneHex(tone: string): string {

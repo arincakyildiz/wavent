@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { MockApiService } from '../../../core/api/mock-api.service';
+import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
+import { AllocationRec, db } from './mock-data';
 
 export interface ReservationRow {
   id: string;
@@ -8,27 +10,67 @@ export interface ReservationRow {
   sku: string;
   lot?: string;
   locationPath: string;
+  warehouseCode: string;
   quantity: number;
+  requested: number;
+  strategy: 'FEFO' | 'FIFO';
   isPartial: boolean;
   isBackorder: boolean;
   overrideReason?: string;
-  strategy: 'FEFO' | 'FIFO';
+  /** Single derived label the table and the filter both use. */
+  fulfilment: 'full' | 'partial' | 'backorder';
 }
 
-const MOCK_RESERVATIONS: ReservationRow[] = [
-  { id: 'al-1', orderNumber: 'SO-10581', sku: 'SKU-1001', lot: 'L-24081', locationPath: 'A/01/01', quantity: 1200, isPartial: false, isBackorder: false, strategy: 'FEFO' },
-  { id: 'al-2', orderNumber: 'SO-10582', sku: 'SKU-1004', lot: 'L-24070', locationPath: 'C/01/02', quantity: 400, isPartial: true, isBackorder: false, strategy: 'FEFO' },
-  { id: 'al-3', orderNumber: 'SO-10583', sku: 'SKU-1002', locationPath: 'A/03/02', quantity: 900, isPartial: false, isBackorder: false, strategy: 'FIFO' },
-  { id: 'al-4', orderNumber: 'SO-10584', sku: 'SKU-1006', lot: 'L-24055', locationPath: 'A/02/01', quantity: 0, isPartial: true, isBackorder: true, strategy: 'FEFO' },
-  { id: 'al-5', orderNumber: 'SO-10585', sku: 'SKU-1001', lot: 'L-24060', locationPath: 'B/01/01', quantity: 300, isPartial: false, isBackorder: false, overrideReason: 'Müşteri talebiyle daha yeni lot kullanıldı', strategy: 'FEFO' },
-  { id: 'al-6', orderNumber: 'SO-10586', sku: 'SKU-1008', locationPath: 'HZ/01/01', quantity: 60, isPartial: false, isBackorder: false, strategy: 'FIFO' },
-];
+function toRow(a: AllocationRec): ReservationRow {
+  return {
+    id: a.id,
+    orderNumber: a.orderNumber,
+    sku: a.skuCode,
+    lot: a.lot,
+    locationPath: a.locationPath,
+    warehouseCode: a.warehouseCode,
+    quantity: a.quantity,
+    requested: a.requested,
+    strategy: a.strategy,
+    isPartial: a.isPartial,
+    isBackorder: a.isBackorder,
+    overrideReason: a.overrideReason,
+    fulfilment: a.isBackorder ? 'backorder' : a.isPartial ? 'partial' : 'full',
+  };
+}
+
+const ACCESSOR = (row: ReservationRow, key: string): unknown =>
+  (row as unknown as Record<string, unknown>)[key];
 
 @Injectable({ providedIn: 'root' })
 export class ReservationsService {
   private readonly api = inject(MockApiService);
 
-  list(): Observable<ReservationRow[]> {
-    return this.api.simulate(MOCK_RESERVATIONS, { delayMs: 350 });
+  query(scope: string[], query: ListQuery): Observable<ListResult<ReservationRow>> {
+    const source = db.allocations
+      .filter((a) => !scope.length || scope.includes(a.warehouseCode))
+      .map(toRow);
+
+    return this.api.simulate(source, { delayMs: 330 }).pipe(
+      map((rows) =>
+        runQuery(rows, query, {
+          accessor: ACCESSOR,
+          searchable: (r) => [r.orderNumber, r.sku, r.lot ?? ''],
+        }),
+      ),
+    );
+  }
+
+  totals(scope: string[]): Observable<{ total: number; partial: number; backorder: number; overrides: number }> {
+    const rows = db.allocations.filter((a) => !scope.length || scope.includes(a.warehouseCode));
+    return this.api.simulate(
+      {
+        total: rows.length,
+        partial: rows.filter((r) => r.isPartial && !r.isBackorder).length,
+        backorder: rows.filter((r) => r.isBackorder).length,
+        overrides: rows.filter((r) => r.overrideReason).length,
+      },
+      { delayMs: 200 },
+    );
   }
 }

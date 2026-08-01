@@ -1,0 +1,79 @@
+<app-form-dialog
+  title="Yeni Sayım"
+  subtitle="Sayım planlanır; fark eşiği aşılırsa ikinci sayım otomatik gerekli olur."
+  (dismissed)="dismissed.emit()"
+>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Sayım Kodu <span class="req">*</span></span>
+        <input
+          formControlName="code"
+          type="text"
+          placeholder="CC-140"
+          autocomplete="off"
+          [class.invalid]="invalid('code')"
+        />
+        @if (codeControl.pending) {
+          <span class="field__hint">Kod kontrol ediliyor...</span>
+        } @else if (invalid('code')) {
+          <span class="field__error" role="alert">
+            @if (codeControl.hasError('notUnique')) {
+              Bu kod zaten kullanılıyor.
+            } @else {
+              Format: CC- ve 3 rakam (örn. CC-140).
+            }
+          </span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field__label">Depo <span class="req">*</span></span>
+        <select formControlName="warehouseCode">
+          @for (w of warehouses(); track w.code) {
+            <option [value]="w.code">{{ w.code }} — {{ w.name }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Kapsam <span class="req">*</span></span>
+        <input
+          formControlName="scopeLabel"
+          type="text"
+          placeholder="A/01/01 bölgesi veya SKU-1001"
+          [class.invalid]="invalid('scopeLabel')"
+        />
+        @if (invalid('scopeLabel')) {
+          <span class="field__error" role="alert">En az 3 karakterlik bir kapsam girin.</span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field__label">Beklenen Miktar <span class="req">*</span></span>
+        <input
+          formControlName="expectedQuantity"
+          type="number"
+          min="1"
+          [class.invalid]="invalid('expectedQuantity')"
+        />
+        @if (invalid('expectedQuantity')) {
+          <span class="field__error" role="alert">Pozitif bir tam sayı girin.</span>
+        }
+      </label>
+    </div>
+
+    @if (submitError()) {
+      <div class="form__error" role="alert">{{ submitError() }}</div>
+    }
+
+    <div class="form__actions">
+      <button class="btn" type="button" (click)="dismissed.emit()">Vazgeç</button>
+      <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
+        {{ submitting() ? 'Kaydediliyor...' : 'Sayımı Oluştur' }}
+      </button>
+    </div>
+  </form>
+</app-form-dialog>

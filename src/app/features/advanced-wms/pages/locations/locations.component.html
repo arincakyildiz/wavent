@@ -6,50 +6,49 @@
     </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Lokasyonlar yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
-      </div>
-    }
-    @case ('success') {
-      <div class="toolbar">
-        <input
-          type="search"
-          placeholder="Lokasyon veya depo kodu ara..."
-          [value]="search()"
-          (input)="search.set($any($event.target).value)"
-        />
-        <select [value]="classFilter()" (change)="classFilter.set($any($event.target).value)">
-          <option value="all">Tüm sınıflar</option>
-          <option value="ambient">Ambient</option>
-          <option value="chilled">Chilled</option>
-          <option value="frozen">Frozen</option>
-          <option value="hazmat">Hazmat</option>
-        </select>
-        <span class="spacer"></span>
-        <span class="muted small">{{ filtered().length }} lokasyon</span>
-      </div>
+  @if (loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (errorMessage()) {
+    <div class="state state--error" role="alert">
+      {{ errorMessage() }}
+      <button type="button" (click)="reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    <div class="toolbar">
+      <input
+        type="search"
+        placeholder="Lokasyon veya depo kodu ara..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        aria-label="Lokasyon ara"
+      />
+      <select [value]="classFilter()" (change)="onClass($any($event.target).value)" aria-label="Sınıf filtresi">
+        <option value="all">Tüm sınıflar</option>
+        <option value="ambient">Ambient</option>
+        <option value="chilled">Chilled</option>
+        <option value="frozen">Frozen</option>
+        <option value="hazmat">Hazmat</option>
+      </select>
+      <span class="spacer"></span>
+      <span class="muted small">{{ total() }} lokasyon</span>
+    </div>
 
-      @if (filtered().length) {
+    @if (rows().length) {
+      <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Yol</th>
-              <th>Depo</th>
-              <th>Tip</th>
-              <th>Sınıf</th>
-              <th>Ağırlık Kapasitesi</th>
+              <th appSortable="path" [sort]="sort()" (sortChange)="onSort($event)">Yol</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
+              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">Tip</th>
+              <th appSortable="locationClass" [sort]="sort()" (sortChange)="onSort($event)">Sınıf</th>
+              <th appSortable="capacityPct" [sort]="sort()" (sortChange)="onSort($event)">Ağırlık Kapasitesi</th>
               <th>Hacim Kapasitesi</th>
-              <th>Durum</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
             </tr>
           </thead>
           <tbody>
-            @for (l of filtered(); track l.id) {
+            @for (l of rows(); track l.id) {
               <tr>
                 <td>{{ l.path }}</td>
                 <td>{{ l.warehouseCode }}</td>
@@ -57,7 +56,7 @@
                 <td>{{ l.locationClass }}</td>
                 <td>
                   <div class="progress-bar">
-                    <span [style.width.%]="capacity(l)" [class]="capacityTone(l)"></span>
+                    <span [style.width.%]="l.capacityPct" [class]="capacityTone(l)"></span>
                   </div>
                   <span class="muted small">{{ l.usedWeightKg }}/{{ l.maxWeightKg }} kg</span>
                 </td>
@@ -69,9 +68,15 @@
             }
           </tbody>
         </table>
-      } @else {
-        <div class="state state--empty">Filtreyle eşleşen lokasyon bulunamadı.</div>
-      }
+      </div>
+
+      <div class="pagination">
+        <span>Sayfa {{ page() }} / {{ totalPages() }}</span>
+        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+        <button type="button" [disabled]="page() === totalPages()" (click)="nextPage()">Sonraki ›</button>
+      </div>
+    } @else {
+      <div class="state state--empty">Filtreyle eşleşen lokasyon bulunamadı.</div>
     }
   }
 </div>

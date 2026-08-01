@@ -6,34 +6,54 @@
     </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Sevkiyatlar yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
-      </div>
-    }
-    @case ('success') {
-      @if (shipments().length) {
+  @if (list.loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (list.error()) {
+    <div class="state state--error" role="alert">
+      {{ list.error() }}
+      <button type="button" (click)="list.reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    <div class="toolbar">
+      <input
+        type="search"
+        placeholder="Sevkiyat, taşıyıcı veya kapı ara..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        aria-label="Sevkiyat ara"
+      />
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
+        <option value="all">Tüm durumlar</option>
+        <option value="staged">Staged</option>
+        <option value="loading">Loading</option>
+        <option value="in-transit">In Transit</option>
+        <option value="delivered">Delivered</option>
+        <option value="exception">Exception</option>
+      </select>
+      <span class="spacer"></span>
+      <span class="muted small">{{ list.total() | number }} sevkiyat</span>
+    </div>
+
+    @if (list.rows().length) {
+      <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Sevkiyat</th>
-              <th>Taşıyıcı</th>
-              <th>Kapı</th>
-              <th>Paket</th>
-              <th>İlerleme</th>
-              <th>Durum</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Sevkiyat</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
+              <th appSortable="carrier" [sort]="sort()" (sortChange)="onSort($event)">Taşıyıcı</th>
+              <th appSortable="door" [sort]="sort()" (sortChange)="onSort($event)">Kapı</th>
+              <th appSortable="packageCount" [sort]="sort()" (sortChange)="onSort($event)">Paket</th>
+              <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">İlerleme</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
               <th>Kapanış</th>
             </tr>
           </thead>
           <tbody>
-            @for (s of shipments(); track s.id) {
+            @for (s of list.rows(); track s.id) {
               <tr>
                 <td>{{ s.code }}</td>
+                <td>{{ s.warehouseCode }}</td>
                 <td>{{ s.carrier }}</td>
                 <td>{{ s.door }}</td>
                 <td>{{ s.packageCount }}</td>
@@ -49,9 +69,15 @@
             }
           </tbody>
         </table>
-      } @else {
-        <div class="state state--empty">Sevkiyat bulunamadı.</div>
-      }
+      </div>
+
+      <div class="pagination">
+        <span>Sayfa {{ page() }} / {{ list.totalPages() }}</span>
+        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+        <button type="button" [disabled]="page() === list.totalPages()" (click)="nextPage()">Sonraki ›</button>
+      </div>
+    } @else {
+      <div class="state state--empty">Filtreyle eşleşen sevkiyat bulunamadı.</div>
     }
   }
 </div>

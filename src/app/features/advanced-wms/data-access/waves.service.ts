@@ -1,65 +1,176 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { MockApiService } from '../../../core/api/mock-api.service';
+import { ApiError } from '../../../core/api/api-error';
+import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { WaveStatus } from '../models/entities';
+import { WaveRec, db } from './mock-data';
+import { WaveOrderStatus, waveOrderStatuses } from './selectors';
+
+export type { WaveOrderStatus };
 
 export interface WaveRow {
   id: string;
   name: string;
   warehouseCode: string;
   zone?: string;
-  carrier?: string;
+  carrier: string;
   cutOffTime: string;
   orderCount: number;
   capacityUsedPct: number;
   status: WaveStatus;
+  version: number;
+  /** Orders that would fail or be at risk if published now. */
+  riskCount: number;
 }
 
-export interface WaveOrderRow {
-  orderNumber: string;
-  priority: number;
-  route: string;
-  lineCount: number;
-  status: 'ok' | 'capacity-risk' | 'stock-shortage';
-  reason?: string;
+export interface WaveDraft {
+  name: string;
+  warehouseCode: string;
+  zone?: string;
+  carrier: string;
+  cutOffTime: string;
+  minPriority: number;
+  maxOrders: number;
 }
 
-const MOCK_WAVES: WaveRow[] = [
-  { id: 'wv-1', name: 'Wave #251', warehouseCode: 'NYC-01', zone: 'A', carrier: 'DHL Express', cutOffTime: '14:00', orderCount: 42, capacityUsedPct: 88, status: 'released' },
-  { id: 'wv-2', name: 'Wave #252', warehouseCode: 'NYC-01', zone: 'B', carrier: 'UPS', cutOffTime: '16:00', orderCount: 30, capacityUsedPct: 62, status: 'planned' },
-  { id: 'wv-3', name: 'Wave #253', warehouseCode: 'IST-01', carrier: 'Aramex', cutOffTime: '18:00', orderCount: 18, capacityUsedPct: 40, status: 'draft' },
-  { id: 'wv-4', name: 'Wave #250', warehouseCode: 'AMS-01', zone: 'A', carrier: 'Maersk', cutOffTime: '10:00', orderCount: 24, capacityUsedPct: 100, status: 'completed' },
-  { id: 'wv-5', name: 'Wave #254', warehouseCode: 'DXB-01', carrier: 'FedEx', cutOffTime: '20:00', orderCount: 12, capacityUsedPct: 95, status: 'released' },
-];
+export interface ReleaseResult {
+  wave: WaveRow;
+  released: string[];
+  failed: { orderNumber: string; reason: string }[];
+}
 
-const MOCK_WAVE_ORDERS: Record<string, WaveOrderRow[]> = {
-  'wv-1': [
-    { orderNumber: 'SO-10581', priority: 1, route: 'NYC-Manhattan-01', lineCount: 6, status: 'ok' },
-    { orderNumber: 'SO-10582', priority: 2, route: 'NYC-Brooklyn-02', lineCount: 3, status: 'capacity-risk', reason: 'Vardiya kapasitesi %88 dolulukta' },
-    { orderNumber: 'SO-10583', priority: 1, route: 'NYC-Queens-01', lineCount: 8, status: 'stock-shortage', reason: 'SKU-1006 için yeterli stok yok' },
-    { orderNumber: 'SO-10584', priority: 3, route: 'NYC-Manhattan-02', lineCount: 2, status: 'ok' },
-  ],
-};
+function toRow(w: WaveRec): WaveRow {
+  const statuses = waveOrderStatuses(w.id);
+  return {
+    id: w.id,
+    name: w.name,
+    warehouseCode: w.warehouseCode,
+    zone: w.zone,
+    carrier: w.carrier,
+    cutOffTime: w.cutOffTime,
+    orderCount: w.orderNumbers.length,
+    capacityUsedPct: w.capacityUsedPct,
+    status: w.status,
+    version: w.version,
+    riskCount: statuses.filter((s) => s.status !== 'ok').length,
+  };
+}
+
+const ACCESSOR = (row: WaveRow, key: string): unknown => (row as unknown as Record<string, unknown>)[key];
 
 @Injectable({ providedIn: 'root' })
 export class WavesService {
   private readonly api = inject(MockApiService);
 
-  list(): Observable<WaveRow[]> {
-    return this.api.simulate(MOCK_WAVES, { delayMs: 350 });
+  query(scope: string[], query: ListQuery): Observable<ListResult<WaveRow>> {
+    const source = db.waves.filter((w) => !scope.length || scope.includes(w.warehouseCode)).map(toRow);
+
+    return this.api.simulate(source, { delayMs: 330 }).pipe(
+      map((rows) =>
+        runQuery(rows, query, {
+          accessor: ACCESSOR,
+          searchable: (r) => [r.name, r.carrier, r.warehouseCode, r.zone ?? ''],
+        }),
+      ),
+    );
   }
 
-  getById(id: string): Observable<WaveRow | undefined> {
-    return this.api.simulate(MOCK_WAVES.find((w) => w.id === id), { delayMs: 300 });
+  getById(id: string): Observable<WaveRow> {
+    const found = db.waves.find((w) => w.id === id);
+    return this.api.simulate(found, { delayMs: 280 }).pipe(
+      map((w) => {
+        if (!w) throw new ApiError('not-found', 'Dalga bulunamadı.');
+        return toRow(w);
+      }),
+    );
   }
 
-  getOrders(id: string): Observable<WaveOrderRow[]> {
-    return this.api.simulate(MOCK_WAVE_ORDERS[id] ?? [], { delayMs: 300 });
+  getOrders(id: string): Observable<WaveOrderStatus[]> {
+    return this.api.simulate(waveOrderStatuses(id), { delayMs: 280 });
   }
 
-  release(id: string): Observable<WaveRow | undefined> {
-    const wave = MOCK_WAVES.find((w) => w.id === id);
-    if (wave) wave.status = 'released';
-    return this.api.simulate(wave, { delayMs: 400 });
+  isNameAvailable(name: string): Observable<boolean> {
+    const taken = db.waves.some((w) => w.name.toLowerCase() === name.trim().toLowerCase());
+    return this.api.simulate(!taken, { delayMs: 380 });
+  }
+
+  create(draft: WaveDraft): Observable<WaveRow> {
+    return this.api.simulate(draft, { delayMs: 520, kind: 'write' }).pipe(
+      map((d) => {
+        if (db.waves.some((w) => w.name.toLowerCase() === d.name.toLowerCase())) {
+          throw new ApiError('conflict', `${d.name} adlı bir dalga zaten var.`);
+        }
+
+        // Only unwaved, allocated orders of the right warehouse/priority are eligible.
+        const alreadyWaved = new Set(db.waves.flatMap((w) => w.orderNumbers));
+        const candidates = db.orders
+          .filter(
+            (o) =>
+              o.warehouseCode === d.warehouseCode &&
+              o.priority <= d.minPriority &&
+              !alreadyWaved.has(o.number) &&
+              db.allocations.some((a) => a.orderNumber === o.number && a.quantity > 0),
+          )
+          .slice(0, d.maxOrders);
+
+        if (!candidates.length) {
+          throw new ApiError('validation', 'Bu kurala uyan, dalgaya alınmamış sipariş bulunamadı.');
+        }
+
+        const record: WaveRec = {
+          id: `wv-${db.waves.length + 1}`,
+          name: d.name,
+          warehouseCode: d.warehouseCode,
+          zone: d.zone || undefined,
+          carrier: d.carrier,
+          cutOffTime: d.cutOffTime,
+          orderNumbers: candidates.map((o) => o.number),
+          capacityUsedPct: Math.min(100, 25 + candidates.length * 6),
+          status: 'planned',
+          version: 1,
+        };
+        for (const o of candidates) o.status = 'waved';
+        db.waves.unshift(record);
+        return toRow(record);
+      }),
+    );
+  }
+
+  /**
+   * Publishes a wave. Returns a per-order result: orders short on stock stay behind
+   * with a reason instead of failing the whole release (§11 partial result).
+   */
+  release(id: string, expectedVersion: number): Observable<ReleaseResult> {
+    return this.api.simulate(id, { delayMs: 620, kind: 'write' }).pipe(
+      map(() => {
+        const record = db.waves.find((w) => w.id === id);
+        if (!record) throw new ApiError('not-found', 'Dalga bulunamadı.');
+        if (record.status !== 'planned' && record.status !== 'draft') {
+          throw new ApiError('validation', 'Yalnızca draft veya planned dalgalar yayınlanabilir.');
+        }
+
+        this.api.assertVersion(expectedVersion, record.version);
+
+        const statuses = waveOrderStatuses(id);
+        const failed = statuses
+          .filter((s) => s.status === 'stock-shortage')
+          .map((s) => ({ orderNumber: s.orderNumber, reason: s.reason ?? 'Stok yetersiz' }));
+        const released = statuses.filter((s) => s.status !== 'stock-shortage').map((s) => s.orderNumber);
+
+        if (!released.length) {
+          throw new ApiError('validation', 'Hiçbir sipariş yayınlanamadı: tümünde stok yetersiz.');
+        }
+
+        record.status = 'released';
+        record.version += 1;
+        for (const number of released) {
+          const order = db.orders.find((o) => o.number === number);
+          if (order) order.status = 'picking';
+        }
+
+        return { wave: toRow(record), released, failed };
+      }),
+    );
   }
 }

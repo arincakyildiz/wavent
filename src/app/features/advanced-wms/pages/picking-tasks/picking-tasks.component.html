@@ -6,63 +6,74 @@
     </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Görevler yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
+  @if (list.loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (list.error()) {
+    <div class="state state--error" role="alert">
+      {{ list.error() }}
+      <button type="button" (click)="list.reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-card__label">Toplam Görev</div>
+        <div class="kpi-card__value">{{ totals().total | number }}</div>
       </div>
-    }
-    @case ('success') {
-      <div class="kpi-row">
-        <div class="kpi-card">
-          <div class="kpi-card__label">Total Tasks</div>
-          <div class="kpi-card__value">{{ tasks().length }}</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-card__label">Exceptions</div>
-          <div class="kpi-card__value">{{ exceptionCount() }}</div>
-        </div>
+      <div class="kpi-card">
+        <div class="kpi-card__label">Devam Eden</div>
+        <div class="kpi-card__value">{{ totals().inProgress | number }}</div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-card__label">İstisna</div>
+        <div class="kpi-card__value">{{ totals().exceptions | number }}</div>
+      </div>
+    </div>
 
-      <div class="toolbar">
-        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
-          <option value="all">Tüm durumlar</option>
-          <option value="pending">Pending</option>
-          <option value="in-progress">In Progress</option>
-          <option value="exception">Exception</option>
-          <option value="completed">Completed</option>
-        </select>
-        <span class="spacer"></span>
-        <span class="muted small">{{ filtered().length }} görev</span>
-      </div>
+    <div class="toolbar">
+      <input
+        type="search"
+        placeholder="Görev kodu, dalga veya operatör ara..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        aria-label="Görev ara"
+      />
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
+        <option value="all">Tüm durumlar</option>
+        <option value="pending">Pending</option>
+        <option value="in-progress">In Progress</option>
+        <option value="exception">Exception</option>
+        <option value="completed">Completed</option>
+      </select>
+      <span class="spacer"></span>
+      <span class="muted small">{{ list.total() | number }} görev</span>
+    </div>
 
-      @if (filtered().length) {
+    @if (list.rows().length) {
+      <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Dalga</th>
-              <th>Tip</th>
-              <th>Atanan</th>
-              <th>Lokasyon</th>
-              <th>İlerleme</th>
-              <th>Durum</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Görev</th>
+              <th appSortable="waveName" [sort]="sort()" (sortChange)="onSort($event)">Dalga</th>
+              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">Tip</th>
+              <th appSortable="assignedTo" [sort]="sort()" (sortChange)="onSort($event)">Atanan</th>
+              <th appSortable="locationCount" [sort]="sort()" (sortChange)="onSort($event)">Lokasyon</th>
+              <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">İlerleme</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
               <th>İstisna</th>
             </tr>
           </thead>
           <tbody>
-            @for (t of filtered(); track t.id) {
+            @for (t of list.rows(); track t.id) {
               <tr>
+                <td>{{ t.code }}</td>
                 <td>{{ t.waveName }}</td>
                 <td>{{ t.type }}</td>
                 <td>{{ t.assignedTo ?? '—' }}</td>
                 <td>{{ t.locationCount }}</td>
                 <td>
                   <div class="progress-bar">
-                    <span [style.width.%]="progressPct(t)" class="tone-success"></span>
+                    <span [style.width.%]="t.progressPct" class="tone-success"></span>
                   </div>
                   <span class="muted small">{{ t.pickedLines }}/{{ t.lineCount }}</span>
                 </td>
@@ -72,9 +83,15 @@
             }
           </tbody>
         </table>
-      } @else {
-        <div class="state state--empty">Filtreyle eşleşen görev bulunamadı.</div>
-      }
+      </div>
+
+      <div class="pagination">
+        <span>Sayfa {{ page() }} / {{ list.totalPages() }}</span>
+        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+        <button type="button" [disabled]="page() === list.totalPages()" (click)="nextPage()">Sonraki ›</button>
+      </div>
+    } @else {
+      <div class="state state--empty">Filtreyle eşleşen görev bulunamadı.</div>
     }
   }
 </div>

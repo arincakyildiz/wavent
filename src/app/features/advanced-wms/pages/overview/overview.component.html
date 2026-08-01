@@ -2,240 +2,271 @@
   <div class="page__header">
     <div>
       <h1>Overview</h1>
-      <p class="muted">Real-time warehouse control tower</p>
+      <p class="muted">Real-time warehouse control tower · {{ scopeLabel() }}</p>
     </div>
 
     <div class="page__actions">
       <label class="select-control">
-        <select [value]="warehouseFilter()" (change)="warehouseFilter.set($any($event.target).value)">
+        <select
+          [value]="selectedScope()"
+          (change)="selectScope($any($event.target).value)"
+          [disabled]="!canChooseScope()"
+          aria-label="Depo kapsamı"
+        >
           <option value="all">All Warehouses</option>
-          <option value="NYC-01">New York DC</option>
-          <option value="AMS-01">Amsterdam Hub</option>
-          <option value="IST-01">Istanbul Merkez</option>
-          <option value="DXB-01">Dubai Logistics Park</option>
+          @for (w of warehouses(); track w.code) {
+            <option [value]="w.code">{{ w.name }}</option>
+          }
         </select>
         <app-icon name="chevronDown" [size]="15" />
       </label>
 
-      <span class="select-control">
+      <label class="select-control">
         <app-icon name="calendar" [size]="15" />
-        {{ period() }}
-      </span>
+        <select [value]="period()" (change)="period.set($any($event.target).value)" aria-label="Dönem">
+          @for (p of periods; track p) {
+            <option [value]="p">{{ periodLabels[p] }}</option>
+          }
+        </select>
+      </label>
 
-      <button class="btn btn--primary" type="button" (click)="load()">
+      <button class="btn btn--primary" type="button" (click)="go('/wms/waves')">
         <app-icon name="plus" [size]="15" />
-        Add
+        New Wave
+      </button>
+
+      <button class="btn" type="button" (click)="reload()" aria-label="Yenile">
         <app-icon name="refresh" [size]="14" />
       </button>
     </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Veriler yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
-      </div>
-    }
-    @case ('success') {
-      @if (summary(); as data) {
-        <!-- KPI row -->
-        <div class="kpi-row">
-          @for (kpi of data.kpis; track kpi.label) {
-            <div class="kpi-card kpi-card--rich">
-              <div class="kpi-card__head">
-                <span class="icon-tile" [class]="'tone-' + kpi.tone">
-                  <app-icon [name]="kpi.icon" [size]="19" />
-                </span>
-                <div class="kpi-card__body">
-                  <div class="kpi-card__label">{{ kpi.label }}</div>
-                  <div class="kpi-card__value">{{ kpi.value }}</div>
-                </div>
-              </div>
-              <div class="kpi-card__foot">
-                <span class="kpi-card__hint" [class]="'trend-' + kpi.trend">{{ kpi.hint }}</span>
-                <app-sparkline [points]="kpi.spark" [color]="toneHex(kpi.tone)" />
-              </div>
+  @if (loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (errorMessage()) {
+    <div class="state state--error" role="alert">
+      {{ errorMessage() }}
+      <button type="button" (click)="reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    @if (summary(); as data) {
+    <!-- KPI row -->
+    <div class="kpi-row">
+      @for (kpi of data.kpis; track kpi.label) {
+        <button class="kpi-card kpi-card--rich kpi-card--link" type="button" (click)="go(kpi.link)">
+          <div class="kpi-card__head">
+            <span class="icon-tile" [class]="'tone-' + kpi.tone">
+              <app-icon [name]="kpi.icon" [size]="19" />
+            </span>
+            <div class="kpi-card__body">
+              <div class="kpi-card__label">{{ kpi.label }}</div>
+              <div class="kpi-card__value">{{ kpi.value }}</div>
             </div>
-          }
-        </div>
+          </div>
+          <div class="kpi-card__foot">
+            <span class="kpi-card__hint" [class]="'trend-' + kpi.trend">{{ kpi.hint }}</span>
+            <app-sparkline [points]="kpi.spark" [color]="toneHex(kpi.tone)" />
+          </div>
+        </button>
+      }
+    </div>
 
-        <!-- Map / waves / exceptions -->
-        <div class="row row--main">
-          <section class="panel">
-            <div class="panel__head">
-              <h2>Inventory by Warehouse</h2>
-            </div>
-            <app-world-map [points]="data.mapPoints" />
-          </section>
-
-          <section class="panel panel--wave">
-            <div class="panel__head">
-              <h2>Wave Overview</h2>
-            </div>
-            <div class="wave">
-              <app-donut-chart [segments]="data.waveSegments" [size]="132" centerLabel="Total Waves" />
-              <ul class="wave__legend">
-                @for (s of data.waveSegments; track s.label) {
-                  <li>
-                    <span class="swatch" [style.background]="s.color"></span>
-                    <span class="wave__legend-label">{{ s.label }}</span>
-                    <span class="muted small">{{ s.value }} ({{ segmentPct(s.value) }}%)</span>
-                  </li>
-                }
-              </ul>
-            </div>
-            <button class="link-action wave__link" type="button">
-              View all waves
-              <app-icon name="arrowRight" [size]="13" />
-            </button>
-          </section>
-
-          <section class="panel">
-            <div class="panel__head">
-              <h2>Exceptions</h2>
-              <button class="link-action" type="button">
-                View all
-                <app-icon name="arrowRight" [size]="13" />
-              </button>
-            </div>
-            <ul class="feed">
-              @for (e of data.exceptions; track e.reference) {
-                <li>
-                  <span class="icon-tile icon-tile--sm" [class]="'tone-' + e.tone">
-                    <app-icon [name]="e.icon" [size]="15" />
-                  </span>
-                  <div class="feed__body">
-                    <div class="feed__title">{{ e.title }}</div>
-                    <div class="muted small">{{ e.reference }} · {{ e.actor }}</div>
-                  </div>
-                  <span class="muted small feed__meta">{{ e.ago }}</span>
-                </li>
-              }
-            </ul>
-          </section>
-        </div>
-
-        <!-- Timeline / performance / shipments -->
-        <div class="row row--secondary">
-          <section class="panel">
-            <div class="panel__head">
-              <h2>Operations Timeline</h2>
-            </div>
-            <ul class="feed feed--timeline">
-              @for (t of data.timeline; track t.title) {
-                <li>
-                  <span class="feed__marker" [class]="'tone-' + t.tone">
-                    <app-icon [name]="t.icon" [size]="14" />
-                  </span>
-                  <div class="feed__body">
-                    <div class="feed__title">{{ t.title }}</div>
-                    <div class="muted small">{{ t.timestamp }}</div>
-                  </div>
-                </li>
-              }
-            </ul>
-          </section>
-
-          <section class="panel">
-            <div class="panel__head">
-              <h2>Task Performance</h2>
-              <button class="link-action" type="button">
-                View report
-                <app-icon name="arrowRight" [size]="13" />
-              </button>
-            </div>
-            <div class="muted small perf__unit">{{ data.performance.unitLabel }}</div>
-            <app-bar-chart
-              [data]="data.performance.bars"
-              [max]="data.performance.max"
-              [tickStep]="data.performance.tickStep"
-              [axisLabel]="data.performance.unitLabel"
-            />
-            <div class="perf__operators">
-              @for (op of data.performance.operators; track op.name) {
-                <div class="perf__operator">
-                  <span class="avatar" [class]="'tone-' + op.tone">{{ op.initials }}</span>
-                  <span class="muted small">{{ op.name }}</span>
-                </div>
-              }
-            </div>
-          </section>
-
-          <section class="panel">
-            <div class="panel__head">
-              <h2>Shipments</h2>
-              <button class="link-action" type="button">
-                View all
-                <app-icon name="arrowRight" [size]="13" />
-              </button>
-            </div>
-            <div class="table-scroll">
-              <table class="data-table table-flush">
-                <thead>
-                  <tr>
-                    <th>Shipment</th>
-                    <th>Carrier</th>
-                    <th>Status</th>
-                    <th>Progress</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (s of data.shipments; track s.code) {
-                    <tr>
-                      <td>{{ s.code }}</td>
-                      <td>{{ s.carrier }}</td>
-                      <td><span class="status-pill" [class]="'tone-' + s.tone">{{ s.status }}</span></td>
-                      <td>
-                        <div class="progress-cell">
-                          <span class="progress-bar">
-                            <span [style.width.%]="s.progressPct" [class]="'tone-' + s.tone"></span>
-                          </span>
-                          <span class="muted small">{{ s.progressPct }}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-
-        <!-- Today counters -->
-        <div class="row row--today">
-          @for (t of data.today; track t.label) {
-            <div class="today-card">
-              <span class="icon-tile" [class]="'tone-' + t.tone">
-                <app-icon [name]="t.icon" [size]="19" />
-              </span>
-              <div class="today-card__body">
-                <div class="kpi-card__label today-card__label">{{ t.label }}</div>
-                <div class="today-card__row">
-                  <span class="today-card__value">{{ t.value }}</span>
-                  <span class="muted small">{{ t.unit }}</span>
-                  <span class="muted small today-card__secondary">{{ t.secondary }}</span>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- Live footer -->
-        <div class="live-bar">
-          <span class="live-bar__pill">
-            <span class="live-bar__dot"></span>
-            Live
-          </span>
-          <span class="muted small">Last updated: {{ clock() }}</span>
-          <button class="icon-action" type="button" (click)="load()" aria-label="Yenile">
-            <app-icon name="refresh" [size]="14" />
+    <!-- Map / waves / exceptions -->
+    <div class="row row--main">
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Inventory by Warehouse</h2>
+          <button class="link-action" type="button" (click)="go('/wms/warehouses')">
+            View all
+            <app-icon name="arrowRight" [size]="13" />
           </button>
         </div>
+        @if (data.mapPoints.length) {
+          <app-world-map [points]="data.mapPoints" />
+        } @else {
+          <div class="state state--empty">Bu kapsamda envanter yok.</div>
+        }
+      </section>
+
+      <section class="panel panel--wave">
+        <div class="panel__head">
+          <h2>Wave Overview</h2>
+        </div>
+        <div class="wave">
+          <app-donut-chart [segments]="data.waveSegments" [size]="132" centerLabel="Total Waves" />
+          <ul class="wave__legend">
+            @for (s of data.waveSegments; track s.label) {
+              <li>
+                <span class="swatch" [style.background]="s.color"></span>
+                <span class="wave__legend-label">{{ s.label }}</span>
+                <span class="muted small">{{ s.value }} ({{ segmentPct(s.value) }}%)</span>
+              </li>
+            }
+          </ul>
+        </div>
+        <button class="link-action wave__link" type="button" (click)="go('/wms/waves')">
+          View all waves
+          <app-icon name="arrowRight" [size]="13" />
+        </button>
+      </section>
+
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Exceptions</h2>
+          <button class="link-action" type="button" (click)="go('/wms/exceptions')">
+            View all
+            <app-icon name="arrowRight" [size]="13" />
+          </button>
+        </div>
+        @if (data.exceptions.length) {
+          <ul class="feed">
+            @for (e of data.exceptions; track e.id) {
+              <li>
+                <span class="icon-tile icon-tile--sm" [class]="'tone-' + e.tone">
+                  <app-icon [name]="e.icon" [size]="15" />
+                </span>
+                <div class="feed__body">
+                  <div class="feed__title">{{ e.title }}</div>
+                  <div class="muted small">{{ e.reference }} · {{ e.actor }}</div>
+                </div>
+                <span class="muted small feed__meta">{{ e.ago }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="state state--empty">Açık istisna yok.</div>
+        }
+      </section>
+    </div>
+
+    <!-- Timeline / performance / shipments -->
+    <div class="row row--secondary">
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Operations Timeline</h2>
+        </div>
+        @if (data.timeline.length) {
+          <ul class="feed feed--timeline">
+            @for (t of data.timeline; track t.title) {
+              <li>
+                <span class="feed__marker" [class]="'tone-' + t.tone">
+                  <app-icon [name]="t.icon" [size]="14" />
+                </span>
+                <div class="feed__body">
+                  <div class="feed__title">{{ t.title }}</div>
+                  <div class="muted small">{{ t.timestamp }}</div>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="state state--empty">Bu kapsamda olay yok.</div>
+        }
+      </section>
+
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Task Performance</h2>
+          <button class="link-action" type="button" (click)="go('/wms/picking/tasks')">
+            View report
+            <app-icon name="arrowRight" [size]="13" />
+          </button>
+        </div>
+        @if (data.performance.bars.length) {
+          <div class="muted small perf__unit">{{ data.performance.unitLabel }}</div>
+          <app-bar-chart
+            [data]="data.performance.bars"
+            [max]="data.performance.max"
+            [tickStep]="data.performance.tickStep"
+            [axisLabel]="data.performance.unitLabel"
+          />
+          <div class="perf__operators">
+            @for (op of data.performance.operators; track op.name) {
+              <div class="perf__operator">
+                <span class="avatar" [class]="'tone-' + op.tone">{{ op.initials }}</span>
+                <span class="muted small">{{ op.name }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="state state--empty">Bu kapsamda atanmış görev yok.</div>
+        }
+      </section>
+
+      <section class="panel">
+        <div class="panel__head">
+          <h2>Shipments</h2>
+          <button class="link-action" type="button" (click)="go('/wms/shipping')">
+            View all
+            <app-icon name="arrowRight" [size]="13" />
+          </button>
+        </div>
+        @if (data.shipments.length) {
+          <div class="table-scroll">
+            <table class="data-table table-flush">
+              <thead>
+                <tr>
+                  <th>Shipment</th>
+                  <th>Carrier</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of data.shipments; track s.code) {
+                  <tr>
+                    <td>{{ s.code }}</td>
+                    <td>{{ s.carrier }}</td>
+                    <td><span class="status-pill" [class]="'tone-' + s.tone">{{ s.status }}</span></td>
+                    <td>
+                      <div class="progress-cell">
+                        <span class="progress-bar">
+                          <span [style.width.%]="s.progressPct" [class]="'tone-' + s.tone"></span>
+                        </span>
+                        <span class="muted small">{{ s.progressPct }}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="state state--empty">Bu kapsamda sevkiyat yok.</div>
+        }
+      </section>
+    </div>
+
+    <!-- Today counters -->
+    <div class="row row--today">
+      @for (t of data.today; track t.label) {
+        <button class="today-card" type="button" (click)="go(t.link)">
+          <span class="icon-tile" [class]="'tone-' + t.tone">
+            <app-icon [name]="t.icon" [size]="19" />
+          </span>
+          <div class="today-card__body">
+            <div class="kpi-card__label today-card__label">{{ t.label }}</div>
+            <div class="today-card__row">
+              <span class="today-card__value">{{ t.value }}</span>
+              <span class="muted small">{{ t.unit }}</span>
+              <span class="muted small today-card__secondary">{{ t.secondary }}</span>
+            </div>
+          </div>
+        </button>
       }
+    </div>
+
+    <!-- Live footer -->
+    <div class="live-bar">
+      <span class="live-bar__pill">
+        <span class="live-bar__dot"></span>
+        Live
+      </span>
+      <span class="muted small">Last updated: {{ clock() }}</span>
+      <button class="icon-action" type="button" (click)="reload()" aria-label="Yenile">
+        <app-icon name="refresh" [size]="14" />
+      </button>
+    </div>
     }
   }
 </div>

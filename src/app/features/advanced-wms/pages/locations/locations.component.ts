@@ -1,55 +1,106 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { capacityPct, LocationRow, LocationsService } from '../../data-access/locations.service';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of, switchMap } from 'rxjs';
+import { describeError } from '../../../../core/api/api-error';
+import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { SortableDirective } from '../../../../shared/directives/sortable.directive';
+import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
+import { LocationRow, LocationsService } from '../../data-access/locations.service';
 
-type LoadState = 'loading' | 'success' | 'error';
+const PAGE_SIZE = 15;
 
 @Component({
   selector: 'app-locations',
-  imports: [],
+  imports: [SortableDirective],
   templateUrl: './locations.component.html',
   styleUrl: './locations.component.scss',
 })
 export class LocationsComponent {
   private readonly locationsService = inject(LocationsService);
+  private readonly scope = inject(WarehouseScopeService);
 
-  readonly state = signal<LoadState>('loading');
-  readonly locations = signal<LocationRow[]>([]);
   readonly search = signal('');
-  readonly classFilter = signal<'all' | LocationRow['locationClass']>('all');
+  readonly classFilter = signal('all');
+  readonly page = signal(1);
+  readonly sort = signal<SortState | null>({ key: 'path', direction: 'asc' });
+  readonly errorMessage = signal<string | null>(null);
+  readonly reloadToken = signal(0);
 
-  readonly filtered = computed(() => {
-    const term = this.search().trim().toLowerCase();
-    const cls = this.classFilter();
-    return this.locations().filter((l) => {
-      const matchesTerm = !term || l.path.toLowerCase().includes(term) || l.warehouseCode.toLowerCase().includes(term);
-      const matchesClass = cls === 'all' || l.locationClass === cls;
-      return matchesTerm && matchesClass;
-    });
-  });
+  private readonly request = computed(() => ({
+    scope: this.scope.activeCodes(),
+    query: {
+      search: this.search(),
+      page: this.page(),
+      pageSize: PAGE_SIZE,
+      sort: this.sort(),
+      filters: { locationClass: this.classFilter() },
+    } satisfies ListQuery,
+    token: this.reloadToken(),
+  }));
+
+  private readonly result = toSignal(
+    toObservable(this.request).pipe(
+      switchMap(({ scope, query }) =>
+        this.locationsService.query(scope, query).pipe(
+          catchError((err) => {
+            this.errorMessage.set(describeError(err));
+            return of(null);
+          }),
+        ),
+      ),
+    ),
+    { initialValue: undefined },
+  );
+
+  readonly rows = computed(() => this.result()?.rows ?? []);
+  readonly total = computed(() => this.result()?.total ?? 0);
+  readonly totalPages = computed(() => this.result()?.totalPages ?? 1);
+  readonly loading = computed(() => this.result() === undefined && !this.errorMessage());
 
   constructor() {
-    this.load();
-  }
+    bindQueryParams([
+      { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
+      { param: 'class', signal: this.classFilter, defaultValue: 'all', parse: parseString },
+      { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+    ]);
 
-  load(): void {
-    this.state.set('loading');
-    this.locationsService.list().subscribe({
-      next: (list) => {
-        this.locations.set(list);
-        this.state.set('success');
-      },
-      error: () => this.state.set('error'),
+    effect(() => {
+      if (this.result()) this.errorMessage.set(null);
     });
   }
 
-  capacity(loc: LocationRow): number {
-    return capacityPct(loc);
+  onSearch(term: string): void {
+    this.search.set(term);
+    this.page.set(1);
   }
 
-  capacityTone(loc: LocationRow): string {
-    const p = this.capacity(loc);
-    if (p >= 90) return 'tone-danger';
-    if (p >= 65) return 'tone-warning';
+  onClass(value: string): void {
+    this.classFilter.set(value);
+    this.page.set(1);
+  }
+
+  onSort(state: SortState): void {
+    this.sort.set(state);
+    this.page.set(1);
+  }
+
+  reload(): void {
+    this.errorMessage.set(null);
+    this.reloadToken.update((n) => n + 1);
+  }
+
+  prevPage(): void {
+    this.page.update((p) => Math.max(1, p - 1));
+  }
+
+  nextPage(): void {
+    this.page.update((p) => Math.min(this.totalPages(), p + 1));
+  }
+
+  capacityTone(row: LocationRow): string {
+    if (row.capacityPct >= 90) return 'tone-danger';
+    if (row.capacityPct >= 65) return 'tone-warning';
     return 'tone-success';
   }
 

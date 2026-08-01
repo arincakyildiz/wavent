@@ -1,60 +1,135 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of, switchMap } from 'rxjs';
+import { describeError, isApiError } from '../../../../core/api/api-error';
+import { AuditService } from '../../../../core/observability/audit.service';
+import { NotificationService } from '../../../../core/observability/notification.service';
+import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
+import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { SortableDirective } from '../../../../shared/directives/sortable.directive';
+import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { createListResource } from '../../../../shared/utils/list-resource';
+import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { ExceptionRow, ExceptionsService } from '../../data-access/exceptions.service';
 
-type LoadState = 'loading' | 'success' | 'error';
-type StatusFilter = 'all' | ExceptionRow['status'];
+const PAGE_SIZE = 12;
+const EMPTY_TOTALS = { open: 0, investigating: 0, resolved: 0, critical: 0 };
 
 @Component({
   selector: 'app-exceptions',
-  imports: [],
+  imports: [DecimalPipe, SortableDirective, HasPermissionDirective],
   templateUrl: './exceptions.component.html',
   styleUrl: './exceptions.component.scss',
 })
 export class ExceptionsComponent {
   private readonly exceptionsService = inject(ExceptionsService);
+  private readonly scope = inject(WarehouseScopeService);
+  private readonly notifications = inject(NotificationService);
+  private readonly audit = inject(AuditService);
+  private readonly confirm = inject(ConfirmDialogService);
 
-  readonly state = signal<LoadState>('loading');
-  readonly rows = signal<ExceptionRow[]>([]);
-  readonly statusFilter = signal<StatusFilter>('all');
-  readonly resolvingId = signal<string | null>(null);
-  readonly noteDraft = signal('');
+  readonly search = signal('');
+  readonly statusFilter = signal('all');
+  readonly page = signal(1);
+  readonly sort = signal<SortState | null>({ key: 'createdAt', direction: 'desc' });
+  readonly pendingId = signal<string | null>(null);
 
-  readonly filtered = computed(() => {
-    const f = this.statusFilter();
-    return f === 'all' ? this.rows() : this.rows().filter((r) => r.status === f);
-  });
+  readonly list = createListResource<ExceptionRow>(
+    computed(() => ({
+      scope: this.scope.activeCodes(),
+      query: {
+        search: this.search(),
+        page: this.page(),
+        pageSize: PAGE_SIZE,
+        sort: this.sort(),
+        filters: { status: this.statusFilter() },
+      } satisfies ListQuery,
+    })),
+    (scope, query) => this.exceptionsService.query(scope, query),
+  );
+
+  readonly totals = toSignal(
+    toObservable(computed(() => this.scope.activeCodes())).pipe(
+      switchMap((scope) => this.exceptionsService.totals(scope).pipe(catchError(() => of(EMPTY_TOTALS)))),
+    ),
+    { initialValue: EMPTY_TOTALS },
+  );
 
   constructor() {
-    this.load();
+    bindQueryParams([
+      { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
+      { param: 'status', signal: this.statusFilter, defaultValue: 'all', parse: parseString },
+      { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+    ]);
   }
 
-  load(): void {
-    this.state.set('loading');
-    this.exceptionsService.list().subscribe({
-      next: (rows) => {
-        this.rows.set(rows);
-        this.state.set('success');
+  onSearch(term: string): void {
+    this.search.set(term);
+    this.page.set(1);
+  }
+
+  onStatus(value: string): void {
+    this.statusFilter.set(value);
+    this.page.set(1);
+  }
+
+  onSort(state: SortState): void {
+    this.sort.set(state);
+    this.page.set(1);
+  }
+
+  prevPage(): void {
+    this.page.update((p) => Math.max(1, p - 1));
+  }
+
+  nextPage(): void {
+    this.page.update((p) => Math.min(this.list.totalPages(), p + 1));
+  }
+
+  /** Resolution always captures a written decision — the dialog enforces it. */
+  resolve(row: ExceptionRow): void {
+    this.confirm
+      .ask({
+        title: 'İstisnayı çöz',
+        message: `${row.type} · ${row.referenceType} ${row.referenceId}. Çözüm gerekçesi audit kaydına işlenir.`,
+        confirmLabel: 'Çözüldü olarak işaretle',
+        requireReason: true,
+        reasonLabel: 'Çözüm gerekçesi',
+      })
+      .subscribe((result) => {
+        if (result.confirmed) this.commitResolve(row, result.reason ?? '');
+      });
+  }
+
+  private commitResolve(row: ExceptionRow, note: string): void {
+    this.pendingId.set(row.id);
+
+    this.exceptionsService.resolve(row.id, row.version, note).subscribe({
+      next: (updated) => {
+        this.pendingId.set(null);
+        this.audit.record({
+          actionType: 'Exception Resolved',
+          targetType: updated.referenceType,
+          targetId: updated.referenceId,
+          oldValue: row.status,
+          newValue: 'resolved',
+          reason: note,
+        });
+        this.notifications.success('İstisna çözüldü', `${updated.type} · ${updated.referenceId}`);
+        this.list.reload();
       },
-      error: () => this.state.set('error'),
-    });
-  }
-
-  startResolve(id: string): void {
-    this.resolvingId.set(id);
-    this.noteDraft.set('');
-  }
-
-  cancelResolve(): void {
-    this.resolvingId.set(null);
-  }
-
-  confirmResolve(id: string): void {
-    const note = this.noteDraft().trim();
-    if (!note) return;
-    this.exceptionsService.resolve(id, note).subscribe((updated) => {
-      if (!updated) return;
-      this.rows.update((list) => list.map((r) => (r.id === updated.id ? updated : r)));
-      this.resolvingId.set(null);
+      error: (err) => {
+        this.pendingId.set(null);
+        const conflict = isApiError(err) && err.kind === 'conflict';
+        this.notifications.error(
+          conflict ? 'Kayıt değişmiş' : 'İstisna çözülemedi',
+          describeError(err),
+          conflict ? () => this.list.reload() : () => this.commitResolve(row, note),
+        );
+        if (conflict) this.list.reload();
+      },
     });
   }
 

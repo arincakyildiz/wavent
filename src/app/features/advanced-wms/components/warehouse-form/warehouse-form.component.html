@@ -1,0 +1,100 @@
+<app-form-dialog
+  title="Yeni Depo"
+  subtitle="Kod ağ genelinde benzersiz olmalıdır."
+  (dismissed)="dismissed.emit()"
+>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Depo Kodu <span class="req">*</span></span>
+        <input
+          formControlName="code"
+          type="text"
+          placeholder="IST-02"
+          autocomplete="off"
+          [class.invalid]="invalid('code')"
+          [attr.aria-invalid]="invalid('code')"
+        />
+        @if (codeControl.pending) {
+          <span class="field__hint">Kod kontrol ediliyor...</span>
+        } @else if (invalid('code')) {
+          <span class="field__error" role="alert">
+            @if (codeControl.hasError('required')) {
+              Depo kodu zorunludur.
+            } @else if (codeControl.hasError('codePattern')) {
+              Format: 2-4 büyük harf, tire, 2 rakam (örn. IST-02).
+            } @else if (codeControl.hasError('notUnique')) {
+              Bu kod başka bir depoda kullanılıyor.
+            }
+          </span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field__label">Depo Adı <span class="req">*</span></span>
+        <input
+          formControlName="name"
+          type="text"
+          placeholder="Istanbul Anadolu DC"
+          [class.invalid]="invalid('name')"
+        />
+        @if (invalid('name')) {
+          <span class="field__error" role="alert">En az 3 karakterlik bir ad girin.</span>
+        }
+      </label>
+    </div>
+
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Şehir <span class="req">*</span></span>
+        <input formControlName="city" type="text" [class.invalid]="invalid('city')" />
+        @if (invalid('city')) {
+          <span class="field__error" role="alert">Şehir zorunludur.</span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field__label">Ülke <span class="req">*</span></span>
+        <input formControlName="country" type="text" [class.invalid]="invalid('country')" />
+        @if (invalid('country')) {
+          <span class="field__error" role="alert">Ülke zorunludur.</span>
+        }
+      </label>
+    </div>
+
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Saat Dilimi</span>
+        <select formControlName="timezone">
+          @for (tz of timezones; track tz) {
+            <option [value]="tz">{{ tz }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Açılış <span class="req">*</span></span>
+        <input formControlName="open" type="time" [class.invalid]="invalid('open')" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Kapanış <span class="req">*</span></span>
+        <input formControlName="close" type="time" [class.invalid]="invalid('close')" />
+        @if (invalid('close') && form.controls.close.hasError('hoursRange')) {
+          <span class="field__error" role="alert">Kapanış saati açılıştan sonra olmalıdır.</span>
+        }
+      </label>
+    </div>
+
+    @if (submitError()) {
+      <div class="form__error" role="alert">{{ submitError() }}</div>
+    }
+
+    <div class="form__actions">
+      <button class="btn" type="button" (click)="dismissed.emit()">Vazgeç</button>
+      <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
+        {{ submitting() ? 'Kaydediliyor...' : 'Depoyu Oluştur' }}
+      </button>
+    </div>
+  </form>
+</app-form-dialog>

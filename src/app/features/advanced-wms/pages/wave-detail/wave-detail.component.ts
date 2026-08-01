@@ -1,12 +1,18 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { WaveOrderRow, WaveRow, WavesService } from '../../data-access/waves.service';
+import { describeError, isApiError } from '../../../../core/api/api-error';
+import { AuditService } from '../../../../core/observability/audit.service';
+import { NotificationService } from '../../../../core/observability/notification.service';
+import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { ReleaseResult, WaveOrderStatus, WaveRow, WavesService } from '../../data-access/waves.service';
 
 type LoadState = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-wave-detail',
-  imports: [],
+  imports: [IconComponent, HasPermissionDirective],
   templateUrl: './wave-detail.component.html',
   styleUrl: './wave-detail.component.scss',
 })
@@ -14,15 +20,24 @@ export class WaveDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly wavesService = inject(WavesService);
+  private readonly notifications = inject(NotificationService);
+  private readonly audit = inject(AuditService);
+  private readonly confirm = inject(ConfirmDialogService);
 
   readonly state = signal<LoadState>('loading');
+  readonly errorMessage = signal<string | null>(null);
   readonly wave = signal<WaveRow | undefined>(undefined);
-  readonly orders = signal<WaveOrderRow[]>([]);
+  readonly orders = signal<WaveOrderStatus[]>([]);
   readonly releasing = signal(false);
+  /** Per-order outcome of the last publish attempt (§11 partial result). */
+  readonly lastRelease = signal<ReleaseResult | null>(null);
 
-  readonly riskyCount = computed(
-    () => this.orders().filter((o) => o.status !== 'ok').length,
-  );
+  readonly riskyCount = computed(() => this.orders().filter((o) => o.status !== 'ok').length);
+  readonly shortageCount = computed(() => this.orders().filter((o) => o.status === 'stock-shortage').length);
+  readonly canRelease = computed(() => {
+    const w = this.wave();
+    return !!w && (w.status === 'planned' || w.status === 'draft');
+  });
 
   private id = '';
 
@@ -33,17 +48,18 @@ export class WaveDetailComponent {
 
   load(): void {
     this.state.set('loading');
+    this.errorMessage.set(null);
+
     this.wavesService.getById(this.id).subscribe({
       next: (wave) => {
-        if (!wave) {
-          this.state.set('error');
-          return;
-        }
         this.wave.set(wave);
         this.wavesService.getOrders(this.id).subscribe((orders) => this.orders.set(orders));
         this.state.set('success');
       },
-      error: () => this.state.set('error'),
+      error: (err) => {
+        this.errorMessage.set(describeError(err));
+        this.state.set('error');
+      },
     });
   }
 
@@ -51,20 +67,73 @@ export class WaveDetailComponent {
     this.router.navigate(['/wms/waves']);
   }
 
+  /** Publishing is irreversible for the orders it moves, so it always confirms first. */
   releaseWave(): void {
-    if (!this.wave() || this.wave()!.status !== 'planned') return;
+    const wave = this.wave();
+    if (!wave || !this.canRelease()) return;
+
+    const shortages = this.shortageCount();
+    this.confirm
+      .ask({
+        title: `${wave.name} yayınlansın mı?`,
+        message: shortages
+          ? `${wave.orderCount} siparişten ${shortages} tanesi stok yetersizliği nedeniyle dalgada kalacak. Kalanlar toplamaya açılır.`
+          : `${wave.orderCount} sipariş toplamaya açılacak. Yayınlanan dalga doğrudan değiştirilemez.`,
+        confirmLabel: 'Dalgayı yayınla',
+        tone: shortages ? 'danger' : 'default',
+        // A publish that knowingly leaves orders behind needs a recorded justification.
+        requireReason: shortages > 0,
+        reasonLabel: 'Kısmi yayın gerekçesi',
+      })
+      .subscribe((result) => {
+        if (result.confirmed) this.commitRelease(wave, result.reason);
+      });
+  }
+
+  private commitRelease(wave: WaveRow, reason?: string): void {
     this.releasing.set(true);
-    this.wavesService.release(this.id).subscribe({
-      next: (wave) => {
+
+    this.wavesService.release(this.id, wave.version).subscribe({
+      next: (result) => {
         this.releasing.set(false);
-        if (wave) this.wave.set(wave);
+        this.wave.set(result.wave);
+        this.lastRelease.set(result);
+
+        this.audit.record({
+          actionType: 'Wave Released',
+          targetType: 'Wave',
+          targetId: wave.name,
+          oldValue: wave.status,
+          newValue: `released (${result.released.length}/${wave.orderCount})`,
+          reason,
+        });
+
+        if (result.failed.length) {
+          this.notifications.warning(
+            'Dalga kısmi yayınlandı',
+            `${result.released.length} sipariş açıldı, ${result.failed.length} sipariş stok nedeniyle kaldı.`,
+          );
+        } else {
+          this.notifications.success('Dalga yayınlandı', `${result.released.length} sipariş toplamaya açıldı.`);
+        }
+
+        this.wavesService.getOrders(this.id).subscribe((orders) => this.orders.set(orders));
       },
-      error: () => this.releasing.set(false),
+      error: (err) => {
+        this.releasing.set(false);
+        const conflict = isApiError(err) && err.kind === 'conflict';
+        this.notifications.error(
+          conflict ? 'Dalga değişmiş' : 'Dalga yayınlanamadı',
+          describeError(err),
+          () => this.load(),
+        );
+        if (conflict) this.load();
+      },
     });
   }
 
-  orderTone(status: WaveOrderRow['status']): string {
-    const tone: Record<WaveOrderRow['status'], string> = {
+  orderTone(status: WaveOrderStatus['status']): string {
+    const tone: Record<WaveOrderStatus['status'], string> = {
       ok: 'tone-success',
       'capacity-risk': 'tone-warning',
       'stock-shortage': 'tone-danger',

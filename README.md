@@ -1,104 +1,125 @@
 # Wavent — İleri Depo Yönetimi, Lot/Seri, Dalga Toplama ve Sevkiyat Kontrol Kulesi
 
-Angular 17+ (standalone) tabanlı ileri seviye WMS kontrol paneli. Birden fazla depo/lokasyonda ürün, lot/seri,
-son kullanma, rezervasyon, sayım, dalga toplama, paketleme ve sevkiyat istisnalarını yönetir.
+Angular 19 (standalone + Signals) tabanlı ileri seviye WMS kontrol paneli. Birden fazla
+depo/lokasyonda ürün, lot/seri, son kullanma, rezervasyon, sayım, dalga toplama, paketleme ve
+sevkiyat istisnalarını yönetir.
 
-> Bu proje aktif geliştirme aşamasındadır. Mevcut durum ve yol haritası aşağıdadır.
+Backend yoktur: mock transport katmanı gecikme, hata, yetkisiz erişim ve çakışma senaryolarını
+simüle eder.
 
-## Kurulum
+## Kurulum ve Çalıştırma
 
 ```bash
 npm install
+npm start          # http://localhost:4200
+npm run build      # production build
+npm test           # Karma + Jasmine (watch)
 ```
 
-## Çalıştırma
+Tek seferlik test çalıştırma:
 
 ```bash
-npm start
+npx ng test --watch=false --browsers=ChromeHeadless
 ```
 
-`http://localhost:4200` adresinde açılır.
+## Kullanıcı Rolleri
 
-## Test
+Roller yalnızca etiket değil; menü, route guard'ları, aksiyon butonları ve görülen veri kapsamı
+role göre daralır. Settings ekranından rol değiştirilerek uygulama o rolün gözünden önizlenebilir.
 
-```bash
-ng test
-```
+| Rol | Yetki | Veri kapsamı |
+| --- | --- | --- |
+| Depo Operatörü (`warehouse-operator`) | Kabul, putaway, toplama, paketleme, sayım | Kendi deposu |
+| Vardiya Lideri (`shift-lead`) | Dalga planı/yayınlama, istisna kararı, ağırlık onayı | Kendi deposu |
+| Stok Kontrol Uzmanı (`inventory-controller`) | Lot/seri, sayım, karantina, düzeltme, override | Tüm ağ |
+| Sevkiyat Uzmanı (`shipping-specialist`) | Paket, taşıyıcı, yükleme, kapanış | Tüm ağ |
+| Planlama Uzmanı (`planner`) | Sipariş önceliği, dalga kuralı, kapasite | Tüm ağ |
+| Depo Yöneticisi (`warehouse-manager`) | Tümü + ayarlar + audit | Tüm ağ |
 
-## Kullanıcı Rolleri (Demo)
-
-Şu anda `AuthService` sabit bir demo kullanıcıyla (Warehouse Manager) çalışır. Aşağıdaki roller veri modelinde tanımlıdır:
-
-- Depo Operatörü (`warehouse-operator`)
-- Vardiya Lideri (`shift-lead`)
-- Stok Kontrol Uzmanı (`inventory-controller`)
-- Sevkiyat Uzmanı (`shipping-specialist`)
-- Planlama Uzmanı (`planner`)
-- Depo Yöneticisi (`warehouse-manager`)
+Varsayılan demo kullanıcı: **John Doe / Depo Yöneticisi**.
 
 ## Mimari Kararlar
 
-- **Standalone components + Signals**: NgModule kullanılmadı; state yönetimi Angular Signals ile yapılır.
-- **Feature-based klasör yapısı**:
+- **Standalone components + Signals** — NgModule yok; state Signals ile, asenkron akışlar RxJS ile.
+- **Katmanlı, feature-based yapı**:
   ```
   src/app/
-    core/           // api (mock transport), auth, state, storage, observability
-    shared/         // components, directives, validators, utils
+    core/      api (mock transport, ApiError, fault injection), auth (rol/izin/guard),
+               observability (audit, notification), state (tema, confirm dialog, depo kapsamı)
+    shared/    sunum bileşenleri, direktifler, validator'lar, liste/sorgu yardımcıları
     features/advanced-wms/
-      pages/        // route seviyesi ekranlar
-      components/   // modüle özel bileşenler
-      data-access/  // facade/servisler (mock API'ye bağlı)
-      state/        // feature store/selectors
-      models/       // entity/enum modelleri (bkz. entities.ts)
+      pages/        route seviyesi ekranlar
+      components/   özellik diyalogları (oluşturma formları)
+      data-access/  servisler + mock-data + selectors
+      models/       entity/enum tanımları
   ```
-- **Mock API**: `core/api/mock-api.service.ts` gecikme ve hata oranı simülasyonu destekler; gerçek bir backend
-  bağlanana kadar tüm data-access servisleri bu katmanı kullanır.
-- **Routing**: Tüm WMS ekranları `/wms` altında lazy-loaded (`loadComponent`/`loadChildren`) olarak tanımlıdır.
-- **Sıfır UI bağımlılığı**: Tasarım sistemi (ikonlar, sparkline, donut, bar chart, dünya haritası) tamamen
-  inline SVG ile yazıldı — ikon fontu, chart kütüphanesi veya CSS framework'ü yok. `shared/components/` altında.
-- **Tema**: `core/state/theme.service.ts` `data-theme` attribute'unu kök elemente yazar; koyu/açık paletler
-  `src/styles.scss` içinde CSS değişkeni olarak tanımlıdır ve seçim `localStorage`'da saklanır.
+- **Tek kaynaklı veri** — `data-access/mock-data.ts` sabit tohumlu bir üreteçle tüm ilişkili veri
+  grafiğini kurar (depo → lokasyon → SKU → bakiye → sipariş → **gerçek FEFO/FIFO tahsis motoru** →
+  dalga → görev → paket → sevkiyat). Ekranlar arası sayılar bu yüzden tutarlıdır.
+- **Tek türetme katmanı** — hesaplanan değerler ve iş kuralı kararları yalnızca
+  `data-access/selectors.ts` içinde; Inventory, SKU detayı ve Control Tower asla farklı sayı
+  gösteremez.
+- **Sunucu benzeri liste sorgusu** — arama, filtre, sıralama ve sayfalama servis tarafında
+  uygulanır ve `total` döner; istemci elindeki listeyi dilimlemez.
+- **Optimistic concurrency** — yazma çağrıları okunan `version` değerini gönderir; kayıt değiştiyse
+  `409 conflict` döner.
+- **Sıfır UI bağımlılığı** — ikon, sparkline, donut, bar chart ve noktalı dünya haritası tamamen
+  inline SVG.
 
-## Mevcut Durum
+## Öne Çıkan Özellikler
 
-- [x] Proje iskeleti, klasör mimarisi, routing (21 ekran, lazy-loaded)
-- [x] Veri modelleri (`features/advanced-wms/models/entities.ts`)
-- [x] Shell — ikonlu gruplu sidebar (daraltılabilir), arama + bildirim/mesaj/dil aksiyonları, kullanıcı kartı,
-      koyu/açık tema toggle
-- [x] Overview kontrol kulesi — ikon + sparkline'lı KPI kartları, noktalı dünya haritası (depo bazlı envanter),
-      dalga donut grafiği, istisna akışı, operasyon zaman çizelgesi, operatör performans bar grafiği,
-      sevkiyat tablosu, günlük sayaç kartları ve canlı saat göstergesi
-- [x] Warehouses, Locations — depo/lokasyon listeleri, kapasite göstergeleri, arama/filtre
-- [x] Lot / Serial — SKT yaklaşan, bloke ve geri çağrılan lotlar, seri no takibi
-- [x] Stock Movements — giriş/çıkış hareketleri, tip filtresi, pagination
-- [x] Control Tower — RxJS ile simüle edilmiş canlı görev akışı, sayaçlar olay geldikçe güncellenir, aktif uyarılar
-- [x] Settings — rol önizleme, tema seçimi, iş kuralı anahtarları ve eşik ayarları
-- [x] Inventory + Inventory Detail — SKU listesi (arama, pagination), lot/lokasyon dağılımı, stok hareketleri (ledger)
-- [x] Reservations — FEFO/FIFO, kısmi rezervasyon, backorder, manuel override gerekçesi
-- [x] Receiving + Receiving Detail — ASN listesi, kabul satırları (eksik/fazla/hasar/karantina)
-- [x] Putaway — puanlanmış öneriler, kabul akışı
-- [x] Waves + Wave Detail — dalga listesi, kapasite, yayınlama akışı, satır bazlı sonuç (risk/stok yetersizliği)
-- [x] Picking Tasks — single/batch/zone görevler, ilerleme, istisna nedeni
-- [x] Packing — içerik doğrulama, ağırlık toleransı, supervisor onay akışı
-- [x] Shipping — kapı, taşıyıcı, ilerleme, kapanış
-- [x] Cycle Counts — beklenen/sayılan/fark, ikinci sayım eşiği
-- [x] Exceptions — istisna workbench, inline çözüm formu
-- [x] Traceability — lot bazlı uçtan uca zaman çizelgesi
-- [x] Audit Log — işlem geçmişi, arama
-- [x] Gerçek zamanlı akış simülasyonu (Control Tower canlı olay akışı + Overview canlı saat)
-- [ ] Rol/izin bazlı route ve aksiyon kısıtları (route guard + directive)
-- [ ] Reactive Forms + cross-field/async validasyonlar (yeni kayıt/düzenleme formları)
-- [ ] Unit ve component/integration testleri
+**İş kuralları** (`selectors.ts` içinde saf fonksiyon, unit testlerle doğrulanır)
+- Karantina/hasarlı/bloke stok rezerve edilemez
+- Lokasyon kapasitesini aşan putaway onay ister
+- FEFO ihlali tespiti ve gerekçeli override
+- Sayım farkı eşiği aşılırsa ikinci sayım zorunlu
+- Ağırlık toleransı dışındaki paket supervisor onayı olmadan ilerleyemez
+- On-hand = available + reserved + quarantine + damaged + blocked
+
+**Kritik işlem akışı** — onay dialogu (gerekçe zorunlu olabilir) → optimistic güncelleme →
+başarısızlıkta rollback + "tekrar dene" bildirimi → audit kaydı.
+
+**Dalga yayınlama** — stok yetersizliği olan siparişler dalgada kalır, kalanlar açılır; sonuç
+satır bazında raporlanır.
+
+**Gerçek zamanlı akış** — Control Tower'da RxJS ile simüle edilmiş görev olayları; sayaçlar sayfa
+yenilenmeden güncellenir.
+
+**Hata simülasyonu** — Settings ekranından okuma/yazma hata oranı, ek gecikme ve tek seferlik
+`network` / `403` / `409` hataları tetiklenebilir; böylece loading, error, unauthorized ve conflict
+durumları gerçek ekranlarda gösterilebilir.
+
+**Erişilebilirlik** — sıralanabilir başlıklar `aria-sort` ile klavyeden çalışır, tıklanabilir tablo
+satırları Enter/Space ile açılır, diyaloglar odağı içeri alır, bildirimler `aria-live` ile duyurulur.
+
+**Performans** — Stock Movements CDK sanal kaydırma ile; diğer listeler sunucu benzeri sayfalama ile.
+
+**Paylaşılabilir görünüm** — liste ekranlarındaki arama/filtre/sayfa durumu URL query
+parametrelerinde tutulur.
+
+## Ekranlar
+
+`/wms` altında, tamamı lazy-loaded ve izin guard'lı:
+
+overview · warehouses · locations · inventory · inventory/:sku · lot-serial · stock-movements ·
+reservations · receiving · receiving/:id · putaway · waves · waves/:id · picking/tasks · packing ·
+shipping · cycle-counts · exceptions · traceability · control-tower · audit-log · settings ·
+unauthorized (403)
+
+## Test
+
+Kritik iş kuralları, liste sorgu motoru, validator'lar ve izin sistemi unit testlerle kaplıdır:
+
+- `data-access/selectors.spec.ts` — FEFO, kapasite, tolerans, sayım eşiği, stok tutarlılığı,
+  dalga yayınlama kararları
+- `shared/utils/list-query.spec.ts` — arama/filtre/sıralama/sayfalama
+- `shared/validators/wms-validators.spec.ts` — cross-field ve async validator'lar
+- `core/auth/permissions.spec.ts` — izin haritası ve route guard
 
 ## Bilinen Eksikler
 
-- Tüm modüller mock veri ile çalışır; gerçek backend entegrasyonu yok.
-- "+ Add / New" butonları şu an aksiyon tetiklemiyor (form akışları bir sonraki iterasyonda eklenecek).
-- Rol bazlı erişim kısıtları henüz uygulanmadı; Settings ekranındaki rol seçimi yalnızca aktif rolü değiştirir,
-  route/aksiyon seviyesinde kısıtlama yapmaz.
-- Overview'daki tarih aralığı ve depo seçici henüz veriyi filtrelemiyor (görsel yerleşim hazır).
-- Otomatik testler henüz eklenmedi.
-- `/wms/locations` route'u geçerlidir ancak sidebar'da yer almaz (referans tasarımda bulunmuyor); doğrudan URL ile
-  veya Warehouses ekranından erişilir.
-- Control Tower'daki sayaç hareketleri simüle edilmiş olay akışından türetilir; sunucu tarafı bir gerçek kaynakla
-  senkronize değildir.
+- Tüm veriler mock; gerçek backend entegrasyonu yok ve oturum içi değişiklikler kalıcı değildir.
+- Component/integration testleri (ana akışların uçtan uca DOM testi) henüz yazılmadı; mevcut test
+  kapsamı unit seviyesindedir.
+- Barkod/tartı gibi fiziksel cihaz entegrasyonları simüle edilmemiştir.
+- Offline/IndexedDB önbellek katmanı uygulanmadı.

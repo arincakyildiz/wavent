@@ -1,39 +1,127 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { describeError, isApiError } from '../../../../core/api/api-error';
+import { AuditService } from '../../../../core/observability/audit.service';
+import { NotificationService } from '../../../../core/observability/notification.service';
+import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
+import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { SortableDirective } from '../../../../shared/directives/sortable.directive';
+import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { createListResource } from '../../../../shared/utils/list-resource';
+import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { PackageRow, PackingService } from '../../data-access/packing.service';
 
-type LoadState = 'loading' | 'success' | 'error';
+const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-packing',
-  imports: [],
+  imports: [DecimalPipe, SortableDirective, HasPermissionDirective],
   templateUrl: './packing.component.html',
   styleUrl: './packing.component.scss',
 })
 export class PackingComponent {
   private readonly packingService = inject(PackingService);
+  private readonly scope = inject(WarehouseScopeService);
+  private readonly notifications = inject(NotificationService);
+  private readonly audit = inject(AuditService);
+  private readonly confirm = inject(ConfirmDialogService);
 
-  readonly state = signal<LoadState>('loading');
-  readonly packages = signal<PackageRow[]>([]);
+  readonly search = signal('');
+  readonly statusFilter = signal('all');
+  readonly page = signal(1);
+  readonly sort = signal<SortState | null>({ key: 'code', direction: 'asc' });
+  readonly pendingId = signal<string | null>(null);
+
+  readonly list = createListResource<PackageRow>(
+    computed(() => ({
+      scope: this.scope.activeCodes(),
+      query: {
+        search: this.search(),
+        page: this.page(),
+        pageSize: PAGE_SIZE,
+        sort: this.sort(),
+        filters: { status: this.statusFilter() },
+      } satisfies ListQuery,
+    })),
+    (scope, query) => this.packingService.query(scope, query),
+  );
 
   constructor() {
-    this.load();
+    bindQueryParams([
+      { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
+      { param: 'status', signal: this.statusFilter, defaultValue: 'all', parse: parseString },
+      { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+    ]);
   }
 
-  load(): void {
-    this.state.set('loading');
-    this.packingService.list().subscribe({
-      next: (rows) => {
-        this.packages.set(rows);
-        this.state.set('success');
+  onSearch(term: string): void {
+    this.search.set(term);
+    this.page.set(1);
+  }
+
+  onStatus(value: string): void {
+    this.statusFilter.set(value);
+    this.page.set(1);
+  }
+
+  onSort(state: SortState): void {
+    this.sort.set(state);
+    this.page.set(1);
+  }
+
+  prevPage(): void {
+    this.page.update((p) => Math.max(1, p - 1));
+  }
+
+  nextPage(): void {
+    this.page.update((p) => Math.min(this.list.totalPages(), p + 1));
+  }
+
+  /** §10: an out-of-tolerance package cannot proceed without a justified approval. */
+  approveWeight(row: PackageRow): void {
+    this.confirm
+      .ask({
+        title: 'Supervisor onayı',
+        message: `${row.code} paketi ${row.weightKg} kg — beklenen ${row.expectedWeightKg} kg (±${row.toleranceKg}). Sapma ${row.deviationKg} kg. Onaylanırsa paket mühürlenir.`,
+        confirmLabel: 'Onayla ve mühürle',
+        tone: 'danger',
+        requireReason: true,
+        reasonLabel: 'Onay gerekçesi',
+        reasonPlaceholder: 'Örn. tartı kalibrasyonu doğrulandı, içerik sayıldı',
+      })
+      .subscribe((result) => {
+        if (result.confirmed) this.commitApproval(row, result.reason ?? '');
+      });
+  }
+
+  private commitApproval(row: PackageRow, reason: string): void {
+    this.pendingId.set(row.id);
+
+    this.packingService.approveWeight(row.id, row.version, reason).subscribe({
+      next: (updated) => {
+        this.pendingId.set(null);
+        this.audit.record({
+          actionType: 'Weight Tolerance Override',
+          targetType: 'Package',
+          targetId: updated.code,
+          oldValue: `${row.expectedWeightKg} kg ±${row.toleranceKg}`,
+          newValue: `${updated.weightKg} kg onaylandı`,
+          reason,
+        });
+        this.notifications.success('Paket onaylandı', `${updated.code} mühürlendi.`);
+        this.list.reload();
       },
-      error: () => this.state.set('error'),
-    });
-  }
-
-  approveWeight(pkg: PackageRow): void {
-    this.packingService.approveWeight(pkg.id).subscribe((updated) => {
-      if (!updated) return;
-      this.packages.update((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+      error: (err) => {
+        this.pendingId.set(null);
+        const conflict = isApiError(err) && err.kind === 'conflict';
+        this.notifications.error(
+          conflict ? 'Paket değişmiş' : 'Onay uygulanamadı',
+          describeError(err),
+          conflict ? () => this.list.reload() : () => this.commitApproval(row, reason),
+        );
+        if (conflict) this.list.reload();
+      },
     });
   }
 

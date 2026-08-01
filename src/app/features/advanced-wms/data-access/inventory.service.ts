@@ -1,23 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { MockApiService } from '../../../core/api/mock-api.service';
+import { ApiError } from '../../../core/api/api-error';
+import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { StockStatus } from '../models/entities';
+import { db } from './mock-data';
+import { SkuStock, balancesInScope, skuStock, skuStockFor } from './selectors';
 
-export interface InventoryRow {
-  sku: string;
-  name: string;
-  totalOnHand: number;
-  available: number;
-  reserved: number;
-  quarantine: number;
-  damaged: number;
-  lotTracked: boolean;
-  serialTracked: boolean;
-  nearestExpiry?: string;
-}
+export interface InventoryRow extends SkuStock {}
 
 export interface InventoryLotRow {
+  id: string;
   lot: string;
+  serial?: string;
   locationPath: string;
   warehouseCode: string;
   quantity: number;
@@ -36,53 +31,78 @@ export interface LedgerEntry {
   reasonCode: string;
 }
 
-const MOCK_INVENTORY: InventoryRow[] = [
-  { sku: 'SKU-1001', name: 'Organic Almond Milk 1L', totalOnHand: 8420, available: 6200, reserved: 1800, quarantine: 300, damaged: 120, lotTracked: true, serialTracked: false, nearestExpiry: '2026-08-14' },
-  { sku: 'SKU-1002', name: 'Stainless Steel Water Bottle', totalOnHand: 5210, available: 4600, reserved: 610, quarantine: 0, damaged: 0, lotTracked: false, serialTracked: false },
-  { sku: 'SKU-1003', name: 'Wireless Barcode Scanner', totalOnHand: 640, available: 420, reserved: 180, quarantine: 20, damaged: 20, lotTracked: false, serialTracked: true },
-  { sku: 'SKU-1004', name: 'Frozen Chicken Breast 5kg', totalOnHand: 3120, available: 2200, reserved: 700, quarantine: 220, damaged: 0, lotTracked: true, serialTracked: false, nearestExpiry: '2026-08-02' },
-  { sku: 'SKU-1005', name: 'Industrial Shelving Unit', totalOnHand: 240, available: 180, reserved: 60, quarantine: 0, damaged: 0, lotTracked: false, serialTracked: true },
-  { sku: 'SKU-1006', name: 'Hand Sanitizer 500ml', totalOnHand: 12400, available: 9800, reserved: 2100, quarantine: 400, damaged: 100, lotTracked: true, serialTracked: false, nearestExpiry: '2027-01-10' },
-  { sku: 'SKU-1007', name: 'Corrugated Shipping Box M', totalOnHand: 20500, available: 19000, reserved: 1500, quarantine: 0, damaged: 0, lotTracked: false, serialTracked: false },
-  { sku: 'SKU-1008', name: 'Lithium Battery Pack 10Ah', totalOnHand: 980, available: 640, reserved: 240, quarantine: 60, damaged: 40, lotTracked: true, serialTracked: true, nearestExpiry: '2028-03-01' },
-];
-
-const MOCK_LOTS: Record<string, InventoryLotRow[]> = {
-  'SKU-1001': [
-    { lot: 'L-24081', locationPath: 'A/01/01', warehouseCode: 'NYC-01', quantity: 3200, status: StockStatus.Available, expiryDate: '2026-08-14' },
-    { lot: 'L-24075', locationPath: 'C/01/02', warehouseCode: 'IST-01', quantity: 3000, status: StockStatus.Available, expiryDate: '2026-09-02' },
-    { lot: 'L-24081', locationPath: 'A/02/01', warehouseCode: 'NYC-01', quantity: 1800, status: StockStatus.Reserved, expiryDate: '2026-08-14' },
-    { lot: 'L-24060', locationPath: 'B/01/01', warehouseCode: 'NYC-01', quantity: 300, status: StockStatus.Quarantine, expiryDate: '2026-07-20' },
-    { lot: 'L-24060', locationPath: 'B/01/01', warehouseCode: 'NYC-01', quantity: 120, status: StockStatus.Damaged, expiryDate: '2026-07-20' },
-  ],
-};
-
-const MOCK_LEDGER: Record<string, LedgerEntry[]> = {
-  'SKU-1001': [
-    { id: 'mv-1', date: '2026-07-28 09:12', type: 'Receipt', quantity: 3200, toLocation: 'A/01/01', runningBalance: 8420, reasonCode: 'ASN-4887' },
-    { id: 'mv-2', date: '2026-07-27 14:03', type: 'Pick', quantity: -450, fromLocation: 'A/01/01', runningBalance: 5220, reasonCode: 'PK-2790' },
-    { id: 'mv-3', date: '2026-07-27 08:40', type: 'Cycle Count Adj.', quantity: -30, fromLocation: 'B/01/01', runningBalance: 5670, reasonCode: 'CC-118' },
-    { id: 'mv-4', date: '2026-07-26 17:22', type: 'Putaway', quantity: 1800, toLocation: 'A/02/01', runningBalance: 5700, reasonCode: 'ASN-4880' },
-  ],
-};
+const ACCESSOR = (row: InventoryRow, key: string): unknown =>
+  (row as unknown as Record<string, unknown>)[key];
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
   private readonly api = inject(MockApiService);
 
-  list(): Observable<InventoryRow[]> {
-    return this.api.simulate(MOCK_INVENTORY, { delayMs: 400 });
+  query(scope: string[], query: ListQuery): Observable<ListResult<InventoryRow>> {
+    return this.api.simulate(skuStock(scope), { delayMs: 340 }).pipe(
+      map((rows) =>
+        runQuery(rows, query, {
+          accessor: ACCESSOR,
+          searchable: (r) => [r.skuCode, r.name],
+        }),
+      ),
+    );
   }
 
-  getBySku(sku: string): Observable<InventoryRow | undefined> {
-    return this.api.simulate(MOCK_INVENTORY.find((i) => i.sku === sku), { delayMs: 300 });
+  getBySku(skuCode: string, scope: string[]): Observable<InventoryRow> {
+    return this.api.simulate(skuStockFor(skuCode, scope), { delayMs: 300 }).pipe(
+      map((row) => {
+        if (!row) throw new ApiError('not-found', `${skuCode} için stok kaydı bulunamadı.`);
+        return row;
+      }),
+    );
   }
 
-  getLots(sku: string): Observable<InventoryLotRow[]> {
-    return this.api.simulate(MOCK_LOTS[sku] ?? [], { delayMs: 300 });
+  getLots(skuCode: string, scope: string[]): Observable<InventoryLotRow[]> {
+    const rows = balancesInScope(scope)
+      .filter((b) => b.skuCode === skuCode)
+      .map((b) => ({
+        id: b.id,
+        lot: b.lot ?? '—',
+        serial: b.serial,
+        locationPath: b.locationPath,
+        warehouseCode: b.warehouseCode,
+        quantity: b.quantity,
+        status: b.status,
+        expiryDate: b.expiryDate,
+      }));
+
+    return this.api.simulate(rows, { delayMs: 280 });
   }
 
-  getLedger(sku: string): Observable<LedgerEntry[]> {
-    return this.api.simulate(MOCK_LEDGER[sku] ?? [], { delayMs: 300 });
+  /**
+   * Movement history with a running balance. Computed from oldest to newest so the
+   * balance column reads as a real ledger, then reversed for display.
+   */
+  getLedger(skuCode: string, scope: string[]): Observable<LedgerEntry[]> {
+    const movements = db.movements
+      .filter((m) => m.skuCode === skuCode && (!scope.length || scope.includes(m.warehouseCode)))
+      .slice()
+      .sort((a, b) => a.at.localeCompare(b.at));
+
+    const opening = skuStockFor(skuCode, scope)?.onHand ?? 0;
+    const net = movements.reduce((s, m) => s + m.quantity, 0);
+    let running = opening - net;
+
+    const entries = movements.map((m) => {
+      running += m.quantity;
+      return {
+        id: m.id,
+        date: m.at,
+        type: m.type,
+        quantity: m.quantity,
+        fromLocation: m.fromLocation,
+        toLocation: m.toLocation,
+        runningBalance: running,
+        reasonCode: m.reasonCode,
+      } satisfies LedgerEntry;
+    });
+
+    return this.api.simulate(entries.reverse(), { delayMs: 300 });
   }
 }

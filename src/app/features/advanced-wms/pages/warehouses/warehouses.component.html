@@ -4,67 +4,76 @@
       <h1>Warehouses</h1>
       <p class="muted">Depo topolojisi ve kapasite genel bakışı</p>
     </div>
-    <button class="btn btn--primary" type="button">+ Add Warehouse</button>
+
+    <div class="page__actions">
+      <button class="btn" type="button" (click)="reload()">
+        <app-icon name="refresh" [size]="14" />
+        Yenile
+      </button>
+      <button class="btn btn--primary" type="button" (click)="formOpen.set(true)" *appHasPermission="'warehouse.create'">
+        <app-icon name="plus" [size]="15" />
+        Add Warehouse
+      </button>
+    </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Depolar yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
+  @if (loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (errorMessage()) {
+    <div class="state state--error" role="alert">
+      {{ errorMessage() }}
+      <button type="button" (click)="reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-card__label">Kapsamdaki Depo</div>
+        <div class="kpi-card__value">{{ total() }}</div>
       </div>
-    }
-    @case ('success') {
-      <div class="kpi-row">
-        <div class="kpi-card">
-          <div class="kpi-card__label">Total Warehouses</div>
-          <div class="kpi-card__value">{{ warehouses().length }}</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-card__label">Active</div>
-          <div class="kpi-card__value">{{ activeCount() }}</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-card__label">Avg. Capacity Used</div>
-          <div class="kpi-card__value">{{ totalCapacityPct() }}%</div>
-        </div>
+      <div class="kpi-card">
+        <div class="kpi-card__label">Aktif (bu sayfada)</div>
+        <div class="kpi-card__value">{{ activeCount() }}</div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-card__label">Ort. Kapasite (bu sayfada)</div>
+        <div class="kpi-card__value">{{ avgCapacity() }}%</div>
+      </div>
+    </div>
 
-      <div class="toolbar">
-        <input
-          type="search"
-          placeholder="Depo, kod veya şehir ara..."
-          [value]="search()"
-          (input)="search.set($any($event.target).value)"
-        />
-        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
-          <option value="all">Tüm durumlar</option>
-          <option value="active">Aktif</option>
-          <option value="inactive">Pasif</option>
-        </select>
-        <span class="spacer"></span>
-        <span class="muted small">{{ filtered().length }} depo</span>
-      </div>
+    <div class="toolbar">
+      <input
+        type="search"
+        placeholder="Depo, kod veya şehir ara..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        aria-label="Depo ara"
+      />
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
+        <option value="all">Tüm durumlar</option>
+        <option value="active">Aktif</option>
+        <option value="inactive">Pasif</option>
+      </select>
+      <span class="spacer"></span>
+      <span class="muted small">{{ total() }} depo</span>
+    </div>
 
-      @if (filtered().length) {
+    @if (rows().length) {
+      <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Kod</th>
-              <th>Depo Adı</th>
-              <th>Şehir / Ülke</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Kod</th>
+              <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">Depo Adı</th>
+              <th appSortable="city" [sort]="sort()" (sortChange)="onSort($event)">Şehir / Ülke</th>
               <th>Çalışma Saatleri</th>
-              <th>Lokasyon</th>
-              <th>Envanter (adet)</th>
-              <th>Kapasite</th>
-              <th>Durum</th>
+              <th appSortable="locationCount" [sort]="sort()" (sortChange)="onSort($event)">Lokasyon</th>
+              <th appSortable="inventoryUnits" [sort]="sort()" (sortChange)="onSort($event)">Envanter</th>
+              <th appSortable="capacityUsedPct" [sort]="sort()" (sortChange)="onSort($event)">Kapasite</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
             </tr>
           </thead>
           <tbody>
-            @for (w of filtered(); track w.id) {
+            @for (w of rows(); track w.id) {
               <tr>
                 <td>{{ w.code }}</td>
                 <td>{{ w.name }}</td>
@@ -87,9 +96,19 @@
             }
           </tbody>
         </table>
-      } @else {
-        <div class="state state--empty">Filtreyle eşleşen depo bulunamadı.</div>
-      }
+      </div>
+
+      <div class="pagination">
+        <span>Sayfa {{ page() }} / {{ totalPages() }}</span>
+        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+        <button type="button" [disabled]="page() === totalPages()" (click)="nextPage()">Sonraki ›</button>
+      </div>
+    } @else {
+      <div class="state state--empty">Filtreyle eşleşen depo bulunamadı.</div>
     }
+  }
+
+  @if (formOpen()) {
+    <app-warehouse-form (created)="onCreated($event)" (dismissed)="formOpen.set(false)" />
   }
 </div>

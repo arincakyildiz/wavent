@@ -2,10 +2,10 @@
   <div class="page__header">
     <div>
       <h1>Settings</h1>
-      <p class="muted">Rol, iş kuralı eşikleri ve görünüm ayarları</p>
+      <p class="muted">Rol, iş kuralı eşikleri, görünüm ve hata simülasyonu</p>
     </div>
     @if (saved()) {
-      <span class="status-pill tone-success">Kaydedildi</span>
+      <span class="status-pill tone-success" role="status">Kaydedildi</span>
     }
   </div>
 
@@ -16,8 +16,8 @@
         <span class="muted small">demo kullanıcı: {{ currentUser().name }}</span>
       </div>
       <p class="muted small">
-        Rol değiştirmek uygulamayı o rolün gözünden önizler. Yetki kısıtları route ve işlem seviyesinde
-        uygulandığında bu seçim doğrudan erişimi etkiler.
+        Rol değiştirmek uygulamayı o rolün gözünden gösterir: menü, route guard'ları ve aksiyon
+        butonları anında bu role göre daralır.
       </p>
       <div class="option-list">
         @for (r of roles; track r.value) {
@@ -30,7 +30,10 @@
               (change)="setRole(r.value)"
             />
             <span class="option__body">
-              <span class="option__label">{{ r.label }}</span>
+              <span class="option__label">
+                {{ r.label }}
+                <span class="status-pill tone-neutral">{{ permissionCount(r.value) }} izin</span>
+              </span>
               <span class="muted small">{{ r.description }}</span>
             </span>
           </label>
@@ -46,16 +49,16 @@
         <div class="segmented">
           <button
             type="button"
-            [class.segmented__btn--active]="theme() === 'dark'"
             class="segmented__btn"
+            [class.segmented__btn--active]="theme() === 'dark'"
             (click)="setTheme('dark')"
           >
             Koyu
           </button>
           <button
             type="button"
-            [class.segmented__btn--active]="theme() === 'light'"
             class="segmented__btn"
+            [class.segmented__btn--active]="theme() === 'light'"
             (click)="setTheme('light')"
           >
             Açık
@@ -78,21 +81,69 @@
             [value]="varianceThreshold()"
             (input)="updateVariance($any($event.target).value)"
           />
-          <span class="muted small">Bu oranın üzerindeki farklarda ikinci sayım zorunlu olur.</span>
+          <span class="field__hint">Bu oranın üzerindeki farklarda ikinci sayım zorunlu olur.</span>
         </div>
+      </section>
+
+      <section class="panel" *appHasPermission="'settings.manage'">
+        <div class="panel__head">
+          <h2>Hata Simülasyonu</h2>
+          <button class="link-action" type="button" (click)="resetFaults()">Sıfırla</button>
+        </div>
+        <p class="muted small">
+          Yükleme, hata, yetkisiz erişim ve çakışma durumlarını gerçek ekranlarda tetiklemek için.
+        </p>
+
         <div class="field">
-          <label for="tolerance">Paket ağırlık toleransı (kg)</label>
+          <label for="readFail">Okuma hatası oranı: %{{ (faultProfile().readFailRate * 100).toFixed(0) }}</label>
           <input
-            id="tolerance"
-            type="number"
+            id="readFail"
+            type="range"
             min="0"
-            max="10"
-            step="0.05"
-            [value]="weightTolerance()"
-            (input)="updateTolerance($any($event.target).value)"
+            max="100"
+            step="5"
+            [value]="faultProfile().readFailRate * 100"
+            (input)="setReadFailRate($any($event.target).value)"
           />
-          <span class="muted small">Tolerans dışı paketler supervisor onayına düşer.</span>
         </div>
+
+        <div class="field">
+          <label for="writeFail">Yazma hatası oranı: %{{ (faultProfile().writeFailRate * 100).toFixed(0) }}</label>
+          <input
+            id="writeFail"
+            type="range"
+            min="0"
+            max="100"
+            step="5"
+            [value]="faultProfile().writeFailRate * 100"
+            (input)="setWriteFailRate($any($event.target).value)"
+          />
+        </div>
+
+        <div class="field">
+          <label for="latency">Ek gecikme: {{ faultProfile().extraLatencyMs }} ms</label>
+          <input
+            id="latency"
+            type="range"
+            min="0"
+            max="3000"
+            step="100"
+            [value]="faultProfile().extraLatencyMs"
+            (input)="setLatency($any($event.target).value)"
+          />
+        </div>
+
+        <div class="fault-actions">
+          <span class="muted small">Sonraki isteği zorla:</span>
+          <button class="btn" type="button" (click)="armFailure('network')">Ağ hatası</button>
+          <button class="btn" type="button" (click)="armFailure('forbidden')">403</button>
+          <button class="btn" type="button" (click)="armFailure('conflict')">409 çakışma</button>
+        </div>
+        @if (faultProfile().nextFailure) {
+          <div class="form__error" role="status">
+            Sonraki istek "{{ faultProfile().nextFailure }}" hatasıyla dönecek.
+          </div>
+        }
       </section>
     </div>
   </div>

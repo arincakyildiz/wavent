@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { MockApiService } from '../../../core/api/mock-api.service';
+import { ApiError } from '../../../core/api/api-error';
+import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { ASNStatus, ReceiptLineStatus } from '../models/entities';
+import { AsnRec, ReceiptLineRec, db } from './mock-data';
 
 export interface AsnRow {
   id: string;
@@ -11,48 +14,100 @@ export interface AsnRow {
   expectedDate: string;
   status: ASNStatus;
   lineCount: number;
+  /** Derived once here so list and detail agree. */
+  discrepancyCount: number;
 }
 
-export interface ReceiptLineRow {
-  id: string;
-  sku: string;
-  lot?: string;
-  expectedQuantity: number;
-  receivedQuantity: number;
-  damagedQuantity: number;
-  status: ReceiptLineStatus;
+export interface ReceiptLineRow extends ReceiptLineRec {
+  skuName: string;
 }
 
-const MOCK_ASNS: AsnRow[] = [
-  { id: 'asn-1', number: 'ASN-4887', supplierName: 'FreshFarm Co.', warehouseCode: 'NYC-01', expectedDate: '2026-07-30', status: 'receiving', lineCount: 4 },
-  { id: 'asn-2', number: 'ASN-4886', supplierName: 'Global Bottling Ltd.', warehouseCode: 'AMS-01', expectedDate: '2026-07-29', status: 'closed', lineCount: 2 },
-  { id: 'asn-3', number: 'ASN-4885', supplierName: 'ScanTech Devices', warehouseCode: 'NYC-01', expectedDate: '2026-08-01', status: 'expected', lineCount: 3 },
-  { id: 'asn-4', number: 'ASN-4884', supplierName: 'Nordic Frozen Foods', warehouseCode: 'IST-01', expectedDate: '2026-07-28', status: 'closed', lineCount: 5 },
-  { id: 'asn-5', number: 'ASN-4883', supplierName: 'CleanCare Supplies', warehouseCode: 'DXB-01', expectedDate: '2026-07-27', status: 'cancelled', lineCount: 1 },
-];
+export interface AsnDraft {
+  number: string;
+  supplierName: string;
+  warehouseCode: string;
+  expectedDate: string;
+}
 
-const MOCK_LINES: Record<string, ReceiptLineRow[]> = {
-  'asn-1': [
-    { id: 'rl-1', sku: 'SKU-1001', lot: 'L-24081', expectedQuantity: 3200, receivedQuantity: 3200, damagedQuantity: 0, status: 'matched' },
-    { id: 'rl-2', sku: 'SKU-1006', lot: 'L-24090', expectedQuantity: 1500, receivedQuantity: 1400, damagedQuantity: 60, status: 'short' },
-    { id: 'rl-3', sku: 'SKU-1002', expectedQuantity: 900, receivedQuantity: 950, damagedQuantity: 0, status: 'over' },
-    { id: 'rl-4', sku: 'SKU-1004', lot: 'L-24070', expectedQuantity: 600, receivedQuantity: 0, damagedQuantity: 0, status: 'quarantined' },
-  ],
-};
+const DISCREPANT: ReceiptLineStatus[] = ['short', 'over', 'damaged', 'quarantined'];
+
+function toRow(a: AsnRec): AsnRow {
+  const lines = db.receiptLines.filter((l) => l.asnNumber === a.number);
+  return {
+    id: a.id,
+    number: a.number,
+    supplierName: a.supplierName,
+    warehouseCode: a.warehouseCode,
+    expectedDate: a.expectedDate,
+    status: a.status,
+    lineCount: lines.length,
+    discrepancyCount: lines.filter((l) => DISCREPANT.includes(l.status)).length,
+  };
+}
+
+const ACCESSOR = (row: AsnRow, key: string): unknown => (row as unknown as Record<string, unknown>)[key];
 
 @Injectable({ providedIn: 'root' })
 export class ReceivingService {
   private readonly api = inject(MockApiService);
 
-  list(): Observable<AsnRow[]> {
-    return this.api.simulate(MOCK_ASNS, { delayMs: 350 });
+  query(scope: string[], query: ListQuery): Observable<ListResult<AsnRow>> {
+    const source = db.asns.filter((a) => !scope.length || scope.includes(a.warehouseCode)).map(toRow);
+
+    return this.api.simulate(source, { delayMs: 330 }).pipe(
+      map((rows) =>
+        runQuery(rows, query, {
+          accessor: ACCESSOR,
+          searchable: (r) => [r.number, r.supplierName, r.warehouseCode],
+        }),
+      ),
+    );
   }
 
-  getById(id: string): Observable<AsnRow | undefined> {
-    return this.api.simulate(MOCK_ASNS.find((a) => a.id === id), { delayMs: 300 });
+  getById(id: string): Observable<AsnRow> {
+    const found = db.asns.find((a) => a.id === id || a.number === id);
+    return this.api.simulate(found, { delayMs: 280 }).pipe(
+      map((a) => {
+        if (!a) throw new ApiError('not-found', 'ASN bulunamadı.');
+        return toRow(a);
+      }),
+    );
   }
 
   getLines(id: string): Observable<ReceiptLineRow[]> {
-    return this.api.simulate(MOCK_LINES[id] ?? [], { delayMs: 300 });
+    const asn = db.asns.find((a) => a.id === id || a.number === id);
+    const nameByCode = new Map(db.skus.map((s) => [s.code, s.name]));
+    const rows = asn
+      ? db.receiptLines
+          .filter((l) => l.asnNumber === asn.number)
+          .map((l) => ({ ...l, skuName: nameByCode.get(l.skuCode) ?? l.skuCode }))
+      : [];
+
+    return this.api.simulate(rows, { delayMs: 280 });
+  }
+
+  isNumberAvailable(number: string): Observable<boolean> {
+    const taken = db.asns.some((a) => a.number.toLowerCase() === number.trim().toLowerCase());
+    return this.api.simulate(!taken, { delayMs: 400 });
+  }
+
+  create(draft: AsnDraft): Observable<AsnRow> {
+    return this.api.simulate(draft, { delayMs: 500, kind: 'write' }).pipe(
+      map((d) => {
+        if (db.asns.some((a) => a.number.toLowerCase() === d.number.toLowerCase())) {
+          throw new ApiError('conflict', `${d.number} numarası zaten kayıtlı.`);
+        }
+        const record: AsnRec = {
+          id: `asn-${db.asns.length + 1}`,
+          number: d.number.toUpperCase(),
+          supplierName: d.supplierName,
+          warehouseCode: d.warehouseCode,
+          expectedDate: d.expectedDate,
+          status: 'expected',
+        };
+        db.asns.unshift(record);
+        return toRow(record);
+      }),
+    );
   }
 }

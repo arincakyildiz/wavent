@@ -1,0 +1,29 @@
+<div class="page">
+  <div class="denied" role="alert">
+    <span class="denied__icon">
+      <app-icon name="alertTriangle" [size]="26" />
+    </span>
+
+    <h1>403 — Yetkiniz yok</h1>
+    <p class="muted">
+      Bu ekran aktif rolünüz (<strong>{{ roleLabel() }}</strong>) için kapalı.
+      @if (from) {
+        İstenen yol: <code>/wms/{{ from }}</code>
+      }
+    </p>
+
+    @if (needed.length) {
+      <div class="denied__needs">
+        <span class="muted small">Gereken izin:</span>
+        @for (n of needed; track n) {
+          <span class="status-pill tone-warning">{{ n }}</span>
+        }
+      </div>
+    }
+
+    <div class="denied__actions">
+      <button class="btn btn--primary" type="button" (click)="goOverview()">Overview'a dön</button>
+      <button class="btn" type="button" (click)="goSettings()">Rolü değiştir</button>
+    </div>
+  </div>
+</div>

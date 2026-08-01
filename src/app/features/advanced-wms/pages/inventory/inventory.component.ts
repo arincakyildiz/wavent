@@ -1,58 +1,58 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { ActivatableDirective } from '../../../../shared/directives/activatable.directive';
+import { SortableDirective } from '../../../../shared/directives/sortable.directive';
+import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { createListResource } from '../../../../shared/utils/list-resource';
+import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { InventoryRow, InventoryService } from '../../data-access/inventory.service';
 
-type LoadState = 'loading' | 'success' | 'error';
-
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-inventory',
-  imports: [],
+  imports: [DecimalPipe, SortableDirective, ActivatableDirective],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss',
 })
 export class InventoryComponent {
   private readonly inventoryService = inject(InventoryService);
+  private readonly scope = inject(WarehouseScopeService);
   private readonly router = inject(Router);
 
-  readonly state = signal<LoadState>('loading');
-  readonly rows = signal<InventoryRow[]>([]);
   readonly search = signal('');
   readonly page = signal(1);
+  readonly sort = signal<SortState | null>({ key: 'skuCode', direction: 'asc' });
 
-  readonly filtered = computed(() => {
-    const term = this.search().trim().toLowerCase();
-    if (!term) return this.rows();
-    return this.rows().filter(
-      (r) => r.sku.toLowerCase().includes(term) || r.name.toLowerCase().includes(term),
-    );
-  });
-
-  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filtered().length / PAGE_SIZE)));
-
-  readonly pageRows = computed(() => {
-    const start = (this.page() - 1) * PAGE_SIZE;
-    return this.filtered().slice(start, start + PAGE_SIZE);
-  });
+  readonly list = createListResource<InventoryRow>(
+    computed(() => ({
+      scope: this.scope.activeCodes(),
+      query: {
+        search: this.search(),
+        page: this.page(),
+        pageSize: PAGE_SIZE,
+        sort: this.sort(),
+      } satisfies ListQuery,
+    })),
+    (scope, query) => this.inventoryService.query(scope, query),
+  );
 
   constructor() {
-    this.load();
-  }
-
-  load(): void {
-    this.state.set('loading');
-    this.inventoryService.list().subscribe({
-      next: (rows) => {
-        this.rows.set(rows);
-        this.state.set('success');
-      },
-      error: () => this.state.set('error'),
-    });
+    bindQueryParams([
+      { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
+      { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+    ]);
   }
 
   onSearch(term: string): void {
     this.search.set(term);
+    this.page.set(1);
+  }
+
+  onSort(state: SortState): void {
+    this.sort.set(state);
     this.page.set(1);
   }
 
@@ -61,14 +61,14 @@ export class InventoryComponent {
   }
 
   nextPage(): void {
-    this.page.update((p) => Math.min(this.totalPages(), p + 1));
+    this.page.update((p) => Math.min(this.list.totalPages(), p + 1));
   }
 
-  openDetail(sku: string): void {
-    this.router.navigate(['/wms/inventory', sku]);
+  openDetail(skuCode: string): void {
+    this.router.navigate(['/wms/inventory', skuCode]);
   }
 
   availabilityPct(row: InventoryRow): number {
-    return row.totalOnHand ? Math.round((row.available / row.totalOnHand) * 100) : 0;
+    return row.onHand ? Math.round((row.available / row.onHand) * 100) : 0;
   }
 }

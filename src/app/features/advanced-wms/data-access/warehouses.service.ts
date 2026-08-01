@@ -1,6 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { MockApiService } from '../../../core/api/mock-api.service';
+import { ApiError } from '../../../core/api/api-error';
+import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
+import { WarehouseRec, db } from './mock-data';
+import { inventoryByWarehouse, locationCount, warehouseCapacityPct } from './selectors';
 
 export interface WarehouseSummary {
   id: string;
@@ -16,79 +20,101 @@ export interface WarehouseSummary {
   inventoryUnits: number;
 }
 
-const MOCK_WAREHOUSES: WarehouseSummary[] = [
-  {
-    id: 'wh-1',
-    code: 'NYC-01',
-    name: 'New York DC',
-    city: 'New York',
-    country: 'USA',
-    timezone: 'America/New_York',
-    operatingHours: { open: '06:00', close: '22:00' },
-    isActive: true,
-    locationCount: 1240,
-    capacityUsedPct: 78,
-    inventoryUnits: 32540,
-  },
-  {
-    id: 'wh-2',
-    code: 'AMS-01',
-    name: 'Amsterdam Hub',
-    city: 'Amsterdam',
-    country: 'Netherlands',
-    timezone: 'Europe/Amsterdam',
-    operatingHours: { open: '05:00', close: '21:00' },
-    isActive: true,
-    locationCount: 860,
-    capacityUsedPct: 54,
-    inventoryUnits: 18430,
-  },
-  {
-    id: 'wh-3',
-    code: 'IST-01',
-    name: 'Istanbul Merkez',
-    city: 'Istanbul',
-    country: 'Turkey',
-    timezone: 'Europe/Istanbul',
-    operatingHours: { open: '06:00', close: '23:00' },
-    isActive: true,
-    locationCount: 1520,
-    capacityUsedPct: 91,
-    inventoryUnits: 24510,
-  },
-  {
-    id: 'wh-4',
-    code: 'DXB-01',
-    name: 'Dubai Logistics Park',
-    city: 'Dubai',
-    country: 'UAE',
-    timezone: 'Asia/Dubai',
-    operatingHours: { open: '00:00', close: '23:59' },
-    isActive: true,
-    locationCount: 980,
-    capacityUsedPct: 63,
-    inventoryUnits: 15620,
-  },
-  {
-    id: 'wh-5',
-    code: 'GRU-01',
-    name: 'Sao Paulo Cross-dock',
-    city: 'Sao Paulo',
-    country: 'Brazil',
-    timezone: 'America/Sao_Paulo',
-    operatingHours: { open: '07:00', close: '19:00' },
-    isActive: false,
-    locationCount: 410,
-    capacityUsedPct: 22,
-    inventoryUnits: 12350,
-  },
-];
+export interface WarehouseDraft {
+  code: string;
+  name: string;
+  city: string;
+  country: string;
+  timezone: string;
+  open: string;
+  close: string;
+}
+
+function toSummary(w: WarehouseRec): WarehouseSummary {
+  const units = inventoryByWarehouse().find((i) => i.code === w.code)?.units ?? 0;
+  return {
+    id: w.id,
+    code: w.code,
+    name: w.name,
+    city: w.city,
+    country: w.country,
+    timezone: w.timezone,
+    operatingHours: { open: w.open, close: w.close },
+    isActive: w.isActive,
+    locationCount: locationCount(w.code),
+    capacityUsedPct: warehouseCapacityPct(w.code),
+    inventoryUnits: units,
+  };
+}
+
+const ACCESSOR = (row: WarehouseSummary, key: string): unknown => {
+  switch (key) {
+    case 'capacityUsedPct':
+      return row.capacityUsedPct;
+    case 'inventoryUnits':
+      return row.inventoryUnits;
+    case 'locationCount':
+      return row.locationCount;
+    case 'status':
+      return row.isActive ? 'active' : 'inactive';
+    default:
+      return (row as unknown as Record<string, unknown>)[key];
+  }
+};
 
 @Injectable({ providedIn: 'root' })
 export class WarehousesService {
   private readonly api = inject(MockApiService);
 
-  list(): Observable<WarehouseSummary[]> {
-    return this.api.simulate(MOCK_WAREHOUSES, { delayMs: 400 });
+  /** Server-like query: scope, search, filter, sort and page all applied remotely. */
+  query(scope: string[], query: ListQuery): Observable<ListResult<WarehouseSummary>> {
+    const source = db.warehouses.filter((w) => !scope.length || scope.includes(w.code)).map(toSummary);
+
+    return this.api
+      .simulate(source, { delayMs: 320 })
+      .pipe(
+        map((rows) =>
+          runQuery(rows, query, {
+            accessor: ACCESSOR,
+            searchable: (r) => [r.code, r.name, r.city, r.country],
+          }),
+        ),
+      );
+  }
+
+  /** Async uniqueness check backing the create form's code validator. */
+  isCodeAvailable(code: string): Observable<boolean> {
+    const taken = db.warehouses.some((w) => w.code.toLowerCase() === code.trim().toLowerCase());
+    return this.api.simulate(!taken, { delayMs: 420 });
+  }
+
+  create(draft: WarehouseDraft): Observable<WarehouseSummary> {
+    return this.api
+      .simulate(draft, { delayMs: 520, kind: 'write' })
+      .pipe(
+        map((d) => {
+          // Server-side re-check: the async validator can go stale between blur and submit.
+          if (db.warehouses.some((w) => w.code.toLowerCase() === d.code.toLowerCase())) {
+            throw new ApiError('conflict', `${d.code} kodu başka bir depo tarafından kullanılıyor.`);
+          }
+
+          const record: WarehouseRec = {
+            id: `wh-${db.warehouses.length + 1}`,
+            code: d.code.toUpperCase(),
+            name: d.name,
+            city: d.city,
+            country: d.country,
+            lon: 0,
+            lat: 0,
+            timezone: d.timezone,
+            open: d.open,
+            close: d.close,
+            isActive: true,
+            version: 1,
+          };
+          db.warehouses.push(record);
+          return toSummary(record);
+        }),
+      );
   }
 }

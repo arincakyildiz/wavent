@@ -6,66 +6,65 @@
     </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Envanter yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
-      </div>
-    }
-    @case ('success') {
-      <div class="toolbar">
-        <input
-          type="search"
-          placeholder="SKU veya ürün adı ara..."
-          [value]="search()"
-          (input)="onSearch($any($event.target).value)"
-        />
-        <span class="spacer"></span>
-        <span class="muted small">{{ filtered().length }} SKU</span>
-      </div>
+  @if (list.loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (list.error()) {
+    <div class="state state--error" role="alert">
+      {{ list.error() }}
+      <button type="button" (click)="list.reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    <div class="toolbar">
+      <input
+        type="search"
+        placeholder="SKU veya ürün adı ara..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        aria-label="SKU ara"
+      />
+      <span class="spacer"></span>
+      <span class="muted small">{{ list.total() }} SKU</span>
+    </div>
 
-      @if (pageRows().length) {
+    @if (list.rows().length) {
+      <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>SKU</th>
-              <th>Ürün</th>
-              <th>On-hand</th>
-              <th>Available</th>
-              <th>Reserved</th>
-              <th>Quarantine</th>
-              <th>Damaged</th>
-              <th>SKT</th>
+              <th appSortable="skuCode" [sort]="sort()" (sortChange)="onSort($event)">SKU</th>
+              <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">Ürün</th>
+              <th appSortable="onHand" [sort]="sort()" (sortChange)="onSort($event)">On-hand</th>
+              <th appSortable="available" [sort]="sort()" (sortChange)="onSort($event)">Available</th>
+              <th appSortable="reserved" [sort]="sort()" (sortChange)="onSort($event)">Reserved</th>
+              <th appSortable="quarantine" [sort]="sort()" (sortChange)="onSort($event)">Quarantine</th>
+              <th appSortable="damaged" [sort]="sort()" (sortChange)="onSort($event)">Damaged</th>
+              <th appSortable="nearestExpiry" [sort]="sort()" (sortChange)="onSort($event)">SKT</th>
               <th>İzlenebilirlik</th>
             </tr>
           </thead>
           <tbody>
-            @for (r of pageRows(); track r.sku) {
-              <tr class="clickable" (click)="openDetail(r.sku)">
-                <td>{{ r.sku }}</td>
+            @for (r of list.rows(); track r.skuCode) {
+              <tr appActivatable (activated)="openDetail(r.skuCode)" [attr.aria-label]="r.skuCode + ' detayını aç'">
+                <td>{{ r.skuCode }}</td>
                 <td>{{ r.name }}</td>
-                <td>{{ r.totalOnHand }}</td>
+                <td>{{ r.onHand | number }}</td>
                 <td>
-                  {{ r.available }}
+                  {{ r.available | number }}
                   <div class="progress-bar">
                     <span [style.width.%]="availabilityPct(r)" class="tone-success"></span>
                   </div>
                 </td>
-                <td>{{ r.reserved }}</td>
+                <td>{{ r.reserved | number }}</td>
                 <td>
                   @if (r.quarantine > 0) {
-                    <span class="status-pill tone-warning">{{ r.quarantine }}</span>
+                    <span class="status-pill tone-warning">{{ r.quarantine | number }}</span>
                   } @else {
                     <span class="muted small">0</span>
                   }
                 </td>
                 <td>
                   @if (r.damaged > 0) {
-                    <span class="status-pill tone-danger">{{ r.damaged }}</span>
+                    <span class="status-pill tone-danger">{{ r.damaged | number }}</span>
                   } @else {
                     <span class="muted small">0</span>
                   }
@@ -86,15 +85,15 @@
             }
           </tbody>
         </table>
+      </div>
 
-        <div class="pagination">
-          <span>Sayfa {{ page() }} / {{ totalPages() }}</span>
-          <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
-          <button type="button" [disabled]="page() === totalPages()" (click)="nextPage()">Sonraki ›</button>
-        </div>
-      } @else {
-        <div class="state state--empty">Aramayla eşleşen SKU bulunamadı.</div>
-      }
+      <div class="pagination">
+        <span>Sayfa {{ page() }} / {{ list.totalPages() }}</span>
+        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+        <button type="button" [disabled]="page() === list.totalPages()" (click)="nextPage()">Sonraki ›</button>
+      </div>
+    } @else {
+      <div class="state state--empty">Aramayla eşleşen SKU bulunamadı.</div>
     }
   }
 </div>

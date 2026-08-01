@@ -1,12 +1,15 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { describeError } from '../../../../core/api/api-error';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { AsnRow, ReceiptLineRow, ReceivingService } from '../../data-access/receiving.service';
 
 type LoadState = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-receiving-detail',
-  imports: [],
+  imports: [DecimalPipe, IconComponent],
   templateUrl: './receiving-detail.component.html',
   styleUrl: './receiving-detail.component.scss',
 })
@@ -16,27 +19,35 @@ export class ReceivingDetailComponent {
   private readonly receivingService = inject(ReceivingService);
 
   readonly state = signal<LoadState>('loading');
+  readonly errorMessage = signal<string | null>(null);
   readonly asn = signal<AsnRow | undefined>(undefined);
   readonly lines = signal<ReceiptLineRow[]>([]);
 
+  readonly expectedTotal = computed(() => this.lines().reduce((s, l) => s + l.expectedQuantity, 0));
+  readonly receivedTotal = computed(() => this.lines().reduce((s, l) => s + l.receivedQuantity, 0));
+  readonly damagedTotal = computed(() => this.lines().reduce((s, l) => s + l.damagedQuantity, 0));
+
+  private id = '';
+
   constructor() {
-    const id = this.route.snapshot.paramMap.get('id') ?? '';
-    this.load(id);
+    this.id = this.route.snapshot.paramMap.get('id') ?? '';
+    this.load();
   }
 
-  load(id: string): void {
+  load(): void {
     this.state.set('loading');
-    this.receivingService.getById(id).subscribe({
+    this.errorMessage.set(null);
+
+    this.receivingService.getById(this.id).subscribe({
       next: (asn) => {
-        if (!asn) {
-          this.state.set('error');
-          return;
-        }
         this.asn.set(asn);
-        this.receivingService.getLines(id).subscribe((lines) => this.lines.set(lines));
+        this.receivingService.getLines(this.id).subscribe((lines) => this.lines.set(lines));
         this.state.set('success');
       },
-      error: () => this.state.set('error'),
+      error: (err) => {
+        this.errorMessage.set(describeError(err));
+        this.state.set('error');
+      },
     });
   }
 

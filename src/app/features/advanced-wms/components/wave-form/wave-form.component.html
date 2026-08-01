@@ -1,0 +1,94 @@
+<app-form-dialog
+  title="Yeni Dalga"
+  subtitle="Kural, dalgaya alınmamış ve rezervasyonu olan siparişlere uygulanır."
+  (dismissed)="dismissed.emit()"
+>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Dalga Adı <span class="req">*</span></span>
+        <input
+          formControlName="name"
+          type="text"
+          placeholder="Wave #260"
+          autocomplete="off"
+          [class.invalid]="invalid('name')"
+        />
+        @if (nameControl.pending) {
+          <span class="field__hint">Ad kontrol ediliyor...</span>
+        } @else if (invalid('name')) {
+          <span class="field__error" role="alert">
+            @if (nameControl.hasError('notUnique')) {
+              Bu adda bir dalga zaten var.
+            } @else {
+              En az 4 karakterlik bir ad girin.
+            }
+          </span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field__label">Depo <span class="req">*</span></span>
+        <select formControlName="warehouseCode">
+          @for (w of warehouses(); track w.code) {
+            <option [value]="w.code">{{ w.code }} — {{ w.name }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Bölge</span>
+        <select formControlName="zone">
+          @for (z of zones; track z) {
+            <option [value]="z">{{ z || 'Tümü' }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Taşıyıcı <span class="req">*</span></span>
+        <select formControlName="carrier">
+          @for (c of carriers; track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Cut-off <span class="req">*</span></span>
+        <input formControlName="cutOffTime" type="time" [class.invalid]="invalid('cutOffTime')" />
+        @if (form.controls.cutOffTime.hasError('cutOffRunway')) {
+          <span class="field__error" role="alert">
+            Cut-off'a en az {{ minRunway }} dakika kalmalı.
+          </span>
+        }
+      </label>
+    </div>
+
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">En düşük öncelik <span class="req">*</span></span>
+        <input formControlName="minPriority" type="number" min="1" max="5" [class.invalid]="invalid('minPriority')" />
+        <span class="field__hint">Bu değer ve daha öncelikli siparişler alınır.</span>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Maks. sipariş <span class="req">*</span></span>
+        <input formControlName="maxOrders" type="number" min="1" max="40" [class.invalid]="invalid('maxOrders')" />
+      </label>
+    </div>
+
+    @if (submitError()) {
+      <div class="form__error" role="alert">{{ submitError() }}</div>
+    }
+
+    <div class="form__actions">
+      <button class="btn" type="button" (click)="dismissed.emit()">Vazgeç</button>
+      <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
+        {{ submitting() ? 'Oluşturuluyor...' : 'Dalgayı Oluştur' }}
+      </button>
+    </div>
+  </form>
+</app-form-dialog>

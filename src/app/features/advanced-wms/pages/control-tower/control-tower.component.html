@@ -13,6 +13,10 @@
       <button class="btn" type="button" (click)="toggleStream()">
         {{ streaming() ? 'Akışı durdur' : 'Akışı başlat' }}
       </button>
+      <button class="btn" type="button" (click)="load()">
+        <app-icon name="refresh" [size]="14" />
+        Yenile
+      </button>
     </div>
   </div>
 
@@ -21,8 +25,8 @@
       <div class="state state--loading">Yükleniyor...</div>
     }
     @case ('error') {
-      <div class="state state--error">
-        Kontrol kulesi verileri yüklenemedi.
+      <div class="state state--error" role="alert">
+        {{ errorMessage() }}
         <button type="button" (click)="load()">Tekrar dene</button>
       </div>
     }
@@ -48,30 +52,40 @@
           <section class="panel">
             <div class="panel__head">
               <h2>Aktif Uyarılar</h2>
-              <span class="status-pill tone-danger">{{ data.alerts.length }}</span>
+              <span class="status-pill" [class]="data.alerts.length ? 'tone-danger' : 'tone-success'">
+                {{ data.alerts.length }}
+              </span>
             </div>
-            <ul class="feed">
-              @for (a of data.alerts; track a.id) {
-                <li>
-                  <span class="icon-tile icon-tile--sm" [class]="'tone-' + a.tone">
-                    <app-icon [name]="a.icon" [size]="15" />
-                  </span>
-                  <div class="feed__body">
-                    <div class="feed__title">{{ a.title }}</div>
-                    <div class="muted small">{{ a.detail }}</div>
-                  </div>
-                </li>
-              }
-            </ul>
+            @if (data.alerts.length) {
+              <ul class="feed">
+                @for (a of data.alerts; track a.id) {
+                  <li>
+                    <span class="icon-tile icon-tile--sm" [class]="'tone-' + a.tone">
+                      <app-icon [name]="a.icon" [size]="15" />
+                    </span>
+                    <div class="feed__body">
+                      <div class="feed__title">{{ a.title }}</div>
+                      <div class="muted small">{{ a.detail }}</div>
+                    </div>
+                    <button class="link-action" type="button" (click)="goTo(a.link)">
+                      Git
+                      <app-icon name="arrowRight" [size]="13" />
+                    </button>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="state state--empty">Bu kapsamda aktif uyarı yok.</div>
+            }
           </section>
 
           <section class="panel">
             <div class="panel__head">
               <h2>Canlı Görev Akışı</h2>
-              <span class="muted small">son {{ events().length }} olay</span>
+              <span class="muted small">son {{ eventCount() }} olay</span>
             </div>
             @if (events().length) {
-              <ul class="feed">
+              <ul class="feed" aria-live="polite">
                 @for (e of events(); track e.id) {
                   <li class="feed__row-enter">
                     <span class="icon-tile icon-tile--sm" [class]="'tone-' + e.tone">
@@ -86,7 +100,9 @@
                 }
               </ul>
             } @else {
-              <div class="state state--empty">Olay bekleniyor...</div>
+              <div class="state state--empty">
+                {{ streaming() ? 'Olay bekleniyor...' : 'Akış duraklatıldı.' }}
+              </div>
             }
           </section>
         </div>

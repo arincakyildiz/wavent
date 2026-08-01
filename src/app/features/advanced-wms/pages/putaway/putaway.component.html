@@ -6,38 +6,53 @@
     </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Öneriler yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
-      </div>
-    }
-    @case ('success') {
-      @if (suggestions().length) {
+  @if (list.loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (list.error()) {
+    <div class="state state--error" role="alert">
+      {{ list.error() }}
+      <button type="button" (click)="list.reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    <div class="toolbar">
+      <input
+        type="search"
+        placeholder="SKU, lot, lokasyon veya ASN ara..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        aria-label="Öneri ara"
+      />
+      <span class="spacer"></span>
+      <span class="muted small">{{ list.total() | number }} öneri</span>
+    </div>
+
+    @if (rows().length) {
+      <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>SKU</th>
-              <th>Lot</th>
-              <th>Miktar</th>
-              <th>Önerilen Lokasyon</th>
-              <th>Skor</th>
+              <th appSortable="skuCode" [sort]="sort()" (sortChange)="onSort($event)">SKU</th>
+              <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">Lot</th>
+              <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">Miktar</th>
+              <th appSortable="suggestedLocationPath" [sort]="sort()" (sortChange)="onSort($event)">Önerilen Lokasyon</th>
+              <th appSortable="score" [sort]="sort()" (sortChange)="onSort($event)">Skor</th>
               <th>Gerekçeler</th>
-              <th>Durum</th>
+              <th appSortable="accepted" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            @for (s of suggestions(); track s.id) {
+            @for (s of rows(); track s.id) {
               <tr>
-                <td>{{ s.sku }}</td>
+                <td>{{ s.skuCode }}</td>
                 <td>{{ s.lot ?? '—' }}</td>
-                <td>{{ s.quantity }}</td>
-                <td>{{ s.suggestedLocationPath }}</td>
+                <td>{{ s.quantity | number }}</td>
+                <td>
+                  {{ s.suggestedLocationPath }}
+                  @if (!s.capacityOk) {
+                    <span class="status-pill tone-danger">Kapasite riski</span>
+                  }
+                </td>
                 <td><span class="status-pill" [class]="scoreTone(s.score)">{{ s.score }}</span></td>
                 <td class="muted small">{{ s.reasons.join(' · ') }}</td>
                 <td>
@@ -49,16 +64,30 @@
                 </td>
                 <td>
                   @if (!s.accepted) {
-                    <button class="btn" type="button" (click)="accept(s)">Kabul Et</button>
+                    <button
+                      class="btn"
+                      type="button"
+                      [disabled]="pendingId() === s.id"
+                      (click)="accept(s)"
+                      *appHasPermission="'putaway.accept'"
+                    >
+                      {{ pendingId() === s.id ? 'Kaydediliyor...' : 'Kabul Et' }}
+                    </button>
                   }
                 </td>
               </tr>
             }
           </tbody>
         </table>
-      } @else {
-        <div class="state state--empty">Bekleyen putaway önerisi yok.</div>
-      }
+      </div>
+
+      <div class="pagination">
+        <span>Sayfa {{ page() }} / {{ list.totalPages() }}</span>
+        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+        <button type="button" [disabled]="page() === list.totalPages()" (click)="nextPage()">Sonraki ›</button>
+      </div>
+    } @else {
+      <div class="state state--empty">Bekleyen putaway önerisi yok.</div>
     }
   }
 </div>

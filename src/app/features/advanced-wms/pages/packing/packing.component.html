@@ -6,38 +6,62 @@
     </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Paketler yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
-      </div>
-    }
-    @case ('success') {
-      @if (packages().length) {
+  @if (list.loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (list.error()) {
+    <div class="state state--error" role="alert">
+      {{ list.error() }}
+      <button type="button" (click)="list.reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    <div class="toolbar">
+      <input
+        type="search"
+        placeholder="Paket veya sipariş ara..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        aria-label="Paket ara"
+      />
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
+        <option value="all">Tüm durumlar</option>
+        <option value="open">Open</option>
+        <option value="sealed">Sealed</option>
+        <option value="weight-hold">Weight Hold</option>
+        <option value="shipped">Shipped</option>
+      </select>
+      <span class="spacer"></span>
+      <span class="muted small">{{ list.total() | number }} paket</span>
+    </div>
+
+    @if (list.rows().length) {
+      <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Sipariş</th>
-              <th>Ürün Sayısı</th>
-              <th>Ağırlık</th>
-              <th>İçerik Doğrulama</th>
-              <th>Durum</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Paket</th>
+              <th appSortable="orderNumber" [sort]="sort()" (sortChange)="onSort($event)">Sipariş</th>
+              <th appSortable="itemCount" [sort]="sort()" (sortChange)="onSort($event)">Ürün</th>
+              <th appSortable="weightKg" [sort]="sort()" (sortChange)="onSort($event)">Ağırlık</th>
+              <th appSortable="deviationKg" [sort]="sort()" (sortChange)="onSort($event)">Sapma</th>
+              <th appSortable="contentVerified" [sort]="sort()" (sortChange)="onSort($event)">İçerik</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            @for (p of packages(); track p.id) {
+            @for (p of list.rows(); track p.id) {
               <tr>
+                <td>{{ p.code }}</td>
                 <td>{{ p.orderNumber }}</td>
-                <td>{{ p.itemCount }}</td>
+                <td>{{ p.itemCount | number }}</td>
                 <td>
                   {{ p.weightKg }} kg
+                  <span class="muted small">/ {{ p.expectedWeightKg }} ±{{ p.toleranceKg }}</span>
+                </td>
+                <td [class]="p.weightOk ? '' : 'negative'">
+                  {{ p.deviationKg > 0 ? '+' : '' }}{{ p.deviationKg }} kg
                   @if (!p.weightOk) {
-                    <span class="status-pill tone-danger">Tolerans dışı (±{{ p.toleranceKg }} kg)</span>
+                    <span class="status-pill tone-danger">Tolerans dışı</span>
                   }
                 </td>
                 <td>
@@ -50,16 +74,30 @@
                 <td><span class="status-pill" [class]="statusTone(p.status)">{{ p.status }}</span></td>
                 <td>
                   @if (!p.weightOk) {
-                    <button class="btn" type="button" (click)="approveWeight(p)">Supervisor Onayı</button>
+                    <button
+                      class="btn"
+                      type="button"
+                      [disabled]="pendingId() === p.id"
+                      (click)="approveWeight(p)"
+                      *appHasPermission="'packing.approveWeight'"
+                    >
+                      {{ pendingId() === p.id ? 'Onaylanıyor...' : 'Supervisor Onayı' }}
+                    </button>
                   }
                 </td>
               </tr>
             }
           </tbody>
         </table>
-      } @else {
-        <div class="state state--empty">Paket bulunamadı.</div>
-      }
+      </div>
+
+      <div class="pagination">
+        <span>Sayfa {{ page() }} / {{ list.totalPages() }}</span>
+        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+        <button type="button" [disabled]="page() === list.totalPages()" (click)="nextPage()">Sonraki ›</button>
+      </div>
+    } @else {
+      <div class="state state--empty">Filtreyle eşleşen paket bulunamadı.</div>
     }
   }
 </div>

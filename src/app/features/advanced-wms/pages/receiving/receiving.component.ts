@@ -1,39 +1,106 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuditService } from '../../../../core/observability/audit.service';
+import { NotificationService } from '../../../../core/observability/notification.service';
+import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { ActivatableDirective } from '../../../../shared/directives/activatable.directive';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { SortableDirective } from '../../../../shared/directives/sortable.directive';
+import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { createListResource } from '../../../../shared/utils/list-resource';
+import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
+import { AsnFormComponent } from '../../components/asn-form/asn-form.component';
 import { AsnRow, ReceivingService } from '../../data-access/receiving.service';
 
-type LoadState = 'loading' | 'success' | 'error';
+const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-receiving',
-  imports: [],
+  imports: [
+    DecimalPipe,
+    IconComponent,
+    SortableDirective,
+    ActivatableDirective,
+    HasPermissionDirective,
+    AsnFormComponent,
+  ],
   templateUrl: './receiving.component.html',
   styleUrl: './receiving.component.scss',
 })
 export class ReceivingComponent {
   private readonly receivingService = inject(ReceivingService);
+  private readonly scope = inject(WarehouseScopeService);
   private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
+  private readonly audit = inject(AuditService);
 
-  readonly state = signal<LoadState>('loading');
-  readonly asns = signal<AsnRow[]>([]);
+  readonly search = signal('');
+  readonly statusFilter = signal('all');
+  readonly page = signal(1);
+  readonly sort = signal<SortState | null>({ key: 'expectedDate', direction: 'desc' });
+  readonly formOpen = signal(false);
+
+  readonly list = createListResource<AsnRow>(
+    computed(() => ({
+      scope: this.scope.activeCodes(),
+      query: {
+        search: this.search(),
+        page: this.page(),
+        pageSize: PAGE_SIZE,
+        sort: this.sort(),
+        filters: { status: this.statusFilter() },
+      } satisfies ListQuery,
+    })),
+    (scope, query) => this.receivingService.query(scope, query),
+  );
 
   constructor() {
-    this.load();
+    bindQueryParams([
+      { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
+      { param: 'status', signal: this.statusFilter, defaultValue: 'all', parse: parseString },
+      { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+    ]);
   }
 
-  load(): void {
-    this.state.set('loading');
-    this.receivingService.list().subscribe({
-      next: (rows) => {
-        this.asns.set(rows);
-        this.state.set('success');
-      },
-      error: () => this.state.set('error'),
-    });
+  onSearch(term: string): void {
+    this.search.set(term);
+    this.page.set(1);
+  }
+
+  onStatus(value: string): void {
+    this.statusFilter.set(value);
+    this.page.set(1);
+  }
+
+  onSort(state: SortState): void {
+    this.sort.set(state);
+    this.page.set(1);
+  }
+
+  prevPage(): void {
+    this.page.update((p) => Math.max(1, p - 1));
+  }
+
+  nextPage(): void {
+    this.page.update((p) => Math.min(this.list.totalPages(), p + 1));
   }
 
   open(id: string): void {
     this.router.navigate(['/wms/receiving', id]);
+  }
+
+  onCreated(asn: AsnRow): void {
+    this.formOpen.set(false);
+    this.audit.record({
+      actionType: 'ASN Created',
+      targetType: 'ASN',
+      targetId: asn.number,
+      newValue: `${asn.supplierName} · ${asn.expectedDate}`,
+    });
+    this.notifications.success('ASN oluşturuldu', `${asn.number} — ${asn.supplierName}`);
+    this.list.reload();
   }
 
   statusTone(status: AsnRow['status']): string {

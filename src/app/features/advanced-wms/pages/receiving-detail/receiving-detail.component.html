@@ -1,12 +1,19 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <button class="btn" type="button" (click)="back()">‹ Receiving</button>
+      <button class="btn" type="button" (click)="back()">
+        <app-icon name="chevronLeft" [size]="14" />
+        Receiving
+      </button>
       @if (asn(); as a) {
         <h1 class="mt">{{ a.number }}</h1>
         <p class="muted">{{ a.supplierName }} · {{ a.warehouseCode }} · Beklenen {{ a.expectedDate }}</p>
       }
     </div>
+
+    @if (asn(); as a) {
+      <span class="status-pill" [class]="'tone-' + (a.status === 'closed' ? 'success' : 'info')">{{ a.status }}</span>
+    }
   </div>
 
   @switch (state()) {
@@ -14,36 +21,64 @@
       <div class="state state--loading">Yükleniyor...</div>
     }
     @case ('error') {
-      <div class="state state--error">ASN bulunamadı.</div>
+      <div class="state state--error" role="alert">
+        {{ errorMessage() }}
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
     }
     @case ('success') {
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-card__label">Beklenen</div>
+          <div class="kpi-card__value">{{ expectedTotal() | number }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Alınan</div>
+          <div class="kpi-card__value">{{ receivedTotal() | number }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Fark</div>
+          <div class="kpi-card__value" [class]="receivedTotal() - expectedTotal() < 0 ? 'negative' : ''">
+            {{ receivedTotal() - expectedTotal() | number }}
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__label">Hasarlı</div>
+          <div class="kpi-card__value">{{ damagedTotal() | number }}</div>
+        </div>
+      </div>
+
       <div class="panel">
         <h2>Kabul Satırları</h2>
         @if (lines().length) {
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>SKU</th>
-                <th>Lot</th>
-                <th>Beklenen</th>
-                <th>Alınan</th>
-                <th>Hasarlı</th>
-                <th>Durum</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (l of lines(); track l.id) {
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td>{{ l.sku }}</td>
-                  <td>{{ l.lot ?? '—' }}</td>
-                  <td>{{ l.expectedQuantity }}</td>
-                  <td>{{ l.receivedQuantity }}</td>
-                  <td>{{ l.damagedQuantity }}</td>
-                  <td><span class="status-pill" [class]="lineTone(l.status)">{{ l.status }}</span></td>
+                  <th>SKU</th>
+                  <th>Ürün</th>
+                  <th>Lot</th>
+                  <th>Beklenen</th>
+                  <th>Alınan</th>
+                  <th>Hasarlı</th>
+                  <th>Durum</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (l of lines(); track l.id) {
+                  <tr>
+                    <td>{{ l.skuCode }}</td>
+                    <td>{{ l.skuName }}</td>
+                    <td>{{ l.lot ?? '—' }}</td>
+                    <td>{{ l.expectedQuantity | number }}</td>
+                    <td>{{ l.receivedQuantity | number }}</td>
+                    <td>{{ l.damagedQuantity | number }}</td>
+                    <td><span class="status-pill" [class]="lineTone(l.status)">{{ l.status }}</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         } @else {
           <div class="state state--empty">Bu ASN için kabul satırı bulunamadı.</div>
         }

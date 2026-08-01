@@ -2,47 +2,72 @@
   <div class="page__header">
     <div>
       <h1>Cycle Counts</h1>
-      <p class="muted">Sayım kapsamı, beklenen, sayılan ve fark</p>
+      <p class="muted">Sayım kapsamı, beklenen, sayılan ve fark — eşik %{{ threshold }}</p>
     </div>
-    <button class="btn btn--primary" type="button">+ New Count</button>
+
+    <div class="page__actions">
+      <button class="btn btn--primary" type="button" (click)="formOpen.set(true)" *appHasPermission="'cycleCount.create'">
+        <app-icon name="plus" [size]="15" />
+        New Count
+      </button>
+    </div>
   </div>
 
-  @switch (state()) {
-    @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
-    }
-    @case ('error') {
-      <div class="state state--error">
-        Sayımlar yüklenemedi.
-        <button type="button" (click)="load()">Tekrar dene</button>
-      </div>
-    }
-    @case ('success') {
-      @if (rows().length) {
+  @if (list.loading()) {
+    <div class="state state--loading">Yükleniyor...</div>
+  } @else if (list.error()) {
+    <div class="state state--error" role="alert">
+      {{ list.error() }}
+      <button type="button" (click)="list.reload()">Tekrar dene</button>
+    </div>
+  } @else {
+    <div class="toolbar">
+      <input
+        type="search"
+        placeholder="Kod, kapsam veya depo ara..."
+        [value]="search()"
+        (input)="onSearch($any($event.target).value)"
+        aria-label="Sayım ara"
+      />
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
+        <option value="all">Tüm durumlar</option>
+        <option value="scheduled">Scheduled</option>
+        <option value="in-progress">In Progress</option>
+        <option value="variance-review">Variance Review</option>
+        <option value="closed">Closed</option>
+      </select>
+      <span class="spacer"></span>
+      <span class="muted small">{{ list.total() | number }} sayım · {{ secondCountNeeded() }} ikinci sayım</span>
+    </div>
+
+    @if (list.rows().length) {
+      <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Kod</th>
-              <th>Depo</th>
-              <th>Kapsam</th>
-              <th>Beklenen</th>
-              <th>Sayılan</th>
-              <th>Fark</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Kod</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
+              <th appSortable="scopeLabel" [sort]="sort()" (sortChange)="onSort($event)">Kapsam</th>
+              <th appSortable="expectedQuantity" [sort]="sort()" (sortChange)="onSort($event)">Beklenen</th>
+              <th appSortable="countedQuantity" [sort]="sort()" (sortChange)="onSort($event)">Sayılan</th>
+              <th appSortable="variance" [sort]="sort()" (sortChange)="onSort($event)">Fark</th>
+              <th appSortable="variancePct" [sort]="sort()" (sortChange)="onSort($event)">Fark %</th>
               <th>2. Sayım</th>
-              <th>Durum</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
             </tr>
           </thead>
           <tbody>
-            @for (r of rows(); track r.id) {
+            @for (r of list.rows(); track r.id) {
               <tr>
                 <td>{{ r.code }}</td>
                 <td>{{ r.warehouseCode }}</td>
                 <td>{{ r.scopeLabel }}</td>
-                <td>{{ r.expectedQuantity }}</td>
-                <td>{{ r.countedQuantity }}</td>
-                <td [class]="variance(r) < 0 ? 'negative' : variance(r) > 0 ? 'positive' : ''">
-                  {{ variance(r) > 0 ? '+' : '' }}{{ variance(r) }}
+                <td>{{ r.expectedQuantity | number }}</td>
+                <td>{{ r.countedQuantity | number }}</td>
+                <td [class]="r.variance < 0 ? 'negative' : r.variance > 0 ? 'positive' : ''">
+                  {{ r.variance > 0 ? '+' : '' }}{{ r.variance | number }}
                 </td>
+                <td>{{ r.variancePct }}%</td>
                 <td>
                   @if (r.requiresSecondCount) {
                     <span class="status-pill tone-warning">Gerekli</span>
@@ -55,9 +80,19 @@
             }
           </tbody>
         </table>
-      } @else {
-        <div class="state state--empty">Sayım bulunamadı.</div>
-      }
+      </div>
+
+      <div class="pagination">
+        <span>Sayfa {{ page() }} / {{ list.totalPages() }}</span>
+        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
+        <button type="button" [disabled]="page() === list.totalPages()" (click)="nextPage()">Sonraki ›</button>
+      </div>
+    } @else {
+      <div class="state state--empty">Filtreyle eşleşen sayım bulunamadı.</div>
     }
+  }
+
+  @if (formOpen()) {
+    <app-cycle-count-form (created)="onCreated($event)" (dismissed)="formOpen.set(false)" />
   }
 </div>

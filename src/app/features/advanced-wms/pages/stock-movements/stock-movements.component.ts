@@ -1,83 +1,73 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of, switchMap } from 'rxjs';
+import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { SortableDirective } from '../../../../shared/directives/sortable.directive';
+import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { createListResource } from '../../../../shared/utils/list-resource';
+import { bindQueryParams, parseString } from '../../../../shared/utils/query-params';
 import { MovementType, StockMovementRow, StockMovementsService } from '../../data-access/stock-movements.service';
 
-type LoadState = 'loading' | 'success' | 'error';
-type TypeFilter = 'all' | MovementType;
-
-const PAGE_SIZE = 6;
+/**
+ * Movements are the densest dataset in the app, so this screen virtualises the rows
+ * instead of paginating: one page holds the whole filtered set and the CDK viewport
+ * renders only what is on screen.
+ */
+const VIRTUAL_PAGE_SIZE = 5000;
+export const ROW_HEIGHT = 44;
 
 @Component({
   selector: 'app-stock-movements',
-  imports: [],
+  imports: [DecimalPipe, ScrollingModule, SortableDirective],
   templateUrl: './stock-movements.component.html',
   styleUrl: './stock-movements.component.scss',
 })
 export class StockMovementsComponent {
   private readonly movementsService = inject(StockMovementsService);
+  private readonly scope = inject(WarehouseScopeService);
 
-  readonly state = signal<LoadState>('loading');
-  readonly rows = signal<StockMovementRow[]>([]);
+  readonly rowHeight = ROW_HEIGHT;
+
   readonly search = signal('');
-  readonly typeFilter = signal<TypeFilter>('all');
-  readonly page = signal(1);
+  readonly typeFilter = signal('all');
+  readonly sort = signal<SortState | null>({ key: 'at', direction: 'desc' });
 
-  readonly filtered = computed(() => {
-    const term = this.search().trim().toLowerCase();
-    const type = this.typeFilter();
-    return this.rows().filter((r) => {
-      const matchesTerm =
-        !term || r.sku.toLowerCase().includes(term) || r.reasonCode.toLowerCase().includes(term);
-      const matchesType = type === 'all' || r.type === type;
-      return matchesTerm && matchesType;
-    });
-  });
-
-  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filtered().length / PAGE_SIZE)));
-
-  readonly pageRows = computed(() => {
-    const start = (this.page() - 1) * PAGE_SIZE;
-    return this.filtered().slice(start, start + PAGE_SIZE);
-  });
-
-  readonly inboundTotal = computed(() =>
-    this.rows().reduce((sum, r) => (r.quantity > 0 ? sum + r.quantity : sum), 0),
+  readonly list = createListResource<StockMovementRow>(
+    computed(() => ({
+      scope: this.scope.activeCodes(),
+      query: {
+        search: this.search(),
+        page: 1,
+        pageSize: VIRTUAL_PAGE_SIZE,
+        sort: this.sort(),
+        filters: { type: this.typeFilter() },
+      } satisfies ListQuery,
+    })),
+    (scope, query) => this.movementsService.query(scope, query),
   );
 
-  readonly outboundTotal = computed(() =>
-    this.rows().reduce((sum, r) => (r.quantity < 0 ? sum + r.quantity : sum), 0),
+  readonly totals = toSignal(
+    toObservable(computed(() => this.scope.activeCodes())).pipe(
+      switchMap((scope) =>
+        this.movementsService.totals(scope).pipe(
+          catchError(() => of({ count: 0, inbound: 0, outbound: 0 })),
+        ),
+      ),
+    ),
+    { initialValue: { count: 0, inbound: 0, outbound: 0 } },
   );
 
   constructor() {
-    this.load();
+    bindQueryParams([
+      { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
+      { param: 'type', signal: this.typeFilter, defaultValue: 'all', parse: parseString },
+    ]);
   }
 
-  load(): void {
-    this.state.set('loading');
-    this.movementsService.list().subscribe({
-      next: (rows) => {
-        this.rows.set(rows);
-        this.state.set('success');
-      },
-      error: () => this.state.set('error'),
-    });
-  }
-
-  onSearch(term: string): void {
-    this.search.set(term);
-    this.page.set(1);
-  }
-
-  onTypeChange(type: TypeFilter): void {
-    this.typeFilter.set(type);
-    this.page.set(1);
-  }
-
-  prevPage(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  nextPage(): void {
-    this.page.update((p) => Math.min(this.totalPages(), p + 1));
+  onSort(state: SortState): void {
+    this.sort.set(state);
   }
 
   typeTone(type: MovementType): string {
