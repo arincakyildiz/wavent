@@ -145,3 +145,43 @@ export const ROLE_WAREHOUSE_SCOPE: Record<Role, 'all' | 'home'> = {
   planner: 'all',
   'warehouse-manager': 'all',
 };
+
+export interface RoleOption {
+  value: Role;
+  label: string;
+  description: string;
+}
+
+/** Single source for the role catalog — used by both the Login screen and Settings. */
+export const ROLE_CATALOG: RoleOption[] = [
+  {
+    value: 'warehouse-operator',
+    label: 'Depo Operatörü',
+    description: 'Kabul, putaway, toplama, paketleme, sayım ve barkod işlemleri',
+  },
+  {
+    value: 'shift-lead',
+    label: 'Vardiya Lideri',
+    description: 'Görev atama, dalga planı, kapasite ve istisna kararları',
+  },
+  {
+    value: 'inventory-controller',
+    label: 'Stok Kontrol Uzmanı',
+    description: 'Lot/seri, sayım farkı, karantina ve düzeltme süreçleri',
+  },
+  {
+    value: 'shipping-specialist',
+    label: 'Sevkiyat Uzmanı',
+    description: 'Paket, taşıyıcı, yükleme ve sevkiyat kapanışı',
+  },
+  {
+    value: 'planner',
+    label: 'Planlama Uzmanı',
+    description: 'Sipariş önceliği, dalga kuralı ve kapasite senaryoları',
+  },
+  {
+    value: 'warehouse-manager',
+    label: 'Depo Yöneticisi',
+    description: 'Depo, lokasyon, kural, rol ve KPI ayarları',
+  },
+];

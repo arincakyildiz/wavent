@@ -1,0 +1,28 @@
+<div class="login">
+  <div class="login__panel">
+    <div class="login__brand">
+      <span class="login__mark">W</span>
+      <span class="login__name">WAVENT</span>
+    </div>
+    <h1>Giriş yap</h1>
+    <p class="muted">
+      Bu bir demo ortamıdır — şifre gerekmez. Devam etmek istediğiniz rolü seçin, o rolün demo
+      kullanıcısı olarak anında giriş yaparsınız.
+    </p>
+
+    <div class="login__roles">
+      @for (r of roles; track r.value) {
+        <button type="button" class="role-card" (click)="loginAs(r.value)">
+          <span class="role-card__icon">
+            <app-icon [name]="roleIcon(r.value)" [size]="20" />
+          </span>
+          <span class="role-card__body">
+            <span class="role-card__label">{{ r.label }}</span>
+            <span class="role-card__desc">{{ r.description }}</span>
+            <span class="status-pill tone-neutral">{{ permissionCount(r.value) }} izin</span>
+          </span>
+        </button>
+      }
+    </div>
+  </div>
+</div>

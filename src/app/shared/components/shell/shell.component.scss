@@ -79,6 +79,7 @@
   flex-direction: column;
   gap: 14px;
   min-height: 0;
+  overflow-y: auto;
 
   &__group {
     display: flex;
@@ -96,6 +97,7 @@
   }
 
   &__item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 11px;
@@ -117,6 +119,18 @@
       background: var(--accent-soft);
       color: var(--accent);
       font-weight: 600;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 16px;
+        border-radius: 0 3px 3px 0;
+        background: var(--accent);
+      }
     }
 
     &:focus-visible {
@@ -334,24 +348,58 @@
 }
 
 .user {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 4px 8px 4px 4px;
-  border-radius: 10px;
-  cursor: pointer;
-  color: var(--text-muted);
+  position: relative;
 
-  &:hover {
-    background: var(--surface-2);
+  &__trigger {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 8px 4px 4px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-muted);
+    font: inherit;
+
+    &:hover {
+      background: var(--surface-2);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 30;
+    min-width: 200px;
+    padding: 5px;
+    border-radius: 10px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__menu-head {
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 4px;
   }
 
   &__avatar {
     width: 33px;
     height: 33px;
     border-radius: 50%;
-    background: var(--accent-soft);
-    color: var(--accent);
+    background: linear-gradient(135deg, var(--accent), var(--violet));
+    color: #fff;
     display: grid;
     place-items: center;
     font-size: 12px;

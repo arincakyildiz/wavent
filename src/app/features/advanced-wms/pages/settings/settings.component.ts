@@ -1,19 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { FaultInjectionService } from '../../../../core/api/fault-injection.service';
 import { ApiErrorKind } from '../../../../core/api/api-error';
 import { AuthService, Role } from '../../../../core/auth/auth.service';
-import { ROLE_PERMISSIONS } from '../../../../core/auth/permissions';
+import { ROLE_CATALOG, ROLE_PERMISSIONS } from '../../../../core/auth/permissions';
 import { AuditService } from '../../../../core/observability/audit.service';
 import { NotificationService } from '../../../../core/observability/notification.service';
 import { ThemeService } from '../../../../core/state/theme.service';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { VARIANCE_THRESHOLD_PCT } from '../../data-access/selectors';
-
-interface RoleOption {
-  value: Role;
-  label: string;
-  description: string;
-}
 
 interface RuleToggle {
   key: string;
@@ -34,20 +29,14 @@ export class SettingsComponent {
   private readonly faults = inject(FaultInjectionService);
   private readonly notifications = inject(NotificationService);
   private readonly audit = inject(AuditService);
+  private readonly router = inject(Router);
 
   readonly currentUser = this.auth.currentUser;
   readonly theme = this.themeService.theme;
   readonly faultProfile = this.faults.profile;
   readonly saved = signal(false);
 
-  readonly roles: RoleOption[] = [
-    { value: 'warehouse-operator', label: 'Depo Operatörü', description: 'Kabul, putaway, toplama, paketleme, sayım ve barkod işlemleri' },
-    { value: 'shift-lead', label: 'Vardiya Lideri', description: 'Görev atama, dalga planı, kapasite ve istisna kararları' },
-    { value: 'inventory-controller', label: 'Stok Kontrol Uzmanı', description: 'Lot/seri, sayım farkı, karantina ve düzeltme süreçleri' },
-    { value: 'shipping-specialist', label: 'Sevkiyat Uzmanı', description: 'Paket, taşıyıcı, yükleme ve sevkiyat kapanışı' },
-    { value: 'planner', label: 'Planlama Uzmanı', description: 'Sipariş önceliği, dalga kuralı ve kapasite senaryoları' },
-    { value: 'warehouse-manager', label: 'Depo Yöneticisi', description: 'Depo, lokasyon, kural, rol ve KPI ayarları' },
-  ];
+  readonly roles = ROLE_CATALOG;
 
   readonly rules = signal<RuleToggle[]>([
     { key: 'fefo', label: 'FEFO zorunluluğu', description: 'Daha erken SKT’li uygun lot varken sonraki lot seçilemez; override gerekçesi ister.', enabled: true },
@@ -62,6 +51,11 @@ export class SettingsComponent {
 
   permissionCount(role: Role): number {
     return ROLE_PERMISSIONS[role].length;
+  }
+
+  switchAccount(): void {
+    this.auth.logout();
+    this.router.navigateByUrl('/login');
   }
 
   setRole(role: string): void {

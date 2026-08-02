@@ -16,8 +16,10 @@
         <span class="muted small">demo kullanıcı: {{ currentUser().name }}</span>
       </div>
       <p class="muted small">
-        Rol değiştirmek uygulamayı o rolün gözünden gösterir: menü, route guard'ları ve aksiyon
-        butonları anında bu role göre daralır.
+        Aşağıdan bir role tıklamak, oturumu kapatmadan geçici bir önizleme yapar: menü, route
+        guard'ları ve aksiyon butonları anında bu role göre daralır. Farklı bir hesapla baştan
+        giriş yapmak için
+        <button type="button" class="link-action" (click)="switchAccount()">hesabı değiştirin</button>.
       </p>
       <div class="option-list">
         @for (r of roles; track r.value) {

@@ -47,6 +47,7 @@ export class ShellComponent {
   readonly searchTerm = signal('');
   readonly scopeMenuOpen = signal(false);
   readonly mobileNavOpen = signal(false);
+  readonly userMenuOpen = signal(false);
 
   readonly warehouses = this.scope.permitted;
   readonly scopeLabel = this.scope.label;
@@ -160,5 +161,15 @@ export class ShellComponent {
       .name.split(' ')
       .map((part) => part[0])
       .join('');
+  }
+
+  toggleUserMenu(): void {
+    this.userMenuOpen.update((v) => !v);
+  }
+
+  logout(): void {
+    this.userMenuOpen.set(false);
+    this.auth.logout();
+    this.router.navigateByUrl('/login');
   }
 }

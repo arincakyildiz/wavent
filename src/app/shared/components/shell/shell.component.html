@@ -138,12 +138,34 @@
         <span class="scope__label muted small">{{ scopeLabel() }}</span>
 
         <div class="user">
-          <div class="user__avatar">{{ initials() }}</div>
-          <div class="user__meta">
-            <div class="user__name">{{ currentUser().name }}</div>
-            <div class="user__role">{{ roleLabel() }}</div>
-          </div>
-          <app-icon name="chevronDown" [size]="15" />
+          <button
+            type="button"
+            class="user__trigger"
+            (click)="toggleUserMenu()"
+            [attr.aria-expanded]="userMenuOpen()"
+            aria-haspopup="menu"
+          >
+            <div class="user__avatar">{{ initials() }}</div>
+            <div class="user__meta">
+              <div class="user__name">{{ currentUser().name }}</div>
+              <div class="user__role">{{ roleLabel() }}</div>
+            </div>
+            <app-icon name="chevronDown" [size]="15" />
+          </button>
+          @if (userMenuOpen()) {
+            <div class="user__menu" role="menu">
+              <div class="user__menu-head">
+                <div class="user__name">{{ currentUser().name }}</div>
+                <div class="muted small">{{ roleLabel() }}</div>
+              </div>
+              <button type="button" role="menuitem" class="scope__item" routerLink="/wms/settings" (click)="userMenuOpen.set(false)">
+                Ayarlar
+              </button>
+              <button type="button" role="menuitem" class="scope__item" (click)="logout()">
+                Çıkış Yap
+              </button>
+            </div>
+          }
         </div>
       </div>
     </header>
