@@ -1,0 +1,146 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <button class="btn" type="button" (click)="back()">
+        <app-icon name="chevronLeft" [size]="14" />
+        Shipping
+      </button>
+      @if (shipment(); as s) {
+        <h1 class="mt">{{ s.code }}</h1>
+        <p class="muted">{{ s.carrier }} · Kapı {{ s.door }} · {{ s.warehouseCode }}</p>
+      }
+    </div>
+
+    <div class="page__actions">
+      @if (shipment(); as s) {
+        <span class="status-pill" [class]="statusTone(s.status)">{{ s.status }}</span>
+      }
+      <button class="btn btn--primary" type="button" (click)="downloadPdf()">
+        <app-icon name="fileText" [size]="14" />
+        PDF olarak indir
+      </button>
+    </div>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="state state--loading">Yükleniyor...</div>
+    }
+    @case ('error') {
+      <div class="state state--error" role="alert">
+        {{ errorMessage() }}
+        <button type="button" (click)="load()">Tekrar dene</button>
+      </div>
+    }
+    @case ('success') {
+      @if (shipment(); as s) {
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-card__label">Paket</div>
+            <div class="kpi-card__value">{{ s.packageCount | number }}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">Toplam Ağırlık</div>
+            <div class="kpi-card__value">{{ totalWeight() | number: '1.1-1' }} kg</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">İçerik Doğrulanan</div>
+            <div class="kpi-card__value">{{ verifiedCount() }} / {{ packages().length }}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">Tolerans Dışı</div>
+            <div class="kpi-card__value" [class]="toleranceIssues() > 0 ? 'negative' : ''">
+              {{ toleranceIssues() }}
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">İlerleme</div>
+            <div class="kpi-card__value">{{ s.progressPct }}%</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__head">
+            <h2>Sevkiyat Bilgileri</h2>
+          </div>
+          <div class="grid-3 detail-facts">
+            <div class="fact">
+              <span class="muted small">Taşıyıcı</span>
+              <span>{{ s.carrier }}</span>
+            </div>
+            <div class="fact">
+              <span class="muted small">Yükleme Kapısı</span>
+              <span>{{ s.door }}</span>
+            </div>
+            <div class="fact">
+              <span class="muted small">Depo</span>
+              <span>{{ s.warehouseCode }}</span>
+            </div>
+            <div class="fact">
+              <span class="muted small">Kapanış</span>
+              <span>{{ s.closedAt ?? '—' }}</span>
+            </div>
+            <div class="fact">
+              <span class="muted small">Sevkiyat Kodu</span>
+              <span>{{ s.code }}</span>
+            </div>
+            <div class="fact">
+              <span class="muted small">Durum</span>
+              <span class="status-pill" [class]="statusTone(s.status)">{{ s.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Paketler</h2>
+          @if (packages().length) {
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Paket</th>
+                    <th>Sipariş</th>
+                    <th>Kalem</th>
+                    <th>Ağırlık</th>
+                    <th>Beklenen</th>
+                    <th>Tolerans</th>
+                    <th>İçerik</th>
+                    <th>Durum</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of packages(); track p.id) {
+                    <tr>
+                      <td>{{ p.code }}</td>
+                      <td>{{ p.orderNumber }}</td>
+                      <td>{{ p.skuSummary }}</td>
+                      <td>{{ p.weightKg | number: '1.1-1' }} kg</td>
+                      <td>{{ p.expectedWeightKg | number: '1.1-1' }} kg</td>
+                      <td>
+                        @if (p.weightKg - p.expectedWeightKg > p.toleranceKg || p.expectedWeightKg - p.weightKg > p.toleranceKg) {
+                          <span class="status-pill tone-danger">Dışında</span>
+                        } @else {
+                          <span class="status-pill tone-success">Uygun</span>
+                        }
+                      </td>
+                      <td>
+                        @if (p.contentVerified) {
+                          <span class="status-pill tone-success">Doğrulandı</span>
+                        } @else {
+                          <span class="status-pill tone-neutral">Bekliyor</span>
+                        }
+                      </td>
+                      <td><span class="status-pill" [class]="packageTone(p.status)">{{ p.status }}</span></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="state state--empty">Bu sevkiyat için paket bulunamadı.</div>
+          }
+        </div>
+      }
+    }
+  }
+</div>

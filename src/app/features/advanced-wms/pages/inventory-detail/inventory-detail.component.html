@@ -10,6 +10,13 @@
         <p class="muted">{{ it.name }} · {{ it.warehouseCodes.join(', ') }}</p>
       }
     </div>
+
+    <div class="page__actions">
+      <button class="btn btn--primary" type="button" (click)="downloadPdf()">
+        <app-icon name="fileText" [size]="14" />
+        PDF olarak indir
+      </button>
+    </div>
   </div>
 
   @switch (state()) {

@@ -11,9 +11,15 @@
       }
     </div>
 
-    @if (asn(); as a) {
-      <span class="status-pill" [class]="'tone-' + (a.status === 'closed' ? 'success' : 'info')">{{ a.status }}</span>
-    }
+    <div class="page__actions">
+      @if (asn(); as a) {
+        <span class="status-pill" [class]="'tone-' + (a.status === 'closed' ? 'success' : 'info')">{{ a.status }}</span>
+      }
+      <button class="btn btn--primary" type="button" (click)="downloadPdf()">
+        <app-icon name="fileText" [size]="14" />
+        PDF olarak indir
+      </button>
+    </div>
   </div>
 
   @switch (state()) {

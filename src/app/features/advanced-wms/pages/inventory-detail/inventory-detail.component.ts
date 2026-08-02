@@ -69,6 +69,11 @@ export class InventoryDetailComponent {
     this.router.navigate(['/wms/inventory']);
   }
 
+  /** The browser's own print pipeline is the PDF export — "Save as PDF" in the print dialog. */
+  downloadPdf(): void {
+    window.print();
+  }
+
   statusTone(status: StockStatus): string {
     const tone: Record<StockStatus, string> = {
       [StockStatus.Available]: 'tone-success',

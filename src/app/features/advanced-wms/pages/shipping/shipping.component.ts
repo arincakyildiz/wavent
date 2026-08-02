@@ -1,6 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { ActivatableDirective } from '../../../../shared/directives/activatable.directive';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
@@ -12,13 +14,14 @@ const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-shipping',
-  imports: [DecimalPipe, SortableDirective, PaginationComponent],
+  imports: [DecimalPipe, SortableDirective, PaginationComponent, ActivatableDirective],
   templateUrl: './shipping.component.html',
   styleUrl: './shipping.component.scss',
 })
 export class ShippingComponent {
   private readonly shippingService = inject(ShippingService);
   private readonly scope = inject(WarehouseScopeService);
+  private readonly router = inject(Router);
 
   readonly search = signal('');
   readonly statusFilter = signal('all');
@@ -67,6 +70,10 @@ export class ShippingComponent {
   onPageSize(size: number): void {
     this.pageSize.set(size);
     this.page.set(1);
+  }
+
+  open(id: string): void {
+    this.router.navigate(['/wms/shipping', id]);
   }
 
   statusTone(status: ShipmentRow['status']): string {

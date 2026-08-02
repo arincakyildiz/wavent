@@ -55,6 +55,11 @@ export class ReceivingDetailComponent {
     this.router.navigate(['/wms/receiving']);
   }
 
+  /** The browser's own print pipeline is the PDF export — "Save as PDF" in the print dialog. */
+  downloadPdf(): void {
+    window.print();
+  }
+
   lineTone(status: ReceiptLineRow['status']): string {
     const tone: Record<ReceiptLineRow['status'], string> = {
       pending: 'tone-neutral',

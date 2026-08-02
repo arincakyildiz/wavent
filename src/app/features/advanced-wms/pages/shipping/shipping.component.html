@@ -52,7 +52,7 @@
           </thead>
           <tbody>
             @for (s of list.rows(); track s.id) {
-              <tr>
+              <tr appActivatable (activated)="open(s.id)" [attr.aria-label]="s.code + ' detayını aç'">
                 <td>{{ s.code }}</td>
                 <td>{{ s.warehouseCode }}</td>
                 <td>{{ s.carrier }}</td>

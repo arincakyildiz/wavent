@@ -16,6 +16,10 @@
     @if (wave(); as w) {
       <div class="header-actions">
         <span class="status-pill" [class]="statusTone(w.status)">{{ w.status }}</span>
+        <button class="btn btn--primary" type="button" (click)="downloadPdf()">
+          <app-icon name="fileText" [size]="14" />
+          PDF olarak indir
+        </button>
         @if (canRelease()) {
           <button
             class="btn btn--primary"

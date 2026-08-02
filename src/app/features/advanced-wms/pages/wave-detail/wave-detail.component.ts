@@ -67,6 +67,11 @@ export class WaveDetailComponent {
     this.router.navigate(['/wms/waves']);
   }
 
+  /** The browser's own print pipeline is the PDF export — "Save as PDF" in the print dialog. */
+  downloadPdf(): void {
+    window.print();
+  }
+
   /** Publishing is irreversible for the orders it moves, so it always confirms first. */
   releaseWave(): void {
     const wave = this.wave();

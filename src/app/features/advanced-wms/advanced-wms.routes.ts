@@ -91,6 +91,12 @@ export const ADVANCED_WMS_ROUTES: Routes = [
     loadComponent: () => import('./pages/shipping/shipping.component').then((m) => m.ShippingComponent),
   },
   {
+    path: 'shipping/:id',
+    canActivate: [requirePermission('shipping.view')],
+    loadComponent: () =>
+      import('./pages/shipping-detail/shipping-detail.component').then((m) => m.ShippingDetailComponent),
+  },
+  {
     path: 'cycle-counts',
     canActivate: [requirePermission('cycleCount.view')],
     loadComponent: () => import('./pages/cycle-counts/cycle-counts.component').then((m) => m.CycleCountsComponent),

@@ -1,11 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { MockApiService } from '../../../core/api/mock-api.service';
+import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
-import { ShipmentRec, db } from './mock-data';
+import { PackageRec, ShipmentRec, db } from './mock-data';
 
 export interface ShipmentRow extends ShipmentRec {
   packageCount: number;
+}
+
+export interface ShipmentPackageRow extends PackageRec {
+  skuSummary: string;
 }
 
 function toRow(s: ShipmentRec): ShipmentRow {
@@ -32,5 +37,26 @@ export class ShippingService {
         }),
       ),
     );
+  }
+
+  getById(id: string): Observable<ShipmentRow> {
+    const found = db.shipments.find((s) => s.id === id || s.code === id);
+    return this.api.simulate(found, { delayMs: 280 }).pipe(
+      map((s) => {
+        if (!s) throw new ApiError('not-found', 'Sevkiyat bulunamadı.');
+        return toRow(s);
+      }),
+    );
+  }
+
+  getPackages(id: string): Observable<ShipmentPackageRow[]> {
+    const shipment = db.shipments.find((s) => s.id === id || s.code === id);
+    const rows: ShipmentPackageRow[] = shipment
+      ? db.packages
+          .filter((p) => shipment.packageCodes.includes(p.code))
+          .map((p) => ({ ...p, skuSummary: `${p.itemCount} kalem` }))
+      : [];
+
+    return this.api.simulate(rows, { delayMs: 280 });
   }
 }

@@ -1,0 +1,16 @@
+.mt {
+  margin: 10px 0 0;
+}
+
+.detail-facts {
+  margin-top: 4px;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13.5px;
+}
