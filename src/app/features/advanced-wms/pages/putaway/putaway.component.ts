@@ -8,15 +8,17 @@ import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.se
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { BarcodeInputComponent } from '../../../../shared/components/barcode-input/barcode-input.component';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { PutawayService, PutawaySuggestionRow } from '../../data-access/putaway.service';
 
-const PAGE_SIZE = 12;
+const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-putaway',
-  imports: [DecimalPipe, SortableDirective, HasPermissionDirective],
+  imports: [DecimalPipe, SortableDirective, PaginationComponent, HasPermissionDirective, BarcodeInputComponent],
   templateUrl: './putaway.component.html',
   styleUrl: './putaway.component.scss',
 })
@@ -29,6 +31,7 @@ export class PutawayComponent {
 
   readonly search = signal('');
   readonly page = signal(1);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'score', direction: 'desc' });
 
   /** Rows accepted locally before the server confirms — cleared on success or rollback. */
@@ -41,7 +44,7 @@ export class PutawayComponent {
       query: {
         search: this.search(),
         page: this.page(),
-        pageSize: PAGE_SIZE,
+        pageSize: this.pageSize(),
         sort: this.sort(),
       } satisfies ListQuery,
     })),
@@ -58,6 +61,7 @@ export class PutawayComponent {
     bindQueryParams([
       { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
       { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+      { param: 'size', signal: this.pageSize, defaultValue: DEFAULT_PAGE_SIZE, parse: parseNumber(DEFAULT_PAGE_SIZE) },
     ]);
   }
 
@@ -71,12 +75,37 @@ export class PutawayComponent {
     this.page.set(1);
   }
 
-  prevPage(): void {
-    this.page.update((p) => Math.max(1, p - 1));
+  onPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
-  nextPage(): void {
-    this.page.update((p) => Math.min(this.list.totalPages(), p + 1));
+  /**
+   * Scan-to-confirm: operator scans the physical location label instead of clicking
+   * "Kabul Et". A code that doesn't match any pending suggestion's location is a
+   * wrong-barcode exception, not a silent no-op.
+   */
+  onLocationScanned(code: string): void {
+    const normalized = code.trim().toUpperCase();
+    const match = this.rows().find(
+      (r) => !r.accepted && r.suggestedLocationPath.toUpperCase() === normalized,
+    );
+
+    if (!match) {
+      this.notifications.error(
+        'Barkod eşleşmedi',
+        `"${code}" bekleyen bir putaway önerisiyle eşleşmiyor.`,
+      );
+      this.audit.record({
+        actionType: 'Putaway Barcode Mismatch',
+        targetType: 'PutawaySuggestion',
+        targetId: code,
+        newValue: 'no matching suggestion',
+      });
+      return;
+    }
+
+    this.accept(match);
   }
 
   accept(row: PutawaySuggestionRow): void {

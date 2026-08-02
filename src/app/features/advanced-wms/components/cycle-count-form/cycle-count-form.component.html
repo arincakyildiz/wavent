@@ -12,6 +12,7 @@
           type="text"
           placeholder="CC-140"
           autocomplete="off"
+          maxlength="6"
           [class.invalid]="invalid('code')"
         />
         @if (codeControl.pending) {
@@ -44,10 +45,17 @@
           formControlName="scopeLabel"
           type="text"
           placeholder="A/01/01 bölgesi veya SKU-1001"
+          maxlength="60"
           [class.invalid]="invalid('scopeLabel')"
         />
         @if (invalid('scopeLabel')) {
-          <span class="field__error" role="alert">En az 3 karakterlik bir kapsam girin.</span>
+          <span class="field__error" role="alert">
+            @if (form.controls.scopeLabel.hasError('maxlength')) {
+              En fazla 60 karakter girebilirsiniz.
+            } @else {
+              En az 3 karakterlik bir kapsam girin.
+            }
+          </span>
         }
       </label>
 

@@ -12,6 +12,7 @@
           type="text"
           placeholder="IST-02"
           autocomplete="off"
+          maxlength="7"
           [class.invalid]="invalid('code')"
           [attr.aria-invalid]="invalid('code')"
         />
@@ -36,10 +37,17 @@
           formControlName="name"
           type="text"
           placeholder="Istanbul Anadolu DC"
+          maxlength="60"
           [class.invalid]="invalid('name')"
         />
         @if (invalid('name')) {
-          <span class="field__error" role="alert">En az 3 karakterlik bir ad girin.</span>
+          <span class="field__error" role="alert">
+            @if (form.controls.name.hasError('maxlength')) {
+              En fazla 60 karakter girebilirsiniz.
+            } @else {
+              En az 3 karakterlik bir ad girin.
+            }
+          </span>
         }
       </label>
     </div>
@@ -47,17 +55,29 @@
     <div class="form__row">
       <label class="field">
         <span class="field__label">Şehir <span class="req">*</span></span>
-        <input formControlName="city" type="text" [class.invalid]="invalid('city')" />
+        <input formControlName="city" type="text" maxlength="40" [class.invalid]="invalid('city')" />
         @if (invalid('city')) {
-          <span class="field__error" role="alert">Şehir zorunludur.</span>
+          <span class="field__error" role="alert">
+            @if (form.controls.city.hasError('maxlength')) {
+              En fazla 40 karakter girebilirsiniz.
+            } @else {
+              Şehir zorunludur.
+            }
+          </span>
         }
       </label>
 
       <label class="field">
         <span class="field__label">Ülke <span class="req">*</span></span>
-        <input formControlName="country" type="text" [class.invalid]="invalid('country')" />
+        <input formControlName="country" type="text" maxlength="40" [class.invalid]="invalid('country')" />
         @if (invalid('country')) {
-          <span class="field__error" role="alert">Ülke zorunludur.</span>
+          <span class="field__error" role="alert">
+            @if (form.controls.country.hasError('maxlength')) {
+              En fazla 40 karakter girebilirsiniz.
+            } @else {
+              Ülke zorunludur.
+            }
+          </span>
         }
       </label>
     </div>

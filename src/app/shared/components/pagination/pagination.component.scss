@@ -1,0 +1,64 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+
+  &__size {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    select {
+      padding: 5px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface-1);
+      color: var(--text-primary);
+      font-size: 12.5px;
+    }
+  }
+
+  &__range {
+    flex: 1;
+    text-align: center;
+    min-width: 90px;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    button {
+      padding: 6px 11px;
+      border-radius: 7px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface-1);
+      color: var(--text-primary);
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/* Stack into two rows once there isn't room for all three groups side by side. */
+@media (max-width: 640px) {
+  .pagination {
+    justify-content: center;
+
+    &__range {
+      order: 3;
+      flex-basis: 100%;
+      text-align: center;
+    }
+  }
+}

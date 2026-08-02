@@ -3,18 +3,19 @@ import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { PickTaskRow, PickingService } from '../../data-access/picking.service';
 
-const PAGE_SIZE = 14;
+const DEFAULT_PAGE_SIZE = 20;
 const EMPTY_TOTALS = { total: 0, exceptions: 0, inProgress: 0 };
 
 @Component({
   selector: 'app-picking-tasks',
-  imports: [DecimalPipe, SortableDirective],
+  imports: [DecimalPipe, SortableDirective, PaginationComponent],
   templateUrl: './picking-tasks.component.html',
   styleUrl: './picking-tasks.component.scss',
 })
@@ -25,6 +26,7 @@ export class PickingTasksComponent {
   readonly search = signal('');
   readonly statusFilter = signal('all');
   readonly page = signal(1);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'code', direction: 'asc' });
 
   readonly list = createListResource<PickTaskRow>(
@@ -33,7 +35,7 @@ export class PickingTasksComponent {
       query: {
         search: this.search(),
         page: this.page(),
-        pageSize: PAGE_SIZE,
+        pageSize: this.pageSize(),
         sort: this.sort(),
         filters: { status: this.statusFilter() },
       } satisfies ListQuery,
@@ -53,6 +55,7 @@ export class PickingTasksComponent {
       { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
       { param: 'status', signal: this.statusFilter, defaultValue: 'all', parse: parseString },
       { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+      { param: 'size', signal: this.pageSize, defaultValue: DEFAULT_PAGE_SIZE, parse: parseNumber(DEFAULT_PAGE_SIZE) },
     ]);
   }
 
@@ -71,12 +74,9 @@ export class PickingTasksComponent {
     this.page.set(1);
   }
 
-  prevPage(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  nextPage(): void {
-    this.page.update((p) => Math.min(this.list.totalPages(), p + 1));
+  onPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
   statusTone(status: PickTaskRow['status']): string {

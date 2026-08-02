@@ -43,6 +43,7 @@
     <div class="toolbar">
       <input
         type="search"
+        maxlength="80"
         placeholder="Depo, kod veya şehir ara..."
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
@@ -98,11 +99,14 @@
         </table>
       </div>
 
-      <div class="pagination">
-        <span>Sayfa {{ page() }} / {{ totalPages() }}</span>
-        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
-        <button type="button" [disabled]="page() === totalPages()" (click)="nextPage()">Sonraki ›</button>
-      </div>
+      <app-pagination
+        [page]="page()"
+        [totalPages]="totalPages()"
+        [total]="total()"
+        [pageSize]="pageSize()"
+        (pageChange)="page.set($event)"
+        (pageSizeChange)="onPageSize($event)"
+      />
     } @else {
       <div class="state state--empty">Filtreyle eşleşen depo bulunamadı.</div>
     }

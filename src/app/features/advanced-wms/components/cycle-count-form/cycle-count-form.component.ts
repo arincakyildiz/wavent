@@ -26,7 +26,7 @@ export class CycleCountFormComponent {
   readonly form = new FormGroup({
     code: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, codePattern(/^CC-\d{3}$/)],
+      validators: [Validators.required, Validators.maxLength(6), codePattern(/^CC-\d{3}$/)],
       asyncValidators: [uniqueValue((v) => this.cycleCountsService.isCodeAvailable(v))],
       updateOn: 'blur',
     }),
@@ -36,7 +36,7 @@ export class CycleCountFormComponent {
     }),
     scopeLabel: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(3)],
+      validators: [Validators.required, Validators.minLength(3), Validators.maxLength(60)],
     }),
     expectedQuantity: new FormControl(0, {
       nonNullable: true,

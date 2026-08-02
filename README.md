@@ -108,18 +108,23 @@ unauthorized (403)
 
 ## Test
 
-Kritik iş kuralları, liste sorgu motoru, validator'lar ve izin sistemi unit testlerle kaplıdır:
+Kritik iş kuralları, liste sorgu motoru, validator'lar, izin sistemi ve seçili ekranlar
+unit/component testlerle kaplıdır:
 
 - `data-access/selectors.spec.ts` — FEFO, kapasite, tolerans, sayım eşiği, stok tutarlılığı,
   dalga yayınlama kararları
 - `shared/utils/list-query.spec.ts` — arama/filtre/sıralama/sayfalama
 - `shared/validators/wms-validators.spec.ts` — cross-field ve async validator'lar
 - `core/auth/permissions.spec.ts` — izin haritası ve route guard
+- `data-access/waves.service.spec.ts` — optimistic concurrency (`version` çakışması)
+- `pages/exceptions/exceptions.component.spec.ts` — component/DOM seviyesinde liste yükleme
 
 ## Bilinen Eksikler
 
 - Tüm veriler mock; gerçek backend entegrasyonu yok ve oturum içi değişiklikler kalıcı değildir.
-- Component/integration testleri (ana akışların uçtan uca DOM testi) henüz yazılmadı; mevcut test
-  kapsamı unit seviyesindedir.
-- Barkod/tartı gibi fiziksel cihaz entegrasyonları simüle edilmemiştir.
+- Component/integration test kapsamı hâlâ sınırlı: yukarıdaki örnekler dışındaki ekranlar için
+  yalnızca unit seviyesinde (selectors, servisler) kapsam var.
+- Tartı gibi fiziksel cihaz entegrasyonları simüle edilmemiştir. Barkod okuma, Putaway ekranında
+  `BarcodeInput` bileşeniyle simüle edilir (tarama, yinelenen okumaları yutar; eşleşmeyen barkod
+  bir istisna olarak loglanır).
 - Offline/IndexedDB önbellek katmanı uygulanmadı.

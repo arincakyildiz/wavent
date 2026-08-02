@@ -12,6 +12,7 @@
           type="text"
           placeholder="Wave #260"
           autocomplete="off"
+          maxlength="60"
           [class.invalid]="invalid('name')"
         />
         @if (nameControl.pending) {
@@ -20,6 +21,8 @@
           <span class="field__error" role="alert">
             @if (nameControl.hasError('notUnique')) {
               Bu adda bir dalga zaten var.
+            } @else if (nameControl.hasError('maxlength')) {
+              En fazla 60 karakter girebilirsiniz.
             } @else {
               En az 4 karakterlik bir ad girin.
             }

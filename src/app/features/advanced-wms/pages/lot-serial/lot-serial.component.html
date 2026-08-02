@@ -17,6 +17,7 @@
     <div class="toolbar">
       <input
         type="search"
+        maxlength="80"
         placeholder="Lot, seri no veya SKU ara..."
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
@@ -76,12 +77,14 @@
           </tbody>
         </table>
       </div>
-
-      <div class="pagination">
-        <span>Sayfa {{ page() }} / {{ list.totalPages() }}</span>
-        <button type="button" [disabled]="page() === 1" (click)="prevPage()">‹ Önceki</button>
-        <button type="button" [disabled]="page() === list.totalPages()" (click)="nextPage()">Sonraki ›</button>
-      </div>
+      <app-pagination
+        [page]="page()"
+        [totalPages]="list.totalPages()"
+        [total]="list.total()"
+        [pageSize]="pageSize()"
+        (pageChange)="page.set($event)"
+        (pageSizeChange)="onPageSize($event)"
+      />
     } @else {
       <div class="state state--empty">Filtreyle eşleşen kayıt bulunamadı.</div>
     }

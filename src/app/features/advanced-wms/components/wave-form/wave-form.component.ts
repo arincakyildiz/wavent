@@ -35,7 +35,7 @@ export class WaveFormComponent {
     {
       name: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.minLength(4)],
+        validators: [Validators.required, Validators.minLength(4), Validators.maxLength(60)],
         asyncValidators: [uniqueValue((v) => this.wavesService.isNameAvailable(v))],
         updateOn: 'blur',
       }),

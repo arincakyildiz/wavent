@@ -45,7 +45,7 @@ export class AsnFormComponent {
   readonly form = new FormGroup({
     number: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, codePattern(/^ASN-\d{4}$/)],
+      validators: [Validators.required, Validators.maxLength(8), codePattern(/^ASN-\d{4}$/)],
       asyncValidators: [uniqueValue((v) => this.receivingService.isNumberAvailable(v))],
       updateOn: 'blur',
     }),

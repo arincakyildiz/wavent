@@ -15,6 +15,7 @@ import {
   StockStatus,
   WaveStatus,
 } from '../models/entities';
+import { fefoViolation, isReservable } from './stock-rules';
 
 /**
  * Single source of demo data. Everything downstream (services, selectors, screens)
@@ -542,7 +543,7 @@ function buildAllocations(
 ): { allocations: AllocationRec[]; allocatedOrders: Set<string> } {
   const skuByCode = new Map(skus.map((s) => [s.code, s]));
   const pool = balances
-    .filter((b) => b.status === StockStatus.Available)
+    .filter((b) => isReservable(b.status))
     .map((b) => ({ ...b, remaining: b.quantity }));
 
   const allocations: AllocationRec[] = [];
@@ -567,19 +568,31 @@ function buildAllocations(
           return a.id.localeCompare(b.id);
         });
 
+      // A small share of FEFO picks deliberately skip the earliest lot, which is
+      // exactly the override the business rules require a reason for — fefoViolation
+      // then detects it the same way the Traceability screen would.
+      let pickOrder = candidates;
+      if (strategy === 'FEFO' && candidates.length > 1 && chance(0.08)) {
+        pickOrder = [candidates[1], candidates[0], ...candidates.slice(2)];
+      }
+
       let need = line.quantity;
       let taken = 0;
 
-      for (const candidate of candidates) {
+      for (const candidate of pickOrder) {
         if (need <= 0) break;
         const qty = Math.min(need, candidate.remaining);
         candidate.remaining -= qty;
         need -= qty;
         taken += qty;
 
-        // A small share of FEFO picks deliberately skip the earliest lot, which is
-        // exactly the override the business rules require a reason for.
-        const isOverride = strategy === 'FEFO' && candidate !== candidates[0] && chance(0.08);
+        const violatedLot =
+          strategy === 'FEFO'
+            ? fefoViolation(
+                candidate,
+                candidates.filter((c) => c !== candidate && c.remaining > 0),
+              )
+            : null;
 
         allocations.push({
           id: `al-${++n}`,
@@ -593,7 +606,7 @@ function buildAllocations(
           strategy,
           isPartial: false,
           isBackorder: false,
-          overrideReason: isOverride ? 'Müşteri talebiyle daha yeni lot kullanıldı' : undefined,
+          overrideReason: violatedLot ? 'Müşteri talebiyle daha yeni lot kullanıldı' : undefined,
         });
       }
 

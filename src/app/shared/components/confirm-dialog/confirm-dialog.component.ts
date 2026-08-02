@@ -28,7 +28,11 @@ export class ConfirmDialogComponent {
       const reason = this.form.controls.reason;
       reason.reset('');
       // Reason is only mandatory when the caller asks for a justification.
-      reason.setValidators(open.requireReason ? [Validators.required, Validators.minLength(6)] : []);
+      reason.setValidators(
+        open.requireReason
+          ? [Validators.required, Validators.minLength(6), Validators.maxLength(300)]
+          : [Validators.maxLength(300)],
+      );
       reason.updateValueAndValidity();
 
       // Move focus into the dialog so keyboard users land in the right place.

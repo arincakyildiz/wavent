@@ -5,16 +5,17 @@ import { catchError, of, switchMap } from 'rxjs';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { ReservationRow, ReservationsService } from '../../data-access/reservations.service';
 
-const PAGE_SIZE = 14;
+const DEFAULT_PAGE_SIZE = 20;
 const EMPTY_TOTALS = { total: 0, partial: 0, backorder: 0, overrides: 0 };
 
 @Component({
   selector: 'app-reservations',
-  imports: [DecimalPipe, SortableDirective],
+  imports: [DecimalPipe, SortableDirective, PaginationComponent],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.scss',
 })
@@ -25,6 +26,7 @@ export class ReservationsComponent {
   readonly search = signal('');
   readonly filter = signal('all');
   readonly page = signal(1);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'orderNumber', direction: 'asc' });
 
   readonly list = createListResource<ReservationRow>(
@@ -33,7 +35,7 @@ export class ReservationsComponent {
       query: {
         search: this.search(),
         page: this.page(),
-        pageSize: PAGE_SIZE,
+        pageSize: this.pageSize(),
         sort: this.sort(),
         filters: { fulfilment: this.filter() },
       } satisfies ListQuery,
@@ -55,6 +57,7 @@ export class ReservationsComponent {
       { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
       { param: 'fulfil', signal: this.filter, defaultValue: 'all', parse: parseString },
       { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+      { param: 'size', signal: this.pageSize, defaultValue: DEFAULT_PAGE_SIZE, parse: parseNumber(DEFAULT_PAGE_SIZE) },
     ]);
   }
 
@@ -73,12 +76,9 @@ export class ReservationsComponent {
     this.page.set(1);
   }
 
-  prevPage(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  nextPage(): void {
-    this.page.update((p) => Math.min(this.list.totalPages(), p + 1));
+  onPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
   fulfilmentTone(value: ReservationRow['fulfilment']): string {

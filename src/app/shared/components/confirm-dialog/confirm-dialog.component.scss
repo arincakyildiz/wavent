@@ -50,6 +50,14 @@
     color: var(--danger);
   }
 
+  &__hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
   &__actions {
     display: flex;
     justify-content: flex-end;

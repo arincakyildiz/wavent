@@ -3,16 +3,17 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { LocationRow, LocationsService } from '../../data-access/locations.service';
 
-const PAGE_SIZE = 15;
+const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-locations',
-  imports: [SortableDirective],
+  imports: [SortableDirective, PaginationComponent],
   templateUrl: './locations.component.html',
   styleUrl: './locations.component.scss',
 })
@@ -23,6 +24,7 @@ export class LocationsComponent {
   readonly search = signal('');
   readonly classFilter = signal('all');
   readonly page = signal(1);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'path', direction: 'asc' });
   readonly errorMessage = signal<string | null>(null);
   readonly reloadToken = signal(0);
@@ -32,7 +34,7 @@ export class LocationsComponent {
     query: {
       search: this.search(),
       page: this.page(),
-      pageSize: PAGE_SIZE,
+      pageSize: this.pageSize(),
       sort: this.sort(),
       filters: { locationClass: this.classFilter() },
     } satisfies ListQuery,
@@ -63,6 +65,7 @@ export class LocationsComponent {
       { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
       { param: 'class', signal: this.classFilter, defaultValue: 'all', parse: parseString },
       { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+      { param: 'size', signal: this.pageSize, defaultValue: DEFAULT_PAGE_SIZE, parse: parseNumber(DEFAULT_PAGE_SIZE) },
     ]);
 
     effect(() => {
@@ -90,12 +93,9 @@ export class LocationsComponent {
     this.reloadToken.update((n) => n + 1);
   }
 
-  prevPage(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  nextPage(): void {
-    this.page.update((p) => Math.min(this.totalPages(), p + 1));
+  onPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
   capacityTone(row: LocationRow): string {

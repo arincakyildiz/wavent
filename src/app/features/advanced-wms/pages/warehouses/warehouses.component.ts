@@ -7,6 +7,7 @@ import { NotificationService } from '../../../../core/observability/notification
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { describeError } from '../../../../core/api/api-error';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
@@ -14,7 +15,7 @@ import { bindQueryParams, parseNumber, parseString } from '../../../../shared/ut
 import { WarehouseFormComponent } from '../../components/warehouse-form/warehouse-form.component';
 import { WarehouseSummary, WarehousesService } from '../../data-access/warehouses.service';
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-warehouses',
@@ -24,6 +25,7 @@ const PAGE_SIZE = 10;
     SortableDirective,
     HasPermissionDirective,
     WarehouseFormComponent,
+    PaginationComponent,
   ],
   templateUrl: './warehouses.component.html',
   styleUrl: './warehouses.component.scss',
@@ -37,6 +39,7 @@ export class WarehousesComponent {
   readonly search = signal('');
   readonly statusFilter = signal('all');
   readonly page = signal(1);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'code', direction: 'asc' });
   readonly formOpen = signal(false);
   readonly reloadToken = signal(0);
@@ -44,7 +47,7 @@ export class WarehousesComponent {
   private readonly query = computed<ListQuery>(() => ({
     search: this.search(),
     page: this.page(),
-    pageSize: PAGE_SIZE,
+    pageSize: this.pageSize(),
     sort: this.sort(),
     filters: { status: this.statusFilter() },
   }));
@@ -88,6 +91,7 @@ export class WarehousesComponent {
       { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
       { param: 'status', signal: this.statusFilter, defaultValue: 'all', parse: parseString },
       { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+      { param: 'size', signal: this.pageSize, defaultValue: DEFAULT_PAGE_SIZE, parse: parseNumber(DEFAULT_PAGE_SIZE) },
     ]);
 
     // Clear a stale error once a fresh result lands.
@@ -116,12 +120,9 @@ export class WarehousesComponent {
     this.reloadToken.update((n) => n + 1);
   }
 
-  prevPage(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  nextPage(): void {
-    this.page.update((p) => Math.min(this.totalPages(), p + 1));
+  onPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
   onCreated(created: WarehouseSummary): void {

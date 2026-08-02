@@ -46,6 +46,7 @@ export class ShellComponent {
   readonly collapsed = signal(false);
   readonly searchTerm = signal('');
   readonly scopeMenuOpen = signal(false);
+  readonly mobileNavOpen = signal(false);
 
   readonly warehouses = this.scope.permitted;
   readonly scopeLabel = this.scope.label;
@@ -115,6 +116,15 @@ export class ShellComponent {
 
   toggleSidebar(): void {
     this.collapsed.update((v) => !v);
+  }
+
+  toggleMobileNav(): void {
+    this.mobileNavOpen.update((v) => !v);
+    if (this.mobileNavOpen()) this.collapsed.set(false);
+  }
+
+  closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 
   setTheme(theme: 'dark' | 'light'): void {

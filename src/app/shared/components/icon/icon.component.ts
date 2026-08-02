@@ -123,6 +123,7 @@ const ICONS: Record<string, IconDef> = {
   },
   layers: { paths: ['m12 2 9 5-9 5-9-5 9-5Z', 'm3 12 9 5 9-5', 'm3 17 9 5 9-5'] },
   clock: { circles: [[12, 12, 10]], paths: ['M12 6v6l4 2'] },
+  x: { paths: ['M18 6 6 18', 'm6 6 12 12'] },
 };
 
 @Component({

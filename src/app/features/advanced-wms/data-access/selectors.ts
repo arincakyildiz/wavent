@@ -1,5 +1,8 @@
 import { StockStatus } from '../models/entities';
 import { AllocationRec, BalanceRec, LocationRec, PackageRec, db } from './mock-data';
+import { fefoViolation, isReservable } from './stock-rules';
+
+export { fefoViolation, isReservable };
 
 /**
  * Single derivation layer. Every screen that needs a computed quantity, percentage or
@@ -143,29 +146,9 @@ export function withinWeightTolerance(pkg: Pick<PackageRec, 'weightKg' | 'expect
   return Math.abs(pkg.weightKg - pkg.expectedWeightKg) <= pkg.toleranceKg;
 }
 
-/** §10: quarantine / damaged / blocked stock may never be reserved to an order. */
-export function isReservable(status: StockStatus): boolean {
-  return status === StockStatus.Available;
-}
-
 /** §10: putaway may not exceed a location's weight capacity. */
 export function fitsCapacity(loc: LocationRec, addedWeightKg: number): boolean {
   return loc.usedWeightKg + addedWeightKg <= loc.maxWeightKg;
-}
-
-/**
- * §10: for shelf-life SKUs, an earlier-expiry lot must be consumed first. Returns the
- * lot that should have been picked when the choice breaks FEFO, otherwise null.
- */
-export function fefoViolation(
-  chosen: { lot?: string; expiryDate?: string },
-  candidates: { lot?: string; expiryDate?: string }[],
-): string | null {
-  if (!chosen.expiryDate) return null;
-  const earlier = candidates
-    .filter((c) => c.expiryDate && c.expiryDate < chosen.expiryDate! && c.lot !== chosen.lot)
-    .sort((a, b) => a.expiryDate!.localeCompare(b.expiryDate!))[0];
-  return earlier?.lot ?? null;
 }
 
 /** §10: on-hand must equal the sum of its status buckets. */

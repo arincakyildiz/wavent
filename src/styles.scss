@@ -474,30 +474,6 @@ a {
   }
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 14px;
-  font-size: 13px;
-  color: var(--text-secondary);
-
-  button {
-    padding: 6px 11px;
-    border-radius: 7px;
-    border: 1px solid var(--border-strong);
-    background: var(--surface-1);
-    color: var(--text-primary);
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-}
-
 /* ---------- Status atoms ---------- */
 
 .status-pill {

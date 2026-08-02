@@ -36,6 +36,7 @@
     <div class="toolbar">
       <input
         type="search"
+        maxlength="80"
         placeholder="SKU, lot veya referans ara..."
         [value]="search()"
         (input)="search.set($any($event.target).value)"

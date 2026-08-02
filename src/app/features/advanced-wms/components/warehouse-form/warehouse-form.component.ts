@@ -37,16 +37,22 @@ export class WarehouseFormComponent {
     {
       code: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, codePattern(/^[A-Z]{2,4}-\d{2}$/)],
+        validators: [Validators.required, Validators.maxLength(7), codePattern(/^[A-Z]{2,4}-\d{2}$/)],
         asyncValidators: [uniqueValue((v) => this.warehousesService.isCodeAvailable(v))],
         updateOn: 'blur',
       }),
       name: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.minLength(3)],
+        validators: [Validators.required, Validators.minLength(3), Validators.maxLength(60)],
       }),
-      city: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      country: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      city: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.maxLength(40)],
+      }),
+      country: new FormControl('', {
+        nonNullable: true,
+        validators: [Validators.required, Validators.maxLength(40)],
+      }),
       timezone: new FormControl(TIMEZONES[0], { nonNullable: true, validators: [Validators.required] }),
       open: new FormControl('06:00', { nonNullable: true, validators: [Validators.required] }),
       close: new FormControl('22:00', { nonNullable: true, validators: [Validators.required] }),

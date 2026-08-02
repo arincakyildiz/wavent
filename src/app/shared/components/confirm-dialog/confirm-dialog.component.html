@@ -18,16 +18,20 @@
               #reasonInput
               formControlName="reason"
               rows="3"
+              maxlength="300"
               [attr.placeholder]="d.reasonPlaceholder ?? 'Bu işlemin gerekçesini yazın...'"
               [attr.aria-invalid]="reasonInvalid"
               [class.invalid]="reasonInvalid"
             ></textarea>
+            <span class="dialog__hint">{{ form.controls.reason.value.length }}/300</span>
             @if (reasonInvalid) {
               <span class="dialog__error" role="alert">
                 @if (form.controls.reason.hasError('required')) {
                   Gerekçe zorunludur.
-                } @else {
+                } @else if (form.controls.reason.hasError('minlength')) {
                   Gerekçe en az 6 karakter olmalıdır.
+                } @else {
+                  Gerekçe en fazla 300 karakter olabilir.
                 }
               </span>
             }

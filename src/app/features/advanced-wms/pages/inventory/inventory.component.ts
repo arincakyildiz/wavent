@@ -5,15 +5,16 @@ import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.se
 import { ActivatableDirective } from '../../../../shared/directives/activatable.directive';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { InventoryRow, InventoryService } from '../../data-access/inventory.service';
 
-const PAGE_SIZE = 12;
+const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-inventory',
-  imports: [DecimalPipe, SortableDirective, ActivatableDirective],
+  imports: [DecimalPipe, SortableDirective, PaginationComponent, ActivatableDirective],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss',
 })
@@ -24,6 +25,7 @@ export class InventoryComponent {
 
   readonly search = signal('');
   readonly page = signal(1);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'skuCode', direction: 'asc' });
 
   readonly list = createListResource<InventoryRow>(
@@ -32,7 +34,7 @@ export class InventoryComponent {
       query: {
         search: this.search(),
         page: this.page(),
-        pageSize: PAGE_SIZE,
+        pageSize: this.pageSize(),
         sort: this.sort(),
       } satisfies ListQuery,
     })),
@@ -43,6 +45,7 @@ export class InventoryComponent {
     bindQueryParams([
       { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
       { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
+      { param: 'size', signal: this.pageSize, defaultValue: DEFAULT_PAGE_SIZE, parse: parseNumber(DEFAULT_PAGE_SIZE) },
     ]);
   }
 
@@ -56,12 +59,9 @@ export class InventoryComponent {
     this.page.set(1);
   }
 
-  prevPage(): void {
-    this.page.update((p) => Math.max(1, p - 1));
-  }
-
-  nextPage(): void {
-    this.page.update((p) => Math.min(this.list.totalPages(), p + 1));
+  onPageSize(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
   openDetail(skuCode: string): void {
