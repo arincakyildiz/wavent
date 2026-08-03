@@ -1,8 +1,16 @@
 import { StockStatus } from '../models/entities';
-import { AllocationRec, BalanceRec, LocationRec, PackageRec, db } from './mock-data';
-import { fefoViolation, isReservable } from './stock-rules';
+import { AllocationRec, BalanceRec, LocationRec, PackageRec, SkuRec, db } from './mock-data';
+import {
+  CapacityVerdict,
+  SerialIssue,
+  checkCapacity,
+  fefoViolation,
+  isReservable,
+  serialIssues,
+} from './stock-rules';
 
-export { fefoViolation, isReservable };
+export { checkCapacity, fefoViolation, isReservable, serialIssues };
+export type { CapacityVerdict, SerialIssue };
 
 /**
  * Single derivation layer. Every screen that needs a computed quantity, percentage or
@@ -146,9 +154,29 @@ export function withinWeightTolerance(pkg: Pick<PackageRec, 'weightKg' | 'expect
   return Math.abs(pkg.weightKg - pkg.expectedWeightKg) <= pkg.toleranceKg;
 }
 
-/** §10: putaway may not exceed a location's weight capacity. */
-export function fitsCapacity(loc: LocationRec, addedWeightKg: number): boolean {
-  return loc.usedWeightKg + addedWeightKg <= loc.maxWeightKg;
+/**
+ * §4/§10: putaway must satisfy weight, volume, product class and temperature.
+ * Returns every failing constraint so Putaway can explain the block (§12).
+ */
+export function capacityVerdict(
+  loc: LocationRec,
+  sku: Pick<SkuRec, 'weightKg' | 'volumeM3' | 'storageClass'>,
+  quantity: number,
+): CapacityVerdict {
+  return checkCapacity(loc, {
+    weightKg: sku.weightKg * quantity,
+    volumeM3: sku.volumeM3 * quantity,
+    storageClass: sku.storageClass,
+  });
+}
+
+/** Boolean shorthand over {@link capacityVerdict}. */
+export function fitsCapacity(
+  loc: LocationRec,
+  sku: Pick<SkuRec, 'weightKg' | 'volumeM3' | 'storageClass'>,
+  quantity: number,
+): boolean {
+  return capacityVerdict(loc, sku, quantity).ok;
 }
 
 /** §10: on-hand must equal the sum of its status buckets. */
@@ -261,6 +289,21 @@ export function lotRows(codes: string[] = []): LotRow[] {
         health,
       } satisfies LotRow;
     });
+}
+
+/** §10: every serial-rule breach in scope, so the Lot/Serial screen can surface them. */
+export function serialIntegrityIssues(codes: string[] = []): SerialIssue[] {
+  const serialTracked = new Set(db.skus.filter((s) => s.serialTracked).map((s) => s.code));
+  return serialIssues(balancesInScope(codes), (code) => serialTracked.has(code));
+}
+
+/** §10: whether a serial is still free for a SKU — backs the async form validator. */
+export function serialIsAvailable(skuCode: string, serial: string): boolean {
+  const needle = serial.trim().toLowerCase();
+  if (!needle) return true;
+  return !db.balances.some(
+    (b) => b.skuCode === skuCode && (b.serial ?? '').toLowerCase() === needle,
+  );
 }
 
 export interface TraceEvent {

@@ -15,7 +15,7 @@ import {
   StockStatus,
   WaveStatus,
 } from '../models/entities';
-import { fefoViolation, isReservable } from './stock-rules';
+import { CLASS_TEMPERATURE_C, fefoViolation, isReservable } from './stock-rules';
 
 /**
  * Single source of demo data. Everything downstream (services, selectors, screens)
@@ -93,6 +93,8 @@ export interface LocationRec {
   maxVolumeM3: number;
   usedWeightKg: number;
   usedVolumeM3: number;
+  /** Present only on temperature-controlled bins; drives the §4 putaway check. */
+  temperatureRangeC?: { min: number; max: number };
 }
 
 export interface SkuRec {
@@ -145,6 +147,8 @@ export interface AllocationRec {
   isPartial: boolean;
   isBackorder: boolean;
   overrideReason?: string;
+  /** Optimistic-concurrency token — two operators re-allocating the same line conflict (§11). */
+  version: number;
 }
 
 export interface WaveRec {
@@ -395,6 +399,7 @@ function buildLocations(): LocationRec[] {
             maxVolumeM3: maxVolume,
             usedWeightKg: Math.round(maxWeight * fill),
             usedVolumeM3: Math.round(maxVolume * fill * 10) / 10,
+            temperatureRangeC: CLASS_TEMPERATURE_C[CLASS_BY_ZONE[zone]] ?? undefined,
           });
         }
       }
@@ -607,6 +612,7 @@ function buildAllocations(
           isPartial: false,
           isBackorder: false,
           overrideReason: violatedLot ? 'Müşteri talebiyle daha yeni lot kullanıldı' : undefined,
+          version: 1,
         });
       }
 
@@ -622,6 +628,7 @@ function buildAllocations(
           strategy,
           isPartial: true,
           isBackorder: true,
+          version: 1,
         });
       } else {
         anyAllocated = true;

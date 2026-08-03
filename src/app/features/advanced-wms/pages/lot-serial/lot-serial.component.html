@@ -6,6 +6,26 @@
     </div>
   </div>
 
+  @if (serialIssues().length) {
+    <div class="panel serial-alert" role="alert">
+      <div class="panel__head">
+        <h2>Seri numarası kural ihlali</h2>
+        <span class="status-pill tone-danger">{{ serialIssues().length }} kayıt</span>
+      </div>
+      <p class="muted small">
+        Seri takipli üründe her birim benzersiz bir seri numarası taşımalıdır (§10).
+      </p>
+      <ul class="serial-alert__list">
+        @for (issue of serialIssues().slice(0, 5); track issue.detail) {
+          <li>{{ issue.detail }}</li>
+        }
+      </ul>
+      @if (serialIssues().length > 5) {
+        <p class="muted small">…ve {{ serialIssues().length - 5 }} kayıt daha.</p>
+      }
+    </div>
+  }
+
   @if (list.loading()) {
     <div class="state state--loading">Yükleniyor...</div>
   } @else if (list.error()) {

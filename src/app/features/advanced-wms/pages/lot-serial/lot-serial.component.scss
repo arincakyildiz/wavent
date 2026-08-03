@@ -1,0 +1,14 @@
+.serial-alert {
+  border-color: var(--danger);
+  margin-bottom: 16px;
+
+  &__list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}

@@ -1,12 +1,14 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of, switchMap } from 'rxjs';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
-import { LotHealth, LotRow, LotSerialService } from '../../data-access/lot-serial.service';
+import { LotHealth, LotRow, LotSerialService, SerialIssue } from '../../data-access/lot-serial.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -38,6 +40,14 @@ export class LotSerialComponent {
       } satisfies ListQuery,
     })),
     (scope, query) => this.lotSerialService.query(scope, query),
+  );
+
+  /** §10 serial-rule breaches for the active scope, shown as a banner above the list. */
+  readonly serialIssues = toSignal(
+    toObservable(computed(() => this.scope.activeCodes())).pipe(
+      switchMap((scope) => this.lotSerialService.serialIssues(scope).pipe(catchError(() => of([])))),
+    ),
+    { initialValue: [] as SerialIssue[] },
   );
 
   constructor() {

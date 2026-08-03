@@ -4,12 +4,19 @@ import { MockApiService } from '../../../core/api/mock-api.service';
 import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { PutawayRec, db } from './mock-data';
-import { fitsCapacity } from './selectors';
+import { capacityVerdict } from './selectors';
 
 export interface PutawaySuggestionRow extends PutawayRec {
   skuName: string;
   /** Rule verdict surfaced to the UI so a blocked suggestion is visible before clicking. */
   capacityOk: boolean;
+  /** Which constraint failed — weight, volume, product class or temperature (§12). */
+  capacityViolations: string[];
+}
+
+/** One putaway drop is capped at 40 units, matching the suggestion generator. */
+function dropQuantity(p: PutawayRec): number {
+  return Math.min(p.quantity, 40);
 }
 
 function toRow(p: PutawayRec): PutawaySuggestionRow {
@@ -17,12 +24,15 @@ function toRow(p: PutawayRec): PutawaySuggestionRow {
   const loc = db.locations.find(
     (l) => l.warehouseCode === p.warehouseCode && l.path === p.suggestedLocationPath,
   );
-  const addedWeight = (sku?.weightKg ?? 1) * Math.min(p.quantity, 40);
+
+  const verdict =
+    loc && sku ? capacityVerdict(loc, sku, dropQuantity(p)) : { ok: true, violations: [] };
 
   return {
     ...p,
     skuName: sku?.name ?? p.skuCode,
-    capacityOk: loc ? fitsCapacity(loc, addedWeight) : true,
+    capacityOk: verdict.ok,
+    capacityViolations: verdict.violations,
   };
 }
 
@@ -65,7 +75,7 @@ export class PutawayService {
         if (!row.capacityOk) {
           throw new ApiError(
             'validation',
-            `${record.suggestedLocationPath} kapasitesi bu miktar için yetersiz.`,
+            `${record.suggestedLocationPath} uygun değil: ${row.capacityViolations.join('; ')}.`,
           );
         }
 

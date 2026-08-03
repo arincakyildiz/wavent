@@ -66,6 +66,7 @@
               <th appSortable="strategy" [sort]="sort()" (sortChange)="onSort($event)">Strateji</th>
               <th appSortable="fulfilment" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
               <th>Gerekçe</th>
+              <th *appHasPermission="'reservation.override'">İşlem</th>
             </tr>
           </thead>
           <tbody>
@@ -84,7 +85,31 @@
                   </span>
                 </td>
                 <td class="muted small">{{ r.overrideReason ?? '—' }}</td>
+                <td *appHasPermission="'reservation.override'">
+                  <button
+                    type="button"
+                    class="btn"
+                    (click)="toggleCandidates(r)"
+                    [attr.aria-expanded]="activeRow()?.id === r.id"
+                  >
+                    {{ activeRow()?.id === r.id ? 'Kapat' : 'Lot değiştir' }}
+                  </button>
+                </td>
               </tr>
+
+              @if (activeRow()?.id === r.id) {
+                <tr class="expanded-row">
+                  <td [attr.colspan]="10">
+                    <app-allocation-breakdown
+                      [line]="r"
+                      [candidates]="candidates()"
+                      [loading]="candidatesLoading()"
+                      [busy]="overriding()"
+                      (select)="chooseCandidate($event)"
+                    />
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>

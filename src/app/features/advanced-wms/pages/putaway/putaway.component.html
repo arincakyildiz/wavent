@@ -53,7 +53,10 @@
                 <td>
                   {{ s.suggestedLocationPath }}
                   @if (!s.capacityOk) {
-                    <span class="status-pill tone-danger">Kapasite riski</span>
+                    <span class="status-pill tone-danger" [title]="s.capacityViolations.join('; ')">
+                      Kısıt ihlali
+                    </span>
+                    <span class="muted small block">{{ s.capacityViolations.join(' · ') }}</span>
                   }
                 </td>
                 <td><span class="status-pill" [class]="scoreTone(s.score)">{{ s.score }}</span></td>

@@ -760,6 +760,12 @@ a {
   color: var(--danger);
 }
 
+/** Forces an inline helper line (e.g. a rule-violation reason) onto its own row. */
+.block {
+  display: block;
+  margin-top: 3px;
+}
+
 /* ---------- Print / PDF export ---------- */
 /* Detail screens have a "PDF olarak indir" button that calls window.print(); this is
    what the browser's print dialog (→ Save as PDF) actually renders. No PDF library —

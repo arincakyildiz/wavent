@@ -1,0 +1,78 @@
+<div class="breakdown">
+  <div class="breakdown__current">
+    <h3>Mevcut rezervasyon</h3>
+    <dl class="facts">
+      <div>
+        <dt>SKU</dt>
+        <dd>{{ line().sku }}</dd>
+      </div>
+      <div>
+        <dt>Lot / Lokasyon</dt>
+        <dd>{{ line().lot ?? '—' }} · {{ line().locationPath }}</dd>
+      </div>
+      <div>
+        <dt>Strateji</dt>
+        <dd><span class="status-pill tone-neutral">{{ line().strategy }}</span></dd>
+      </div>
+      <div>
+        <dt>Karşılanan</dt>
+        <dd>
+          {{ line().quantity | number }} / {{ line().requested | number }}
+          <span class="muted small">(%{{ coveragePct() }})</span>
+        </dd>
+      </div>
+      @if (shortfall() > 0) {
+        <div>
+          <dt>Eksik</dt>
+          <dd><span class="status-pill tone-warning">{{ shortfall() | number }} adet</span></dd>
+        </div>
+      }
+      @if (line().overrideReason) {
+        <div>
+          <dt>Override gerekçesi</dt>
+          <dd class="muted small">{{ line().overrideReason }}</dd>
+        </div>
+      }
+    </dl>
+  </div>
+
+  <div class="breakdown__alternatives">
+    <h3>Alternatif lotlar</h3>
+
+    @if (loading()) {
+      <div class="state state--loading">Yükleniyor...</div>
+    } @else if (candidates().length) {
+      <ul class="candidates">
+        @for (c of candidates(); track c.locationPath + (c.lot ?? '')) {
+          <li class="candidate">
+            <div class="candidate__info">
+              <span class="candidate__lot">{{ c.lot ?? 'Lotsuz' }}</span>
+              <span class="muted small">
+                {{ c.locationPath }} · {{ c.freeQuantity | number }} adet boşta
+                @if (c.expiryDate) {
+                  · SKT {{ c.expiryDate }}
+                }
+              </span>
+              @if (c.fefoViolationLot) {
+                <span class="status-pill tone-warning">
+                  FEFO ihlali — {{ c.fefoViolationLot }} daha erken
+                </span>
+              }
+            </div>
+            <button
+              type="button"
+              class="btn"
+              [disabled]="busy()"
+              (click)="choose(c)"
+              [attr.aria-label]="(c.lot ?? c.locationPath) + ' lotuna taşı'"
+            >
+              Bu lota taşı
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="state state--empty">Taşınabilecek başka lot bulunamadı.</div>
+    }
+  </div>
+</div>

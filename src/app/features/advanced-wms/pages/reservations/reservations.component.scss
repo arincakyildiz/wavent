@@ -1,0 +1,5 @@
+/* The lot-override panel sits in a full-width row under the reservation it belongs to. */
+.expanded-row > td {
+  background: var(--surface-2);
+  border-top: none;
+}

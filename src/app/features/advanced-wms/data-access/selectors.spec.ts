@@ -2,11 +2,13 @@ import { StockStatus } from '../models/entities';
 import { LocationRec, db } from './mock-data';
 import {
   VARIANCE_THRESHOLD_PCT,
+  capacityVerdict,
   fefoViolation,
   fitsCapacity,
   isReservable,
   networkTotals,
   requiresSecondCount,
+  serialIssues,
   skuStock,
   stockIsBalanced,
   variancePct,
@@ -43,13 +45,125 @@ describe('business rules (§10)', () => {
     });
   });
 
-  describe('location capacity', () => {
-    it('accepts a putaway that stays within the weight limit', () => {
-      expect(fitsCapacity(makeLocation({ usedWeightKg: 400 }), 100)).toBe(true);
+  describe('location capacity (§4)', () => {
+    /** 1 kg / 0.01 m³ per unit of an ambient SKU, so quantity alone drives the limit. */
+    const ambientSku = { weightKg: 1, volumeM3: 0.01, storageClass: 'ambient' as const };
+
+    it('accepts a putaway that stays within every limit', () => {
+      expect(fitsCapacity(makeLocation({ usedWeightKg: 400 }), ambientSku, 100)).toBe(true);
     });
 
     it('rejects a putaway that exceeds the weight limit', () => {
-      expect(fitsCapacity(makeLocation({ usedWeightKg: 400 }), 101)).toBe(false);
+      expect(fitsCapacity(makeLocation({ usedWeightKg: 400 }), ambientSku, 101)).toBe(false);
+    });
+
+    it('rejects a bulky-but-light putaway on volume even when weight fits', () => {
+      const bulky = { weightKg: 0.1, volumeM3: 0.5, storageClass: 'ambient' as const };
+      const loc = makeLocation({ usedWeightKg: 0, usedVolumeM3: 3, maxVolumeM3: 4 });
+
+      const verdict = capacityVerdict(loc, bulky, 4);
+      expect(verdict.ok).toBe(false);
+      expect(verdict.violations.join(' ')).toContain('Hacim');
+    });
+
+    it('refuses a product class the location does not hold', () => {
+      const frozenSku = { weightKg: 1, volumeM3: 0.01, storageClass: 'frozen' as const };
+      const verdict = capacityVerdict(makeLocation({ locationClass: 'ambient' }), frozenSku, 1);
+
+      expect(verdict.ok).toBe(false);
+      expect(verdict.violations.join(' ')).toContain('Ürün sınıfı');
+    });
+
+    it('refuses a chilled SKU in a bin whose temperature band is too wide', () => {
+      const chilledSku = { weightKg: 1, volumeM3: 0.01, storageClass: 'chilled' as const };
+      const tooWarm = makeLocation({
+        locationClass: 'chilled',
+        temperatureRangeC: { min: 0, max: 15 },
+      });
+
+      const verdict = capacityVerdict(tooWarm, chilledSku, 1);
+      expect(verdict.ok).toBe(false);
+      expect(verdict.violations.join(' ')).toContain('Sıcaklık');
+    });
+
+    it('accepts a chilled SKU in a correctly-banded chilled bin', () => {
+      const chilledSku = { weightKg: 1, volumeM3: 0.01, storageClass: 'chilled' as const };
+      const chilledBin = makeLocation({
+        locationClass: 'chilled',
+        temperatureRangeC: { min: 2, max: 6 },
+      });
+
+      expect(capacityVerdict(chilledBin, chilledSku, 1).ok).toBe(true);
+    });
+
+    it('reports every failing constraint at once rather than short-circuiting', () => {
+      const frozenSku = { weightKg: 100, volumeM3: 1, storageClass: 'frozen' as const };
+      const verdict = capacityVerdict(makeLocation({ locationClass: 'ambient' }), frozenSku, 10);
+
+      // over weight, over volume, wrong class, and the bin has no temperature control
+      expect(verdict.violations.length).toBe(4);
+    });
+  });
+
+  describe('serial uniqueness (§10)', () => {
+    /** Only SKU-S is serial-tracked in these cases. */
+    const tracked = (code: string) => code === 'SKU-S';
+
+    it('accepts one unit per unique serial', () => {
+      const issues = serialIssues(
+        [
+          { skuCode: 'SKU-S', serial: 'SN-1', quantity: 1 },
+          { skuCode: 'SKU-S', serial: 'SN-2', quantity: 1 },
+        ],
+        tracked,
+      );
+      expect(issues).toEqual([]);
+    });
+
+    it('flags a serial reused across two records', () => {
+      const issues = serialIssues(
+        [
+          { skuCode: 'SKU-S', serial: 'SN-1', quantity: 1 },
+          { skuCode: 'SKU-S', serial: 'SN-1', quantity: 1 },
+        ],
+        tracked,
+      );
+      expect(issues.length).toBe(1);
+      expect(issues[0].kind).toBe('duplicate');
+    });
+
+    it('flags a serial-tracked unit with no serial at all', () => {
+      const issues = serialIssues([{ skuCode: 'SKU-S', quantity: 1 }], tracked);
+      expect(issues.length).toBe(1);
+      expect(issues[0].kind).toBe('missing');
+    });
+
+    it('flags a serial that carries more than one unit', () => {
+      const issues = serialIssues([{ skuCode: 'SKU-S', serial: 'SN-1', quantity: 4 }], tracked);
+      expect(issues.length).toBe(1);
+      expect(issues[0].kind).toBe('quantity');
+    });
+
+    it('ignores SKUs that are not serial-tracked', () => {
+      const issues = serialIssues(
+        [
+          { skuCode: 'SKU-BULK', quantity: 500 },
+          { skuCode: 'SKU-BULK', quantity: 500 },
+        ],
+        tracked,
+      );
+      expect(issues).toEqual([]);
+    });
+
+    it('treats the same serial on different SKUs as distinct', () => {
+      const issues = serialIssues(
+        [
+          { skuCode: 'SKU-S', serial: 'SN-1', quantity: 1 },
+          { skuCode: 'SKU-OTHER', serial: 'SN-1', quantity: 1 },
+        ],
+        (code) => code === 'SKU-S' || code === 'SKU-OTHER',
+      );
+      expect(issues).toEqual([]);
     });
   });
 
