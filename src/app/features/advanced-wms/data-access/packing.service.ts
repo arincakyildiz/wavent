@@ -42,6 +42,39 @@ export class PackingService {
   }
 
   /**
+   * Records a weight read off the bench scale (§2 device simulation).
+   *
+   * The reading replaces the measured weight but never the expectation — that is what
+   * keeps the tolerance rule meaningful: a drifted scale or a mis-loaded package shows
+   * up as out-of-tolerance needing supervisor approval, rather than silently
+   * redefining what the package was supposed to weigh.
+   */
+  recordWeight(id: string, expectedVersion: number, weightKg: number): Observable<PackageRow> {
+    return this.api.simulate(id, { delayMs: 420, kind: 'write' }).pipe(
+      map(() => {
+        const record = db.packages.find((p) => p.id === id);
+        if (!record) throw new ApiError('not-found', 'Paket bulunamadı.');
+
+        this.api.assertVersion(expectedVersion, record.version);
+
+        if (record.status === 'shipped') {
+          throw new ApiError('validation', 'Sevk edilmiş paket yeniden tartılamaz.');
+        }
+        if (!Number.isFinite(weightKg) || weightKg <= 0) {
+          throw new ApiError('validation', 'Geçersiz tartı okuması.');
+        }
+
+        record.weightKg = Math.round(weightKg * 10) / 10;
+        // A fresh reading outside tolerance puts the package back on hold.
+        record.status = withinWeightTolerance(record) ? 'sealed' : 'weight-hold';
+        record.version += 1;
+
+        return toRow(record);
+      }),
+    );
+  }
+
+  /**
    * Supervisor override for an out-of-tolerance package. Requires the reason captured
    * by the confirm dialog, and refuses to run on a package that is already compliant.
    */

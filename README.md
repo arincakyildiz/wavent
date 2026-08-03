@@ -122,6 +122,10 @@ unit/component testlerle kaplıdır:
 - `data-access/reservations.service.spec.ts` — eşzamanlı rezervasyonda version **ve** miktar
   çakışması (§11)
 - `data-access/lot-serial.service.spec.ts` — seri numarasının yazma anında benzersizliği (§10)
+- `data-access/packing.service.spec.ts` — tartı okuması beklentiyi değiştirmez; tolerans dışı
+  okuma paketi weight-hold'a alır (§2/§10)
+- `shared/components/scale-input/scale-input.component.spec.ts` — tartı oturma davranışı;
+  kararsız okuma kaydedilemez
 - `core/storage/indexed-db.service.spec.ts` — offline anlık görüntü önbelleği ve yaş kontrolü
 
 Dört ana kullanıcı akışı component/integration seviyesinde uçtan uca kaplıdır:
@@ -140,7 +144,8 @@ Dört ana kullanıcı akışı component/integration seviyesinde uçtan uca kapl
 ## Paylaşılan Bileşenler
 
 Şartnamedeki sekiz bileşenin tamamı `shared/components/` altında ayrı birer bileşendir ve ilgili
-ekranda kullanılır: `WarehouseTree` (Locations · hiyerarşi görünümü), `BarcodeInput` (Putaway),
+ekranda kullanılır; bunlara ek olarak tartı simülasyonu için `ScaleInput` (Packing) vardır:
+`WarehouseTree` (Locations · hiyerarşi görünümü), `BarcodeInput` (Putaway),
 `InventoryLedger` (Inventory Detail), `AllocationBreakdown` (Reservations · lot override),
 `WaveCapacityBoard` (Waves · kapasite panosu), `PickRouteViewer` (Picking · rota),
 `ExceptionWorkbench` (Exceptions · kanıt + yeniden atama + karar), `TraceabilityTimeline`
@@ -152,9 +157,10 @@ ekranda kullanılır: `WarehouseTree` (Locations · hiyerarşi görünümü), `B
   Mock veri her sayfa yenilemesinde sabit tohumdan yeniden üretilir.
 - Component/integration testler dört ana akışı kapsar; kalan ekranlarda kapsam unit
   seviyesindedir (selectors, servisler).
-- Tartı gibi fiziksel cihaz entegrasyonları simüle edilmemiştir. Barkod okuma, Putaway ekranında
-  `BarcodeInput` bileşeniyle simüle edilir (tarama, yinelenen okumaları yutar; eşleşmeyen barkod
-  bir istisna olarak loglanır).
+- Fiziksel cihaz **bağlantısı** yoktur; cihazlar yazılımda simüle edilir: barkod okuma Putaway'de
+  `BarcodeInput` (yinelenen okumaları yutar, eşleşmeyen barkod istisna üretir), tartı Packing'de
+  `ScaleInput` (load cell oturma süresi, kalibrasyon sapması; kararsız okuma kaydedilemez),
+  gerçek zamanlı görev olayları Control Tower'da RxJS akışı.
 - Offline desteği **okuma yönlüdür**: IndexedDB'deki anlık görüntü, servis hata verdiğinde
   Overview'de "çevrimdışı veri" etiketiyle gösterilir. Çevrimdışıyken yapılan yazmaların
   kuyruklanıp bağlantı gelince gönderilmesi (background sync) uygulanmadı.

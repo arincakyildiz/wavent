@@ -1,0 +1,12 @@
+
+/* The bench scale sits in a full-width row under the package it is weighing. */
+.expanded-row > td {
+  background: var(--surface-2);
+  border-top: none;
+}
+
+.packing__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,58 @@
+.scale {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-1);
+  transition: border-color 0.15s ease;
+
+  &--stable {
+    border-color: var(--success);
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: linear-gradient(155deg, var(--accent-soft), transparent);
+    color: var(--accent);
+  }
+
+  &__readout {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 130px;
+  }
+
+  &__value {
+    /* Tabular figures stop the number jittering sideways while it settles. */
+    font-size: 20px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  &__placeholder {
+    color: var(--text-muted);
+  }
+
+  &__actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .scale__actions {
+    margin-left: 0;
+    width: 100%;
+  }
+}

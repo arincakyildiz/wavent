@@ -73,7 +73,17 @@
                   }
                 </td>
                 <td><span class="status-pill" [class]="statusTone(p.status)">{{ p.status }}</span></td>
-                <td>
+                <td class="packing__actions">
+                  @if (p.status !== 'shipped') {
+                    <button
+                      class="btn"
+                      type="button"
+                      [attr.aria-expanded]="weighingRow()?.id === p.id"
+                      (click)="toggleScale(p)"
+                    >
+                      {{ weighingRow()?.id === p.id ? 'Kapat' : 'Tart' }}
+                    </button>
+                  }
                   @if (!p.weightOk) {
                     <button
                       class="btn"
@@ -87,6 +97,19 @@
                   }
                 </td>
               </tr>
+
+              @if (weighingRow()?.id === p.id) {
+                <tr class="expanded-row">
+                  <td [attr.colspan]="8">
+                    <app-scale-input
+                      [actualWeightKg]="p.weightKg"
+                      [disabled]="pendingId() === p.id"
+                      [label]="p.code + ' — beklenen ' + p.expectedWeightKg + ' kg ±' + p.toleranceKg"
+                      (weighed)="onWeighed(p, $event)"
+                    />
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>

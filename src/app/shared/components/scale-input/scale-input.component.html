@@ -1,0 +1,39 @@
+<div class="scale" [class.scale--stable]="state() === 'stable'">
+  <span class="scale__icon" aria-hidden="true">
+    <app-icon name="package" [size]="16" />
+  </span>
+
+  <div class="scale__readout">
+    <span class="scale__label muted small">{{ label() }}</span>
+    <output class="scale__value" [attr.aria-live]="isWeighing() ? 'off' : 'polite'">
+      @if (reading() === null) {
+        <span class="scale__placeholder">—.— kg</span>
+      } @else {
+        {{ reading() }} kg
+      }
+    </output>
+  </div>
+
+  <span class="scale__state">
+    @switch (state()) {
+      @case ('weighing') {
+        <span class="status-pill tone-warning">Kararsız</span>
+      }
+      @case ('stable') {
+        <span class="status-pill tone-success">Sabit</span>
+      }
+      @default {
+        <span class="status-pill tone-neutral">Hazır</span>
+      }
+    }
+  </span>
+
+  <div class="scale__actions">
+    <button type="button" class="btn" (click)="weigh()" [disabled]="disabled() || isWeighing()">
+      {{ isWeighing() ? 'Tartılıyor...' : 'Tart' }}
+    </button>
+    <button type="button" class="btn btn--primary" (click)="commit()" [disabled]="!canCommit()">
+      Ağırlığı kaydet
+    </button>
+  </div>
+</div>
