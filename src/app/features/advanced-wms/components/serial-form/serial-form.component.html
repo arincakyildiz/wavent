@@ -1,0 +1,108 @@
+<app-form-dialog
+  title="Seri Kaydı Ekle"
+  subtitle="Seri numarası ürün bazında benzersiz olmalıdır; her seri tek birim taşır."
+  (dismissed)="dismissed.emit()"
+>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Ürün <span class="req">*</span></span>
+        <select
+          formControlName="skuCode"
+          (change)="onSku($any($event.target).value)"
+          [class.invalid]="invalid('skuCode')"
+        >
+          @for (s of skus; track s.code) {
+            <option [value]="s.code">{{ s.code }} — {{ s.name }}</option>
+          }
+        </select>
+        <span class="field__hint">Yalnızca seri takipli ürünler listelenir.</span>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Seri No <span class="req">*</span></span>
+        <input
+          formControlName="serial"
+          type="text"
+          placeholder="SN-88999"
+          autocomplete="off"
+          maxlength="40"
+          [class.invalid]="invalid('serial')"
+          [attr.aria-invalid]="invalid('serial')"
+        />
+        @if (serialControl.pending) {
+          <span class="field__hint">Seri numarası kontrol ediliyor...</span>
+        } @else if (invalid('serial')) {
+          <span class="field__error" role="alert">
+            @if (serialControl.hasError('required')) {
+              Seri numarası zorunludur.
+            } @else if (serialControl.hasError('serialPattern')) {
+              En az 4 karakter; harf, rakam ve tire kullanın.
+            } @else if (serialControl.hasError('maxlength')) {
+              En fazla 40 karakter olabilir.
+            } @else if (serialControl.hasError('notUnique')) {
+              Bu seri numarası seçili ürün için zaten kayıtlı.
+            }
+          </span>
+        }
+      </label>
+    </div>
+
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Depo <span class="req">*</span></span>
+        <select
+          formControlName="warehouseCode"
+          (change)="onWarehouse($any($event.target).value)"
+          [class.invalid]="invalid('warehouseCode')"
+        >
+          @for (w of warehouses(); track w.code) {
+            <option [value]="w.code">{{ w.code }} — {{ w.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Lokasyon <span class="req">*</span></span>
+        <select formControlName="locationPath" [class.invalid]="invalid('locationPath')">
+          @if (!locationPaths().length) {
+            <option value="">Lokasyon yükleniyor...</option>
+          }
+          @for (path of locationPaths(); track path) {
+            <option [value]="path">{{ path }}</option>
+          }
+        </select>
+        @if (invalid('locationPath')) {
+          <span class="field__error" role="alert">Lokasyon seçilmelidir.</span>
+        }
+      </label>
+    </div>
+
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">Lot (opsiyonel)</span>
+        <input
+          formControlName="lot"
+          type="text"
+          placeholder="L-24100"
+          autocomplete="off"
+          maxlength="20"
+        />
+        <span class="field__hint">Yalnızca lot takipli ürünlerde dikkate alınır.</span>
+      </label>
+    </div>
+
+    @if (submitError()) {
+      <div class="form__error" role="alert">{{ submitError() }}</div>
+    }
+
+    <div class="form__actions">
+      <button type="button" class="btn" (click)="dismissed.emit()" [disabled]="submitting()">
+        Vazgeç
+      </button>
+      <button type="submit" class="btn btn--primary" [disabled]="submitting() || form.pending">
+        {{ submitting() ? 'Kaydediliyor...' : 'Seriyi kaydet' }}
+      </button>
+    </div>
+  </form>
+</app-form-dialog>

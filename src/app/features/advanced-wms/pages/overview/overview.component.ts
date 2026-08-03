@@ -1,9 +1,11 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { catchError, interval, of, switchMap } from 'rxjs';
+import { catchError, interval, map, of, switchMap, tap } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { IndexedDbService } from '../../../../core/storage/indexed-db.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { SparklineComponent } from '../../../../shared/components/sparkline/sparkline.component';
 import { DonutChartComponent } from '../../../../shared/components/donut-chart/donut-chart.component';
@@ -17,6 +19,14 @@ import {
   Period,
 } from '../../data-access/dashboard.service';
 
+/** Beyond this the snapshot is too old to be worth showing at all. */
+const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1000;
+
+/** One cached snapshot per scope + period, since the figures differ per combination. */
+function cacheKey(scope: string[], period: Period): string {
+  return `dashboard:${scope.join(',') || 'all'}:${period}`;
+}
+
 const TONE_HEX: Record<string, string> = {
   info: '#3b82f6',
   success: '#22c55e',
@@ -28,7 +38,14 @@ const TONE_HEX: Record<string, string> = {
 
 @Component({
   selector: 'app-overview',
-  imports: [IconComponent, SparklineComponent, DonutChartComponent, BarChartComponent, WorldMapComponent],
+  imports: [
+    DatePipe,
+    IconComponent,
+    SparklineComponent,
+    DonutChartComponent,
+    BarChartComponent,
+    WorldMapComponent,
+  ],
   templateUrl: './overview.component.html',
   styleUrl: './overview.component.scss',
 })
@@ -51,6 +68,11 @@ export class OverviewComponent {
   readonly errorMessage = signal<string | null>(null);
   private readonly reloadToken = signal(0);
 
+  private readonly db = inject(IndexedDbService);
+
+  /** Set when the figures on screen came from the offline cache, not the service. */
+  readonly staleSince = signal<Date | null>(null);
+
   private readonly summaryResult = toSignal(
     toObservable(
       computed(() => ({
@@ -61,10 +83,25 @@ export class OverviewComponent {
     ).pipe(
       switchMap(({ scope, period }) => {
         this.errorMessage.set(null);
+        const key = cacheKey(scope, period);
+
         return this.dashboard.getSummary(scope, period).pipe(
+          // A good response refreshes the offline copy for the next outage.
+          tap((summary) => {
+            this.staleSince.set(null);
+            this.db.write(key, summary).subscribe();
+          }),
           catchError((err) => {
-            this.errorMessage.set(describeError(err));
-            return of(null);
+            const message = describeError(err);
+            // Falling back to cache must never hide that the live call failed —
+            // the banner stays and the panel is labelled with the snapshot's age.
+            return this.db.read<DashboardSummary>(key, MAX_CACHE_AGE_MS).pipe(
+              map((cached) => {
+                this.errorMessage.set(message);
+                this.staleSince.set(cached ? cached.savedAt : null);
+                return cached?.value ?? null;
+              }),
+            );
           }),
         );
       }),

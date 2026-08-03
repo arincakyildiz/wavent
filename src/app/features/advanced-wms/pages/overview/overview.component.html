@@ -43,12 +43,28 @@
 
   @if (loading()) {
     <div class="state state--loading">Yükleniyor...</div>
-  } @else if (errorMessage()) {
+  } @else if (errorMessage() && !summary()) {
     <div class="state state--error" role="alert">
       {{ errorMessage() }}
       <button type="button" (click)="reload()">Tekrar dene</button>
     </div>
   } @else {
+    @if (errorMessage()) {
+      <!-- Live call failed but a cached snapshot exists: show it, clearly labelled. -->
+      <div class="offline-banner" role="alert">
+        <div class="offline-banner__text">
+          <strong>Çevrimdışı veri gösteriliyor</strong>
+          <span class="muted small">
+            {{ errorMessage() }}
+            @if (staleSince(); as at) {
+              · Anlık görüntü {{ at | date: 'dd.MM.yyyy HH:mm' }} tarihli
+            }
+          </span>
+        </div>
+        <button type="button" class="btn" (click)="reload()">Tekrar dene</button>
+      </div>
+    }
+
     @if (summary(); as data) {
     <!-- KPI row -->
     <div class="kpi-row">

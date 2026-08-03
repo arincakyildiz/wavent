@@ -121,10 +121,21 @@ unit/component testlerle kaplıdır:
 - `data-access/waves.service.spec.ts` — optimistic concurrency (`version` çakışması)
 - `data-access/reservations.service.spec.ts` — eşzamanlı rezervasyonda version **ve** miktar
   çakışması (§11)
-- `pages/exceptions/exceptions.component.spec.ts` — **integration:** istisna çözme akışı
-  (zorunlu gerekçe → servis → audit → bildirim)
-- `pages/wave-detail/wave-detail.component.spec.ts` — **integration:** dalga yayınlama akışı
-  (kısmi sonuç, zorunlu gerekçe, version çakışması, store senkronu)
+- `data-access/lot-serial.service.spec.ts` — seri numarasının yazma anında benzersizliği (§10)
+- `core/storage/indexed-db.service.spec.ts` — offline anlık görüntü önbelleği ve yaş kontrolü
+
+Dört ana kullanıcı akışı component/integration seviyesinde uçtan uca kaplıdır:
+
+- `pages/exceptions/exceptions.component.spec.ts` — istisna çözme (zorunlu gerekçe → servis →
+  audit → bildirim)
+- `pages/wave-detail/wave-detail.component.spec.ts` — dalga yayınlama (kısmi sonuç, zorunlu
+  gerekçe, version çakışması, store senkronu)
+- `pages/putaway/putaway.component.spec.ts` — putaway kabulü (optimistic update, hata halinde
+  rollback + retry, kapasite override, yanlış barkod istisnası)
+- `pages/reservations/reservations.component.spec.ts` — lot override (zorunlu gerekçe, miktar
+  çakışması, version çakışması)
+- `pages/overview/overview.component.spec.ts` — offline fallback (servis hatasında önbellekten
+  "çevrimdışı" etiketiyle sunum, önbellek yokken düz hata, bağlantı dönünce etiketin kalkması)
 
 ## Paylaşılan Bileşenler
 
@@ -138,13 +149,12 @@ ekranda kullanılır: `WarehouseTree` (Locations · hiyerarşi görünümü), `B
 ## Bilinen Eksikler
 
 - Tüm veriler mock; gerçek backend entegrasyonu yok ve oturum içi değişiklikler kalıcı değildir.
-- Component/integration testler iki ana akışı (istisna çözme, dalga yayınlama) uçtan uca kapsar;
-  diğer ekranlarda kapsam unit seviyesindedir (selectors, servisler).
+  Mock veri her sayfa yenilemesinde sabit tohumdan yeniden üretilir.
+- Component/integration testler dört ana akışı kapsar; kalan ekranlarda kapsam unit
+  seviyesindedir (selectors, servisler).
 - Tartı gibi fiziksel cihaz entegrasyonları simüle edilmemiştir. Barkod okuma, Putaway ekranında
   `BarcodeInput` bileşeniyle simüle edilir (tarama, yinelenen okumaları yutar; eşleşmeyen barkod
   bir istisna olarak loglanır).
-- `core/storage` yalnızca `localStorage` adapter'ı ve TTL'li bellek içi cache sağlar; IndexedDB
-  ve offline senkronizasyon uygulanmadı.
-- Seri numarası benzersizliği kural + doğrulama olarak mevcuttur (`serialIssues`,
-  `LotSerialService.isSerialAvailable`) ve Lot/Serial ekranında ihlaller listelenir; ancak seri
-  üreten bir yazma formu olmadığı için kural şu an tespit/validasyon seviyesindedir.
+- Offline desteği **okuma yönlüdür**: IndexedDB'deki anlık görüntü, servis hata verdiğinde
+  Overview'de "çevrimdışı veri" etiketiyle gösterilir. Çevrimdışıyken yapılan yazmaların
+  kuyruklanıp bağlantı gelince gönderilmesi (background sync) uygulanmadı.

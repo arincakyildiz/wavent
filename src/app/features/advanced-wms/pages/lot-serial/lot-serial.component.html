@@ -4,7 +4,22 @@
       <h1>Lot / Serial</h1>
       <p class="muted">Lot ve seri zorunluluğu, SKT yaklaşan, bloke ve süresi geçen stoklar</p>
     </div>
+
+    <div class="page__actions">
+      <button
+        class="btn btn--primary"
+        type="button"
+        (click)="formOpen.set(true)"
+        *appHasPermission="'lot.view'"
+      >
+        + Seri Kaydı Ekle
+      </button>
+    </div>
   </div>
+
+  @if (formOpen()) {
+    <app-serial-form (created)="onSerialCreated($event)" (dismissed)="formOpen.set(false)" />
+  }
 
   @if (serialIssues().length) {
     <div class="panel serial-alert" role="alert">

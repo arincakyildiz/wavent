@@ -2,25 +2,39 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
+import { AuditService } from '../../../../core/observability/audit.service';
+import { NotificationService } from '../../../../core/observability/notification.service';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
+import { SerialFormComponent } from '../../components/serial-form/serial-form.component';
 import { LotHealth, LotRow, LotSerialService, SerialIssue } from '../../data-access/lot-serial.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-lot-serial',
-  imports: [DecimalPipe, SortableDirective, PaginationComponent],
+  imports: [
+    DecimalPipe,
+    SortableDirective,
+    PaginationComponent,
+    HasPermissionDirective,
+    SerialFormComponent,
+  ],
   templateUrl: './lot-serial.component.html',
   styleUrl: './lot-serial.component.scss',
 })
 export class LotSerialComponent {
   private readonly lotSerialService = inject(LotSerialService);
   private readonly scope = inject(WarehouseScopeService);
+  private readonly notifications = inject(NotificationService);
+  private readonly audit = inject(AuditService);
+
+  readonly formOpen = signal(false);
 
   readonly search = signal('');
   readonly healthFilter = signal('all');
@@ -77,6 +91,22 @@ export class LotSerialComponent {
   onPageSize(size: number): void {
     this.pageSize.set(size);
     this.page.set(1);
+  }
+
+  /** §10: a newly registered serial is an auditable stock event. */
+  onSerialCreated(row: LotRow): void {
+    this.formOpen.set(false);
+
+    this.audit.record({
+      actionType: 'Serial Registered',
+      targetType: 'InventoryBalance',
+      targetId: `${row.skuCode} · ${row.serial}`,
+      oldValue: '—',
+      newValue: `${row.warehouseCode} · ${row.locationPath}`,
+    });
+
+    this.notifications.success('Seri kaydedildi', `${row.serial} · ${row.locationPath}`);
+    this.list.reload();
   }
 
   healthTone(health: LotHealth): string {
