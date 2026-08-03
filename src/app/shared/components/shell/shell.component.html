@@ -1,7 +1,7 @@
 <div class="shell" [class.shell--collapsed]="collapsed()" [class.shell--mobile-nav-open]="mobileNavOpen()">
   <div class="sidebar-backdrop" (click)="closeMobileNav()"></div>
 
-  <aside class="sidebar">
+  <aside class="sidebar" #sidebarEl>
     <div class="sidebar__top">
       <a class="brand" routerLink="/wms/overview" (click)="closeMobileNav()">
         <span class="brand__mark">W</span>
@@ -19,7 +19,7 @@
       </button>
     </div>
 
-    <nav class="nav">
+    <nav class="nav" #navEl>
       @for (group of navGroups(); track $index) {
         <div class="nav__group">
           @if (group.label && !collapsed()) {

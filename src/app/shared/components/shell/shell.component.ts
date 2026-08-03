@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Permission } from '../../../core/auth/permissions';
@@ -35,6 +35,9 @@ interface NavGroup {
   styleUrl: './shell.component.scss',
 })
 export class ShellComponent {
+  @ViewChild('sidebarEl') private sidebarEl?: ElementRef<HTMLElement>;
+  @ViewChild('navEl') private navEl?: ElementRef<HTMLElement>;
+
   private readonly auth = inject(AuthService);
   private readonly themeService = inject(ThemeService);
   private readonly scope = inject(WarehouseScopeService);
@@ -121,7 +124,14 @@ export class ShellComponent {
 
   toggleMobileNav(): void {
     this.mobileNavOpen.update((v) => !v);
-    if (this.mobileNavOpen()) this.collapsed.set(false);
+    if (this.mobileNavOpen()) {
+      this.collapsed.set(false);
+      // The nav list keeps its scroll position from the last time it auto-scrolled
+      // an active link into view (e.g. Audit Log near the bottom); without this the
+      // drawer can open with the whole list scrolled out of the visible area.
+      if (this.sidebarEl) this.sidebarEl.nativeElement.scrollTop = 0;
+      if (this.navEl) this.navEl.nativeElement.scrollTop = 0;
+    }
   }
 
   closeMobileNav(): void {
