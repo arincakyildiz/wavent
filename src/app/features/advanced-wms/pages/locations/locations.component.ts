@@ -4,16 +4,19 @@ import { catchError, of, switchMap } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { WarehouseTreeComponent } from '../../../../shared/components/warehouse-tree/warehouse-tree.component';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { LocationRow, LocationsService } from '../../data-access/locations.service';
 
 const DEFAULT_PAGE_SIZE = 20;
+/** The tree needs the whole hierarchy, not the current page of it. */
+const TREE_PAGE_SIZE = 500;
 
 @Component({
   selector: 'app-locations',
-  imports: [SortableDirective, PaginationComponent],
+  imports: [SortableDirective, PaginationComponent, WarehouseTreeComponent],
   templateUrl: './locations.component.html',
   styleUrl: './locations.component.scss',
 })
@@ -23,6 +26,7 @@ export class LocationsComponent {
 
   readonly search = signal('');
   readonly classFilter = signal('all');
+  readonly view = signal<'table' | 'tree'>('table');
   readonly page = signal(1);
   readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'path', direction: 'asc' });
@@ -33,8 +37,9 @@ export class LocationsComponent {
     scope: this.scope.activeCodes(),
     query: {
       search: this.search(),
-      page: this.page(),
-      pageSize: this.pageSize(),
+      // Tree view renders the full hierarchy, so paging it would truncate branches.
+      page: this.view() === 'tree' ? 1 : this.page(),
+      pageSize: this.view() === 'tree' ? TREE_PAGE_SIZE : this.pageSize(),
       sort: this.sort(),
       filters: { locationClass: this.classFilter() },
     } satisfies ListQuery,
@@ -66,6 +71,12 @@ export class LocationsComponent {
       { param: 'class', signal: this.classFilter, defaultValue: 'all', parse: parseString },
       { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
       { param: 'size', signal: this.pageSize, defaultValue: DEFAULT_PAGE_SIZE, parse: parseNumber(DEFAULT_PAGE_SIZE) },
+      {
+        param: 'view',
+        signal: this.view,
+        defaultValue: 'table' as const,
+        parse: (raw) => (raw === 'tree' ? 'tree' : 'table'),
+      },
     ]);
 
     effect(() => {
@@ -80,6 +91,11 @@ export class LocationsComponent {
 
   onClass(value: string): void {
     this.classFilter.set(value);
+    this.page.set(1);
+  }
+
+  setView(view: 'table' | 'tree'): void {
+    this.view.set(view);
     this.page.set(1);
   }
 

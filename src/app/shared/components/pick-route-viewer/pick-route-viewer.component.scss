@@ -1,0 +1,105 @@
+.route {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+  }
+
+  &__code {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  &__progress {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+  }
+
+  &__exception {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
+    font-size: 13px;
+  }
+
+  &__stops {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__stop {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px 7px 7px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    background: var(--surface-1);
+  }
+
+  &__marker {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--surface-2);
+    color: var(--text-secondary);
+  }
+
+  &__location {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* State is carried by more than colour — each stop also spells out its status. */
+  &__stop--done {
+    border-color: var(--success);
+
+    .route__marker {
+      background: var(--success);
+      color: #fff;
+    }
+  }
+
+  &__stop--current {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+
+    .route__marker {
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+
+  &__stop--blocked {
+    border-color: var(--danger);
+
+    .route__marker {
+      background: var(--danger);
+      color: #fff;
+    }
+  }
+}

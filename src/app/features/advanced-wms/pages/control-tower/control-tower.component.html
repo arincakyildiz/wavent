@@ -82,11 +82,22 @@
           <section class="panel">
             <div class="panel__head">
               <h2>Canlı Görev Akışı</h2>
-              <span class="muted small">son {{ eventCount() }} olay</span>
+              <div class="feed__controls">
+                <select
+                  [value]="toneFilter()"
+                  (change)="toneFilter.set($any($event.target).value)"
+                  aria-label="Olay türü filtresi"
+                >
+                  @for (t of toneFilters; track t) {
+                    <option [value]="t">{{ toneLabel(t) }}</option>
+                  }
+                </select>
+                <span class="muted small">son {{ eventCount() }} olay</span>
+              </div>
             </div>
-            @if (events().length) {
+            @if (visibleEvents().length) {
               <ul class="feed" aria-live="polite">
-                @for (e of events(); track e.id) {
+                @for (e of visibleEvents(); track e.id) {
                   <li class="feed__row-enter">
                     <span class="icon-tile icon-tile--sm" [class]="'tone-' + e.tone">
                       <app-icon [name]="e.icon" [size]="15" />
@@ -99,6 +110,8 @@
                   </li>
                 }
               </ul>
+            } @else if (events().length) {
+              <div class="state state--empty">Bu filtreyle eşleşen olay yok.</div>
             } @else {
               <div class="state state--empty">
                 {{ streaming() ? 'Olay bekleniyor...' : 'Akış duraklatıldı.' }}

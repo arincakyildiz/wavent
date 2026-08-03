@@ -39,10 +39,37 @@
         <option value="cancelled">Cancelled</option>
       </select>
       <span class="spacer"></span>
+      <div class="view-toggle" role="group" aria-label="Görünüm">
+        <button
+          type="button"
+          class="view-toggle__btn"
+          [class.view-toggle__btn--active]="view() === 'table'"
+          [attr.aria-pressed]="view() === 'table'"
+          (click)="setView('table')"
+        >
+          Tablo
+        </button>
+        <button
+          type="button"
+          class="view-toggle__btn"
+          [class.view-toggle__btn--active]="view() === 'board'"
+          [attr.aria-pressed]="view() === 'board'"
+          (click)="setView('board')"
+        >
+          Kapasite Panosu
+        </button>
+      </div>
       <span class="muted small">{{ list.total() | number }} dalga</span>
     </div>
 
-    @if (list.rows().length) {
+    @if (view() === 'board') {
+      <div class="panel">
+        <app-wave-capacity-board
+          [waves]="boardWaves()"
+          emptyMessage="Planlanacak draft veya planned dalga yok."
+        />
+      </div>
+    } @else if (list.rows().length) {
       <div class="table-scroll">
         <table class="data-table">
           <thead>

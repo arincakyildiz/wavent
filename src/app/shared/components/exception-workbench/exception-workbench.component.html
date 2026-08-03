@@ -1,0 +1,77 @@
+<div class="workbench">
+  <section class="workbench__case">
+    <h3>Kanıt</h3>
+
+    @if (loading()) {
+      <div class="state state--loading">Yükleniyor...</div>
+    } @else if (evidence().length) {
+      <dl class="evidence">
+        @for (item of evidence(); track item.label) {
+          <div class="evidence__row">
+            <dt>{{ item.label }}</dt>
+            <dd>
+              {{ item.value }}
+              @if (item.hint) {
+                <span class="muted small">({{ item.hint }})</span>
+              }
+            </dd>
+          </div>
+        }
+      </dl>
+    } @else {
+      <div class="state state--empty">Bu istisna için ek kanıt kaydı yok.</div>
+    }
+  </section>
+
+  <section class="workbench__decision">
+    <h3>Karar</h3>
+
+    <div class="workbench__meta">
+      <span class="status-pill" [class]="severityTone(exception().severity)">
+        {{ exception().severity }}
+      </span>
+      <span class="status-pill" [class]="statusTone(exception().status)">
+        {{ exception().status }}
+      </span>
+      <span class="muted small">Sahip: {{ exception().owner ?? 'Atanmadı' }}</span>
+    </div>
+
+    @if (isResolved()) {
+      <p class="muted small">
+        Bu istisna çözüldü.
+        @if (exception().resolutionNote) {
+          Gerekçe: {{ exception().resolutionNote }}
+        }
+      </p>
+    } @else {
+      <div class="field">
+        <label [attr.for]="'owner-' + exception().id">Yeniden ata</label>
+        <div class="workbench__reassign">
+          <select
+            [id]="'owner-' + exception().id"
+            [value]="selectedOwner()"
+            (change)="onOwnerChange($any($event.target).value)"
+            [disabled]="busy()"
+          >
+            <option value="">Operatör seçin...</option>
+            @for (owner of owners(); track owner) {
+              <option [value]="owner" [disabled]="owner === exception().owner">{{ owner }}</option>
+            }
+          </select>
+          <button type="button" class="btn" [disabled]="!canReassign()" (click)="submitReassign()">
+            Ata
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn--primary"
+        [disabled]="busy()"
+        (click)="submitResolve()"
+      >
+        Çözüldü olarak işaretle
+      </button>
+    }
+  </section>
+</div>

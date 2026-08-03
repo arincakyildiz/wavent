@@ -1,0 +1,56 @@
+@if (rows().length) {
+  <div class="board">
+    <div class="board__summary">
+      <div class="kpi-card">
+        <div class="kpi-card__label">Planlanan Dalga</div>
+        <div class="kpi-card__value">{{ rows().length }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__label">Toplam Sipariş</div>
+        <div class="kpi-card__value">{{ totalOrders() | number }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__label">Ort. Kapasite</div>
+        <div class="kpi-card__value">%{{ averageCapacity() }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card__label">Riskli Dalga</div>
+        <div class="kpi-card__value" [class.negative]="atRiskCount() > 0">{{ atRiskCount() }}</div>
+      </div>
+    </div>
+
+    <ul class="board__list">
+      @for (w of rows(); track w.id) {
+        <li class="board__row">
+          <div class="board__head">
+            <span class="board__name">{{ w.name }}</span>
+            <span class="status-pill" [class]="riskTone(w.risk)">{{ riskLabel(w.risk) }}</span>
+          </div>
+
+          <div class="muted small">
+            {{ w.warehouseCode }} · {{ w.carrier }} · Cut-off {{ w.cutOffTime }} ·
+            {{ w.orderCount | number }} sipariş
+          </div>
+
+          <div class="board__meters">
+            <div class="board__meter">
+              <span class="muted small">Kapasite</span>
+              <span class="progress-bar">
+                <span [style.width.%]="w.capacityUsedPct" [class]="capacityTone(w.capacityUsedPct)"></span>
+              </span>
+              <span class="muted small">%{{ w.capacityUsedPct }}</span>
+            </div>
+            <div class="board__meter">
+              <span class="muted small">Cut-off</span>
+              <span class="board__runway">{{ w.minutesToCutOff }} dk</span>
+            </div>
+          </div>
+
+          <div class="muted small">{{ w.riskReason }}</div>
+        </li>
+      }
+    </ul>
+  </div>
+} @else {
+  <div class="state state--empty">{{ emptyMessage() }}</div>
+}

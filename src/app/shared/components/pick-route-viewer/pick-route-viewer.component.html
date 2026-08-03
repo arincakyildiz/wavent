@@ -1,0 +1,30 @@
+<div class="route">
+  <div class="route__head">
+    <div>
+      <span class="route__code">{{ task().code }}</span>
+      <span class="muted small">
+        {{ task().type }} · {{ task().assignedTo ?? 'Atanmadı' }} ·
+        {{ stops().length }} durak / {{ zoneCount() }} bölge
+      </span>
+    </div>
+    <span class="route__progress">{{ task().pickedLines }}/{{ task().lineCount }} satır (%{{ progressPct() }})</span>
+  </div>
+
+  @if (task().exceptionReason) {
+    <div class="route__exception" role="alert">{{ task().exceptionReason }}</div>
+  }
+
+  @if (stops().length) {
+    <ol class="route__stops">
+      @for (stop of stops(); track stop.index) {
+        <li class="route__stop" [class]="'route__stop--' + stop.state">
+          <span class="route__marker" aria-hidden="true">{{ stop.index }}</span>
+          <span class="route__location">{{ stop.location }}</span>
+          <span class="route__state muted small">{{ stateLabel(stop.state) }}</span>
+        </li>
+      }
+    </ol>
+  } @else {
+    <div class="state state--empty">Bu görev için rota tanımlı değil.</div>
+  }
+</div>

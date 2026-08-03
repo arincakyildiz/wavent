@@ -13,3 +13,9 @@
     min-width: 180px;
   }
 }
+
+/* The workbench sits in a full-width row under the exception it belongs to. */
+.expanded-row > td {
+  background: var(--surface-2);
+  border-top: none;
+}

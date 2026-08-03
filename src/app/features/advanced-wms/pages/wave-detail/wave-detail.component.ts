@@ -7,6 +7,7 @@ import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.serv
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { ReleaseResult, WaveOrderStatus, WaveRow, WavesService } from '../../data-access/waves.service';
+import { WavePlanningStore } from '../../state/wave-planning.store';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -23,6 +24,7 @@ export class WaveDetailComponent {
   private readonly notifications = inject(NotificationService);
   private readonly audit = inject(AuditService);
   private readonly confirm = inject(ConfirmDialogService);
+  private readonly store = inject(WavePlanningStore);
 
   readonly state = signal<LoadState>('loading');
   readonly errorMessage = signal<string | null>(null);
@@ -50,7 +52,8 @@ export class WaveDetailComponent {
     this.state.set('loading');
     this.errorMessage.set(null);
 
-    this.wavesService.getById(this.id).subscribe({
+    // Served from the store on a list → detail hop, fetched on a cold deep-link.
+    this.store.loadWave(this.id).subscribe({
       next: (wave) => {
         this.wave.set(wave);
         this.wavesService.getOrders(this.id).subscribe((orders) => this.orders.set(orders));
@@ -102,6 +105,8 @@ export class WaveDetailComponent {
       next: (result) => {
         this.releasing.set(false);
         this.wave.set(result.wave);
+        // Keep the store in step, or a later visit would serve the pre-release version.
+        this.store.upsert(result.wave);
         this.lastRelease.set(result);
 
         this.audit.record({

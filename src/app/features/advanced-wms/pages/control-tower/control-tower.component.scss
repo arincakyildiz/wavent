@@ -108,3 +108,14 @@
     animation: none;
   }
 }
+
+.feed__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  select {
+    font-size: 12.5px;
+    padding: 4px 8px;
+  }
+}

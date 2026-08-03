@@ -45,12 +45,14 @@ Varsayılan demo kullanıcı: **John Doe / Depo Yöneticisi**.
   ```
   src/app/
     core/      api (mock transport, ApiError, fault injection), auth (rol/izin/guard),
-               observability (audit, notification), state (tema, confirm dialog, depo kapsamı)
+               observability (audit, notification), state (tema, confirm dialog, depo kapsamı),
+               storage (localStorage adapter, TTL'li cache)
     shared/    sunum bileşenleri, direktifler, validator'lar, liste/sorgu yardımcıları
     features/advanced-wms/
       pages/        route seviyesi ekranlar
       components/   özellik diyalogları (oluşturma formları)
-      data-access/  servisler + mock-data + selectors
+      data-access/  servisler + mock-data + selectors + saf iş kuralları (stock-rules)
+      state/        feature store + selector'lar (WavePlanningStore)
       models/       entity/enum tanımları
   ```
 - **Tek kaynaklı veri** — `data-access/mock-data.ts` sabit tohumlu bir üreteçle tüm ilişkili veri
@@ -111,20 +113,38 @@ unauthorized (403)
 Kritik iş kuralları, liste sorgu motoru, validator'lar, izin sistemi ve seçili ekranlar
 unit/component testlerle kaplıdır:
 
-- `data-access/selectors.spec.ts` — FEFO, kapasite, tolerans, sayım eşiği, stok tutarlılığı,
-  dalga yayınlama kararları
+- `data-access/selectors.spec.ts` — FEFO, kapasite (ağırlık/hacim/ürün sınıfı/sıcaklık), seri
+  benzersizliği, tolerans, sayım eşiği, stok tutarlılığı, dalga yayınlama kararları
 - `shared/utils/list-query.spec.ts` — arama/filtre/sıralama/sayfalama
 - `shared/validators/wms-validators.spec.ts` — cross-field ve async validator'lar
 - `core/auth/permissions.spec.ts` — izin haritası ve route guard
 - `data-access/waves.service.spec.ts` — optimistic concurrency (`version` çakışması)
-- `pages/exceptions/exceptions.component.spec.ts` — component/DOM seviyesinde liste yükleme
+- `data-access/reservations.service.spec.ts` — eşzamanlı rezervasyonda version **ve** miktar
+  çakışması (§11)
+- `pages/exceptions/exceptions.component.spec.ts` — **integration:** istisna çözme akışı
+  (zorunlu gerekçe → servis → audit → bildirim)
+- `pages/wave-detail/wave-detail.component.spec.ts` — **integration:** dalga yayınlama akışı
+  (kısmi sonuç, zorunlu gerekçe, version çakışması, store senkronu)
+
+## Paylaşılan Bileşenler
+
+Şartnamedeki sekiz bileşenin tamamı `shared/components/` altında ayrı birer bileşendir ve ilgili
+ekranda kullanılır: `WarehouseTree` (Locations · hiyerarşi görünümü), `BarcodeInput` (Putaway),
+`InventoryLedger` (Inventory Detail), `AllocationBreakdown` (Reservations · lot override),
+`WaveCapacityBoard` (Waves · kapasite panosu), `PickRouteViewer` (Picking · rota),
+`ExceptionWorkbench` (Exceptions · kanıt + yeniden atama + karar), `TraceabilityTimeline`
+(Traceability).
 
 ## Bilinen Eksikler
 
 - Tüm veriler mock; gerçek backend entegrasyonu yok ve oturum içi değişiklikler kalıcı değildir.
-- Component/integration test kapsamı hâlâ sınırlı: yukarıdaki örnekler dışındaki ekranlar için
-  yalnızca unit seviyesinde (selectors, servisler) kapsam var.
+- Component/integration testler iki ana akışı (istisna çözme, dalga yayınlama) uçtan uca kapsar;
+  diğer ekranlarda kapsam unit seviyesindedir (selectors, servisler).
 - Tartı gibi fiziksel cihaz entegrasyonları simüle edilmemiştir. Barkod okuma, Putaway ekranında
   `BarcodeInput` bileşeniyle simüle edilir (tarama, yinelenen okumaları yutar; eşleşmeyen barkod
   bir istisna olarak loglanır).
-- Offline/IndexedDB önbellek katmanı uygulanmadı.
+- `core/storage` yalnızca `localStorage` adapter'ı ve TTL'li bellek içi cache sağlar; IndexedDB
+  ve offline senkronizasyon uygulanmadı.
+- Seri numarası benzersizliği kural + doğrulama olarak mevcuttur (`serialIssues`,
+  `LotSerialService.isSerialAvailable`) ve Lot/Serial ekranında ihlaller listelenir; ancak seri
+  üreten bir yazma formu olmadığı için kural şu an tespit/validasyon seviyesindedir.

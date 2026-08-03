@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { InventoryLedgerComponent } from '../../../../shared/components/inventory-ledger/inventory-ledger.component';
 import { StockStatus } from '../../models/entities';
 import {
   InventoryLotRow,
@@ -17,7 +18,7 @@ type LoadState = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-inventory-detail',
-  imports: [DecimalPipe, IconComponent],
+  imports: [DecimalPipe, IconComponent, InventoryLedgerComponent],
   templateUrl: './inventory-detail.component.html',
   styleUrl: './inventory-detail.component.scss',
 })

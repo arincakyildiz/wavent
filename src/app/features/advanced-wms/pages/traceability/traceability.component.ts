@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
+import { TraceabilityTimelineComponent } from '../../../../shared/components/traceability-timeline/traceability-timeline.component';
 import { TraceabilityService, TraceEvent } from '../../data-access/traceability.service';
 
 type LoadState = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-traceability',
-  imports: [],
+  imports: [TraceabilityTimelineComponent],
   templateUrl: './traceability.component.html',
   styleUrl: './traceability.component.scss',
 })
@@ -32,17 +33,5 @@ export class TraceabilityComponent {
   selectLot(lot: string): void {
     this.selectedLot.set(lot);
     this.traceabilityService.getTrace(lot).subscribe((events) => this.events.set(events));
-  }
-
-  stageTone(stage: TraceEvent['stage']): string {
-    const tone: Record<TraceEvent['stage'], string> = {
-      Receipt: 'tone-info',
-      Putaway: 'tone-info',
-      Reservation: 'tone-warning',
-      Pick: 'tone-warning',
-      Pack: 'tone-success',
-      Shipment: 'tone-success',
-    };
-    return tone[stage];
   }
 }

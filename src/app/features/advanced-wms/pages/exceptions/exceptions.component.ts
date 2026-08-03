@@ -7,20 +7,32 @@ import { AuditService } from '../../../../core/observability/audit.service';
 import { NotificationService } from '../../../../core/observability/notification.service';
 import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { ExceptionWorkbenchComponent } from '../../../../shared/components/exception-workbench/exception-workbench.component';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
-import { ExceptionRow, ExceptionsService } from '../../data-access/exceptions.service';
+import {
+  EXCEPTION_OWNERS,
+  ExceptionEvidence,
+  ExceptionRow,
+  ExceptionsService,
+} from '../../data-access/exceptions.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const EMPTY_TOTALS = { open: 0, investigating: 0, resolved: 0, critical: 0 };
 
 @Component({
   selector: 'app-exceptions',
-  imports: [DecimalPipe, SortableDirective, PaginationComponent, HasPermissionDirective],
+  imports: [
+    DecimalPipe,
+    SortableDirective,
+    PaginationComponent,
+    HasPermissionDirective,
+    ExceptionWorkbenchComponent,
+  ],
   templateUrl: './exceptions.component.html',
   styleUrl: './exceptions.component.scss',
 })
@@ -37,6 +49,12 @@ export class ExceptionsComponent {
   readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'createdAt', direction: 'desc' });
   readonly pendingId = signal<string | null>(null);
+
+  /** Exception whose workbench is expanded. */
+  readonly activeRow = signal<ExceptionRow | null>(null);
+  readonly evidence = signal<ExceptionEvidence[]>([]);
+  readonly evidenceLoading = signal(false);
+  readonly owners = EXCEPTION_OWNERS;
 
   readonly list = createListResource<ExceptionRow>(
     computed(() => ({
@@ -86,6 +104,65 @@ export class ExceptionsComponent {
   onPageSize(size: number): void {
     this.pageSize.set(size);
     this.page.set(1);
+  }
+
+  /** Opens the case view and pulls the evidence behind the exception. */
+  toggleWorkbench(row: ExceptionRow): void {
+    if (this.activeRow()?.id === row.id) {
+      this.activeRow.set(null);
+      return;
+    }
+
+    this.activeRow.set(row);
+    this.evidence.set([]);
+    this.evidenceLoading.set(true);
+
+    this.exceptionsService.evidence(row.id).subscribe({
+      next: (items) => {
+        this.evidence.set(items);
+        this.evidenceLoading.set(false);
+      },
+      error: () => {
+        this.evidenceLoading.set(false);
+        this.notifications.error('Kanıt kayıtları yüklenemedi');
+      },
+    });
+  }
+
+  /** Handing an exception over is version-guarded and audited like any other write. */
+  reassign(row: ExceptionRow, owner: string): void {
+    this.pendingId.set(row.id);
+
+    this.exceptionsService.reassign(row.id, row.version, owner).subscribe({
+      next: (updated) => {
+        this.pendingId.set(null);
+        this.activeRow.set(null);
+
+        this.audit.record({
+          actionType: 'Exception Reassigned',
+          targetType: updated.referenceType,
+          targetId: updated.referenceId,
+          oldValue: row.owner ?? '—',
+          newValue: owner,
+        });
+
+        this.notifications.success('İstisna yeniden atandı', `${updated.referenceId} → ${owner}`);
+        this.list.reload();
+      },
+      error: (err) => {
+        this.pendingId.set(null);
+        const conflict = isApiError(err) && err.kind === 'conflict';
+        this.notifications.error(
+          conflict ? 'Kayıt değişmiş' : 'İstisna atanamadı',
+          describeError(err),
+          () => this.list.reload(),
+        );
+        if (conflict) {
+          this.activeRow.set(null);
+          this.list.reload();
+        }
+      },
+    });
   }
 
   /** Resolution always captures a written decision — the dialog enforces it. */

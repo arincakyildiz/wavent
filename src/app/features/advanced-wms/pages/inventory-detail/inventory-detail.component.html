@@ -97,36 +97,7 @@
 
           <div class="panel">
             <h2>Stok Hareketleri (Ledger)</h2>
-            @if (ledger().length) {
-              <div class="table-scroll">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Tarih</th>
-                      <th>Tip</th>
-                      <th>Miktar</th>
-                      <th>Bakiye</th>
-                      <th>Referans</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (e of ledger(); track e.id) {
-                      <tr>
-                        <td>{{ e.date }}</td>
-                        <td>{{ e.type }}</td>
-                        <td [class]="e.quantity < 0 ? 'negative' : 'positive'">
-                          {{ e.quantity > 0 ? '+' : '' }}{{ e.quantity | number }}
-                        </td>
-                        <td>{{ e.runningBalance | number }}</td>
-                        <td>{{ e.reasonCode }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            } @else {
-              <div class="state state--empty">Hareket kaydı bulunamadı.</div>
-            }
+            <app-inventory-ledger [entries]="ledger()" />
           </div>
         </div>
       }

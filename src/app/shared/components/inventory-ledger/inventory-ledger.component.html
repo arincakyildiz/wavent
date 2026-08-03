@@ -1,0 +1,30 @@
+@if (entries().length) {
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Tarih</th>
+          <th>Tip</th>
+          <th>Miktar</th>
+          <th>Bakiye</th>
+          <th>Referans</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of entries(); track e.id) {
+          <tr>
+            <td>{{ e.date }}</td>
+            <td>{{ e.type }}</td>
+            <td [class]="e.quantity < 0 ? 'negative' : 'positive'">
+              {{ e.quantity > 0 ? '+' : '' }}{{ e.quantity | number }}
+            </td>
+            <td class="ledger__balance">{{ e.runningBalance | number }}</td>
+            <td class="muted small">{{ e.reasonCode }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <div class="state state--empty">{{ emptyMessage() }}</div>
+}

@@ -1,0 +1,6 @@
+
+/* The route viewer sits in a full-width row under the task it belongs to. */
+.expanded-row > td {
+  background: var(--surface-2);
+  border-top: none;
+}

@@ -6,9 +6,13 @@ import { Subscription, switchMap } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { bindQueryParams } from '../../../../shared/utils/query-params';
 import { ControlTowerService, TowerEvent, TowerSnapshot } from '../../data-access/control-tower.service';
 
 type LoadState = 'loading' | 'success' | 'error';
+type ToneFilter = 'all' | 'success' | 'info' | 'warning' | 'danger';
+
+const TONE_FILTERS: ToneFilter[] = ['all', 'success', 'info', 'warning', 'danger'];
 
 const MAX_FEED = 10;
 
@@ -29,12 +33,48 @@ export class ControlTowerComponent {
   readonly snapshot = signal<TowerSnapshot | null>(null);
   readonly events = signal<TowerEvent[]>([]);
   readonly streaming = signal(true);
+  readonly toneFilter = signal<ToneFilter>('all');
+  readonly toneFilters = TONE_FILTERS;
 
-  readonly eventCount = computed(() => this.events().length);
+  /** The feed the template renders — filtered, so the counter matches what is shown. */
+  readonly visibleEvents = computed(() => {
+    const tone = this.toneFilter();
+    return tone === 'all' ? this.events() : this.events().filter((e) => e.tone === tone);
+  });
+
+  readonly eventCount = computed(() => this.visibleEvents().length);
+
+  toneLabel(tone: ToneFilter): string {
+    const label: Record<ToneFilter, string> = {
+      all: 'Tüm olaylar',
+      success: 'Tamamlanan',
+      info: 'Bilgi',
+      warning: 'Uyarı',
+      danger: 'Kritik',
+    };
+    return label[tone];
+  }
 
   private streamSub: Subscription | null = null;
 
   constructor() {
+    // §8: the feed filter and the pause state are shareable via the URL.
+    bindQueryParams([
+      {
+        param: 'tone',
+        signal: this.toneFilter,
+        defaultValue: 'all' as ToneFilter,
+        parse: (raw) => (TONE_FILTERS.includes(raw as ToneFilter) ? (raw as ToneFilter) : 'all'),
+      },
+      {
+        param: 'live',
+        signal: this.streaming,
+        defaultValue: true,
+        parse: (raw) => raw !== 'off',
+        serialize: (value) => (value ? 'on' : 'off'),
+      },
+    ]);
+
     // Re-fetch and re-subscribe whenever the warehouse scope changes.
     toObservable(computed(() => this.scope.activeCodes()))
       .pipe(takeUntilDestroyed(this.destroyRef))

@@ -31,10 +31,37 @@
         <option value="hazmat">Hazmat</option>
       </select>
       <span class="spacer"></span>
+      <div class="view-toggle" role="group" aria-label="Görünüm">
+        <button
+          type="button"
+          class="view-toggle__btn"
+          [class.view-toggle__btn--active]="view() === 'table'"
+          [attr.aria-pressed]="view() === 'table'"
+          (click)="setView('table')"
+        >
+          Tablo
+        </button>
+        <button
+          type="button"
+          class="view-toggle__btn"
+          [class.view-toggle__btn--active]="view() === 'tree'"
+          [attr.aria-pressed]="view() === 'tree'"
+          (click)="setView('tree')"
+        >
+          Hiyerarşi
+        </button>
+      </div>
       <span class="muted small">{{ total() }} lokasyon</span>
     </div>
 
-    @if (rows().length) {
+    @if (view() === 'tree') {
+      <div class="panel">
+        <app-warehouse-tree
+          [locations]="rows()"
+          emptyMessage="Filtreyle eşleşen lokasyon bulunamadı."
+        />
+      </div>
+    } @else if (rows().length) {
       <div class="table-scroll">
         <table class="data-table">
           <thead>

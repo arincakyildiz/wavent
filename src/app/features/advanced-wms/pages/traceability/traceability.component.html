@@ -24,21 +24,7 @@
 
       <div class="panel">
         <h2>{{ selectedLot() }} — Zaman Çizelgesi</h2>
-        @if (events().length) {
-          <ul class="timeline">
-            @for (e of events(); track e.id) {
-              <li>
-                <span class="status-pill" [class]="stageTone(e.stage)">{{ e.stage }}</span>
-                <div class="timeline__body">
-                  <div class="timeline__desc">{{ e.description }}</div>
-                  <div class="muted small">{{ e.at }} · {{ e.referenceId }} · {{ e.actor }}</div>
-                </div>
-              </li>
-            }
-          </ul>
-        } @else {
-          <div class="state state--empty">Bu lot için hareket kaydı yok.</div>
-        }
+        <app-traceability-timeline [events]="events()" />
       </div>
     }
   }

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuditService } from '../../../../core/observability/audit.service';
@@ -10,10 +10,12 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { WaveCapacityBoardComponent } from '../../../../shared/components/wave-capacity-board/wave-capacity-board.component';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { WaveFormComponent } from '../../components/wave-form/wave-form.component';
 import { WaveRow, WavesService } from '../../data-access/waves.service';
+import { WavePlanningStore } from '../../state/wave-planning.store';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -26,6 +28,7 @@ const DEFAULT_PAGE_SIZE = 20;
     ActivatableDirective,
     HasPermissionDirective,
     WaveFormComponent,
+    WaveCapacityBoardComponent,
   ],
   templateUrl: './waves.component.html',
   styleUrl: './waves.component.scss',
@@ -36,6 +39,7 @@ export class WavesComponent {
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
   private readonly audit = inject(AuditService);
+  private readonly store = inject(WavePlanningStore);
 
   readonly search = signal('');
   readonly statusFilter = signal('all');
@@ -43,6 +47,10 @@ export class WavesComponent {
   readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'name', direction: 'desc' });
   readonly formOpen = signal(false);
+  readonly view = signal<'table' | 'board'>('table');
+
+  /** The board is a planning view, so it reads the store's actionable selector. */
+  readonly boardWaves = this.store.actionableWaves;
 
   readonly list = createListResource<WaveRow>(
     computed(() => ({
@@ -59,12 +67,29 @@ export class WavesComponent {
   );
 
   constructor() {
+    // Publish each loaded page to the store so the detail screen can skip a refetch
+    // and the capacity board reads the same rows the table shows.
+    effect(() => {
+      const rows = this.list.rows();
+      if (rows.length) this.store.setWaves(rows, this.scope.activeCodes());
+    });
+
     bindQueryParams([
       { param: 'q', signal: this.search, defaultValue: '', parse: parseString },
       { param: 'status', signal: this.statusFilter, defaultValue: 'all', parse: parseString },
       { param: 'page', signal: this.page, defaultValue: 1, parse: parseNumber(1) },
       { param: 'size', signal: this.pageSize, defaultValue: DEFAULT_PAGE_SIZE, parse: parseNumber(DEFAULT_PAGE_SIZE) },
+      {
+        param: 'view',
+        signal: this.view,
+        defaultValue: 'table' as const,
+        parse: (raw) => (raw === 'board' ? 'board' : 'table'),
+      },
     ]);
+  }
+
+  setView(view: 'table' | 'board'): void {
+    this.view.set(view);
   }
 
   onSearch(term: string): void {

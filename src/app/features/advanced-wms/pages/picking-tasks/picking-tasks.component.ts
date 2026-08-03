@@ -4,6 +4,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { PickRouteViewerComponent } from '../../../../shared/components/pick-route-viewer/pick-route-viewer.component';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { createListResource } from '../../../../shared/utils/list-resource';
@@ -15,7 +16,7 @@ const EMPTY_TOTALS = { total: 0, exceptions: 0, inProgress: 0 };
 
 @Component({
   selector: 'app-picking-tasks',
-  imports: [DecimalPipe, SortableDirective, PaginationComponent],
+  imports: [DecimalPipe, SortableDirective, PaginationComponent, PickRouteViewerComponent],
   templateUrl: './picking-tasks.component.html',
   styleUrl: './picking-tasks.component.scss',
 })
@@ -28,6 +29,8 @@ export class PickingTasksComponent {
   readonly page = signal(1);
   readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'code', direction: 'asc' });
+  /** Task whose pick route is expanded. */
+  readonly activeRow = signal<PickTaskRow | null>(null);
 
   readonly list = createListResource<PickTaskRow>(
     computed(() => ({
@@ -77,6 +80,10 @@ export class PickingTasksComponent {
   onPageSize(size: number): void {
     this.pageSize.set(size);
     this.page.set(1);
+  }
+
+  toggleRoute(row: PickTaskRow): void {
+    this.activeRow.set(this.activeRow()?.id === row.id ? null : row);
   }
 
   statusTone(status: PickTaskRow['status']): string {

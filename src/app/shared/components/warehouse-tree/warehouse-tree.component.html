@@ -1,0 +1,51 @@
+@if (visibleNodes().length) {
+  <ul class="tree" role="tree">
+    @for (node of visibleNodes(); track node.key) {
+      <li
+        class="tree__node"
+        role="treeitem"
+        [attr.aria-level]="node.depth + 1"
+        [attr.aria-expanded]="node.children.length ? !isCollapsed(node) : null"
+        [style.--depth]="node.depth"
+      >
+        <button
+          type="button"
+          class="tree__row"
+          [class.tree__row--leaf]="!node.children.length"
+          (click)="toggle(node)"
+          [disabled]="!node.children.length"
+        >
+          <span class="tree__twisty" aria-hidden="true">
+            @if (node.children.length) {
+              {{ isCollapsed(node) ? '▸' : '▾' }}
+            }
+          </span>
+
+          <span class="tree__label">{{ node.label }}</span>
+          <span class="status-pill tone-neutral tree__kind">{{ node.kind }}</span>
+
+          @if (node.locationClass) {
+            <span class="muted small">{{ node.locationClass }}</span>
+          }
+
+          @if (node.binCount) {
+            <span class="muted small">{{ node.binCount }} göz</span>
+          }
+
+          <span class="tree__capacity">
+            <span class="progress-bar">
+              <span [style.width.%]="node.capacityPct" [class]="capacityTone(node.capacityPct)"></span>
+            </span>
+            <span class="muted small">%{{ node.capacityPct }}</span>
+          </span>
+
+          @if (node.status) {
+            <span class="status-pill" [class]="statusTone(node.status)">{{ node.status }}</span>
+          }
+        </button>
+      </li>
+    }
+  </ul>
+} @else {
+  <div class="state state--empty">{{ emptyMessage() }}</div>
+}

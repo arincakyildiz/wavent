@@ -85,15 +85,31 @@
                     <button
                       class="btn"
                       type="button"
-                      [disabled]="pendingId() === e.id"
-                      (click)="resolve(e)"
+                      [attr.aria-expanded]="activeRow()?.id === e.id"
+                      (click)="toggleWorkbench(e)"
                       *appHasPermission="'exception.resolve'"
                     >
-                      {{ pendingId() === e.id ? 'Kaydediliyor...' : 'Çöz' }}
+                      {{ activeRow()?.id === e.id ? 'Kapat' : 'İncele' }}
                     </button>
                   }
                 </td>
               </tr>
+
+              @if (activeRow()?.id === e.id) {
+                <tr class="expanded-row">
+                  <td [attr.colspan]="7">
+                    <app-exception-workbench
+                      [exception]="e"
+                      [evidence]="evidence()"
+                      [owners]="owners"
+                      [loading]="evidenceLoading()"
+                      [busy]="pendingId() === e.id"
+                      (reassign)="reassign(e, $event)"
+                      (resolve)="resolve(e)"
+                    />
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
