@@ -48,6 +48,7 @@
               <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">İlerleme</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
               <th>Kapanış</th>
+              <th class="col-detail">Detay</th>
             </tr>
           </thead>
           <tbody>
@@ -66,6 +67,12 @@
                 </td>
                 <td><span class="status-pill" [class]="statusTone(s.status)">{{ s.status }}</span></td>
                 <td class="muted small">{{ s.closedAt ?? '—' }}</td>
+                <td class="col-detail">
+                  <span class="row-detail">
+                    <span class="row-detail__text">Detay</span>
+                    <span class="row-detail__chevron" aria-hidden="true">›</span>
+                  </span>
+                </td>
               </tr>
             }
           </tbody>

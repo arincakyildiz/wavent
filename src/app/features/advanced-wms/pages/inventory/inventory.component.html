@@ -41,6 +41,7 @@
               <th appSortable="damaged" [sort]="sort()" (sortChange)="onSort($event)">Damaged</th>
               <th appSortable="nearestExpiry" [sort]="sort()" (sortChange)="onSort($event)">SKT</th>
               <th>İzlenebilirlik</th>
+              <th class="col-detail">Detay</th>
             </tr>
           </thead>
           <tbody>
@@ -81,6 +82,12 @@
                   @if (!r.lotTracked && !r.serialTracked) {
                     <span class="muted small">—</span>
                   }
+                </td>
+                <td class="col-detail">
+                  <span class="row-detail">
+                    <span class="row-detail__text">Detay</span>
+                    <span class="row-detail__chevron" aria-hidden="true">›</span>
+                  </span>
                 </td>
               </tr>
             }

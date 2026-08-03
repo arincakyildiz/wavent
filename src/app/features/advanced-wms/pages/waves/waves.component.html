@@ -83,6 +83,7 @@
               <th appSortable="riskCount" [sort]="sort()" (sortChange)="onSort($event)">Risk</th>
               <th appSortable="capacityUsedPct" [sort]="sort()" (sortChange)="onSort($event)">Kapasite</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
+              <th class="col-detail">Detay</th>
             </tr>
           </thead>
           <tbody>
@@ -108,6 +109,12 @@
                   <span class="muted small">{{ w.capacityUsedPct }}%</span>
                 </td>
                 <td><span class="status-pill" [class]="statusTone(w.status)">{{ w.status }}</span></td>
+                <td class="col-detail">
+                  <span class="row-detail">
+                    <span class="row-detail__text">Detay</span>
+                    <span class="row-detail__chevron" aria-hidden="true">›</span>
+                  </span>
+                </td>
               </tr>
             }
           </tbody>

@@ -54,6 +54,7 @@
               <th appSortable="lineCount" [sort]="sort()" (sortChange)="onSort($event)">Satır</th>
               <th appSortable="discrepancyCount" [sort]="sort()" (sortChange)="onSort($event)">Fark</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
+              <th class="col-detail">Detay</th>
             </tr>
           </thead>
           <tbody>
@@ -72,6 +73,12 @@
                   }
                 </td>
                 <td><span class="status-pill" [class]="statusTone(a.status)">{{ a.status }}</span></td>
+                <td class="col-detail">
+                  <span class="row-detail">
+                    <span class="row-detail__text">Detay</span>
+                    <span class="row-detail__chevron" aria-hidden="true">›</span>
+                  </span>
+                </td>
               </tr>
             }
           </tbody>

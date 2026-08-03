@@ -766,6 +766,43 @@ a {
   margin-top: 3px;
 }
 
+/**
+ * Affordance for a row that drills into a detail screen. Without it a clickable row
+ * looks identical to a static one, so the drill-down goes unnoticed.
+ */
+.row-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+
+  &__chevron {
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 0.15s ease;
+  }
+}
+
+/* The whole row is the target, so the cue reacts to hovering anywhere on it. */
+.data-table tbody tr:hover .row-detail__chevron {
+  transform: translateX(3px);
+}
+
+.col-detail {
+  width: 1%;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  /* Keep the chevron, drop the word — the column would otherwise crowd narrow tables. */
+  .row-detail__text {
+    display: none;
+  }
+}
+
 /** Segmented control for switching between two renderings of the same data. */
 .view-toggle {
   display: inline-flex;
