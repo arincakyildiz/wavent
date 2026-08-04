@@ -2,7 +2,7 @@
   <div class="page__header">
     <div>
       <h1>Receiving</h1>
-      <p class="muted">ASN / irsaliye simülasyonundan kabul satırları</p>
+      <p class="muted">{{ i18n.t('receiving.subtitle') }}</p>
     </div>
 
     <div class="page__actions">
@@ -14,24 +14,24 @@
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
       <input
         type="search"
         maxlength="80"
-        placeholder="ASN, tedarikçi veya depo ara..."
+        [attr.placeholder]="i18n.t('receiving.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
         aria-label="ASN ara"
       />
-      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
         <option value="expected">Expected</option>
         <option value="arrived">Arrived</option>
         <option value="receiving">Receiving</option>
@@ -48,18 +48,18 @@
           <thead>
             <tr>
               <th appSortable="number" [sort]="sort()" (sortChange)="onSort($event)">ASN No</th>
-              <th appSortable="supplierName" [sort]="sort()" (sortChange)="onSort($event)">Tedarikçi</th>
-              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
+              <th appSortable="supplierName" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('receiving.supplier') }}</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
               <th appSortable="expectedDate" [sort]="sort()" (sortChange)="onSort($event)">Beklenen Tarih</th>
-              <th appSortable="lineCount" [sort]="sort()" (sortChange)="onSort($event)">Satır</th>
+              <th appSortable="lineCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('receiving.lines') }}</th>
               <th appSortable="discrepancyCount" [sort]="sort()" (sortChange)="onSort($event)">Fark</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
-              <th class="col-detail">Detay</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
+              <th class="col-detail">{{ i18n.t('common.detail') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (a of list.rows(); track a.id) {
-              <tr appActivatable (activated)="open(a.id)" [attr.aria-label]="a.number + ' detayını aç'">
+              <tr appActivatable (activated)="open(a.id)" [attr.aria-label]="i18n.t('receiving.openDetail', { code: a.number })">
                 <td>{{ a.number }}</td>
                 <td>{{ a.supplierName }}</td>
                 <td>{{ a.warehouseCode }}</td>
@@ -75,7 +75,7 @@
                 <td><span class="status-pill" [class]="statusTone(a.status)">{{ a.status }}</span></td>
                 <td class="col-detail">
                   <span class="row-detail">
-                    <span class="row-detail__text">Detay</span>
+                    <span class="row-detail__text">{{ i18n.t('common.detail') }}</span>
                     <span class="row-detail__chevron" aria-hidden="true">›</span>
                   </span>
                 </td>
@@ -93,7 +93,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen ASN bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('receiving.empty') }}</div>
     }
   }
 

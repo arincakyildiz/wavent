@@ -18,6 +18,7 @@ import {
   PERIOD_LABELS,
   Period,
 } from '../../data-access/dashboard.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 /** Beyond this the snapshot is too old to be worth showing at all. */
 const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1000;
@@ -50,6 +51,7 @@ const TONE_HEX: Record<string, string> = {
   styleUrl: './overview.component.scss',
 })
 export class OverviewComponent {
+  readonly i18n = inject(I18nService);
   private readonly dashboard = inject(DashboardService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly router = inject(Router);

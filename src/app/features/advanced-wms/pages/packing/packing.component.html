@@ -2,29 +2,29 @@
   <div class="page__header">
     <div>
       <h1>Packing</h1>
-      <p class="muted">Paket içerik doğrulama, ağırlık toleransı ve etiket simülasyonu</p>
+      <p class="muted">{{ i18n.t('packing.subtitle') }}</p>
     </div>
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
       <input
         type="search"
         maxlength="80"
-        placeholder="Paket veya sipariş ara..."
+        [attr.placeholder]="i18n.t('packing.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
         aria-label="Paket ara"
       />
-      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
         <option value="open">Open</option>
         <option value="sealed">Sealed</option>
         <option value="weight-hold">Weight Hold</option>
@@ -40,12 +40,12 @@
           <thead>
             <tr>
               <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Paket</th>
-              <th appSortable="orderNumber" [sort]="sort()" (sortChange)="onSort($event)">Sipariş</th>
-              <th appSortable="itemCount" [sort]="sort()" (sortChange)="onSort($event)">Ürün</th>
-              <th appSortable="weightKg" [sort]="sort()" (sortChange)="onSort($event)">Ağırlık</th>
+              <th appSortable="orderNumber" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.order') }}</th>
+              <th appSortable="itemCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.product') }}</th>
+              <th appSortable="weightKg" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('packing.weight') }}</th>
               <th appSortable="deviationKg" [sort]="sort()" (sortChange)="onSort($event)">Sapma</th>
-              <th appSortable="contentVerified" [sort]="sort()" (sortChange)="onSort($event)">İçerik</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
+              <th appSortable="contentVerified" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('packing.content') }}</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th></th>
             </tr>
           </thead>
@@ -62,12 +62,12 @@
                 <td [class]="p.weightOk ? '' : 'negative'">
                   {{ p.deviationKg > 0 ? '+' : '' }}{{ p.deviationKg }} kg
                   @if (!p.weightOk) {
-                    <span class="status-pill tone-danger">Tolerans dışı</span>
+                    <span class="status-pill tone-danger">{{ i18n.t('packing.outOfTolerance') }}</span>
                   }
                 </td>
                 <td>
                   @if (p.contentVerified) {
-                    <span class="status-pill tone-success">Doğrulandı</span>
+                    <span class="status-pill tone-success">{{ i18n.t('common.verified') }}</span>
                   } @else {
                     <span class="status-pill tone-warning">Bekliyor</span>
                   }
@@ -92,7 +92,7 @@
                       (click)="approveWeight(p)"
                       *appHasPermission="'packing.approveWeight'"
                     >
-                      {{ pendingId() === p.id ? 'Onaylanıyor...' : 'Supervisor Onayı' }}
+                      {{ pendingId() === p.id ? i18n.t('packing.approving') : i18n.t('packing.supervisorApproval') }}
                     </button>
                   }
                 </td>
@@ -123,7 +123,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen paket bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('packing.empty') }}</div>
     }
   }
 </div>

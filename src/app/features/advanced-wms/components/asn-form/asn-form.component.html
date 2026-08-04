@@ -1,6 +1,6 @@
 <app-form-dialog
   title="Yeni ASN"
-  subtitle="Beklenen kabul kaydı oluşturur; satırlar kabul sırasında eklenir."
+  [subtitle]="i18n.t('asn.subtitle')"
   (dismissed)="dismissed.emit()"
 >
   <form [formGroup]="form" (ngSubmit)="submit()" class="form">
@@ -20,9 +20,9 @@
         } @else if (invalid('number')) {
           <span class="field__error" role="alert">
             @if (numberControl.hasError('notUnique')) {
-              Bu numara zaten kayıtlı.
+              {{ i18n.t('asn.numberTaken') }}
             } @else {
-              Format: ASN- ve 4 rakam (örn. ASN-4901).
+              {{ i18n.t('asn.numberFormat') }}
             }
           </span>
         } @else {
@@ -31,7 +31,7 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Tedarikçi <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('asn.supplier') }} <span class="req">*</span></span>
         <select formControlName="supplierName">
           @for (s of suppliers; track s) {
             <option [value]="s">{{ s }}</option>
@@ -54,7 +54,7 @@
         <span class="field__label">Beklenen Tarih <span class="req">*</span></span>
         <input formControlName="expectedDate" type="date" [class.invalid]="invalid('expectedDate')" />
         @if (form.controls.expectedDate.hasError('pastDate')) {
-          <span class="field__error" role="alert">Beklenen tarih geçmişte olamaz.</span>
+          <span class="field__error" role="alert">{{ i18n.t('asn.pastDate') }}</span>
         }
       </label>
     </div>
@@ -64,9 +64,9 @@
     }
 
     <div class="form__actions">
-      <button class="btn" type="button" (click)="dismissed.emit()">Vazgeç</button>
+      <button class="btn" type="button" (click)="dismissed.emit()">{{ i18n.t('common.cancel') }}</button>
       <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
-        {{ submitting() ? 'Kaydediliyor...' : 'ASN Oluştur' }}
+        {{ submitting() ? i18n.t('common.saving') : i18n.t('asn.submit') }}
       </button>
     </div>
   </form>

@@ -2,16 +2,16 @@
   <div class="page__header">
     <div>
       <h1>Reservations</h1>
-      <p class="muted">Sipariş satırı için lot/lokasyon rezervasyonu (FEFO/FIFO)</p>
+      <p class="muted">{{ i18n.t('reservations.subtitle') }}</p>
     </div>
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="kpi-row">
@@ -20,7 +20,7 @@
         <div class="kpi-card__value">{{ totals().total | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Kısmi</div>
+        <div class="kpi-card__label">{{ i18n.t('reservations.partial') }}</div>
         <div class="kpi-card__value">{{ totals().partial | number }}</div>
       </div>
       <div class="kpi-card">
@@ -37,19 +37,19 @@
       <input
         type="search"
         maxlength="80"
-        placeholder="Sipariş, SKU veya lot ara..."
+        [attr.placeholder]="i18n.t('reservations.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
         aria-label="Rezervasyon ara"
       />
-      <select [value]="filter()" (change)="onFilter($any($event.target).value)" aria-label="Karşılanma filtresi">
-        <option value="all">Tümü</option>
+      <select [value]="filter()" (change)="onFilter($any($event.target).value)" [attr.aria-label]="i18n.t('reservations.fulfilmentFilter')">
+        <option value="all">{{ i18n.t('common.all') }}</option>
         <option value="full">Tam</option>
-        <option value="partial">Kısmi</option>
+        <option value="partial">{{ i18n.t('reservations.partial') }}</option>
         <option value="backorder">Backorder</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} kayıt</span>
+      <span class="muted small">{{ i18n.t('reservations.count', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -57,16 +57,16 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="orderNumber" [sort]="sort()" (sortChange)="onSort($event)">Sipariş</th>
+              <th appSortable="orderNumber" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.order') }}</th>
               <th appSortable="sku" [sort]="sort()" (sortChange)="onSort($event)">SKU</th>
-              <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">Lot</th>
-              <th>Lokasyon</th>
+              <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.lot') }}</th>
+              <th>{{ i18n.t('common.location') }}</th>
               <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">Rezerve</th>
               <th appSortable="requested" [sort]="sort()" (sortChange)="onSort($event)">Talep</th>
               <th appSortable="strategy" [sort]="sort()" (sortChange)="onSort($event)">Strateji</th>
-              <th appSortable="fulfilment" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
-              <th>Gerekçe</th>
-              <th *appHasPermission="'reservation.override'">İşlem</th>
+              <th appSortable="fulfilment" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('reservations.reason') }}</th>
+              <th *appHasPermission="'reservation.override'">{{ i18n.t('reservations.action') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -92,7 +92,7 @@
                     (click)="toggleCandidates(r)"
                     [attr.aria-expanded]="activeRow()?.id === r.id"
                   >
-                    {{ activeRow()?.id === r.id ? 'Kapat' : 'Lot değiştir' }}
+                    {{ activeRow()?.id === r.id ? i18n.t('common.close') : i18n.t('reservations.changeLot') }}
                   </button>
                 </td>
               </tr>
@@ -123,7 +123,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen rezervasyon bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('reservations.empty') }}</div>
     }
   }
 </div>

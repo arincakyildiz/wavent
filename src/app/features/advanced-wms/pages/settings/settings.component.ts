@@ -9,6 +9,7 @@ import { NotificationService } from '../../../../core/observability/notification
 import { ThemeService } from '../../../../core/state/theme.service';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { VARIANCE_THRESHOLD_PCT } from '../../data-access/selectors';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 interface RuleToggle {
   key: string;
@@ -24,6 +25,7 @@ interface RuleToggle {
   styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
+  readonly i18n = inject(I18nService);
   private readonly auth = inject(AuthService);
   private readonly themeService = inject(ThemeService);
   private readonly faults = inject(FaultInjectionService);

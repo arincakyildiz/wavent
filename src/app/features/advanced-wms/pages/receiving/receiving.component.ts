@@ -14,6 +14,7 @@ import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { AsnFormComponent } from '../../components/asn-form/asn-form.component';
 import { AsnRow, ReceivingService } from '../../data-access/receiving.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -31,6 +32,7 @@ const DEFAULT_PAGE_SIZE = 20;
   styleUrl: './receiving.component.scss',
 })
 export class ReceivingComponent {
+  readonly i18n = inject(I18nService);
   private readonly receivingService = inject(ReceivingService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly router = inject(Router);

@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, Role } from '../../../core/auth/auth.service';
 import { ROLE_CATALOG, ROLE_PERMISSIONS } from '../../../core/auth/permissions';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const ROLE_ICONS: Record<Role, string> = {
   'warehouse-operator': 'scanLine',
@@ -20,6 +21,7 @@ const ROLE_ICONS: Record<Role, string> = {
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
+  readonly i18n = inject(I18nService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

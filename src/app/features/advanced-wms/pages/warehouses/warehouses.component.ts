@@ -14,6 +14,7 @@ import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { WarehouseFormComponent } from '../../components/warehouse-form/warehouse-form.component';
 import { WarehouseSummary, WarehousesService } from '../../data-access/warehouses.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -31,6 +32,7 @@ const DEFAULT_PAGE_SIZE = 10;
   styleUrl: './warehouses.component.scss',
 })
 export class WarehousesComponent {
+  readonly i18n = inject(I18nService);
   private readonly warehousesService = inject(WarehousesService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly notifications = inject(NotificationService);
@@ -133,7 +135,7 @@ export class WarehousesComponent {
       targetId: created.code,
       newValue: `${created.name} (${created.city})`,
     });
-    this.notifications.success('Depo oluşturuldu', `${created.code} — ${created.name}`);
+    this.notifications.success(this.i18n.t('warehouses.created'), `${created.code} — ${created.name}`);
     this.reload();
   }
 

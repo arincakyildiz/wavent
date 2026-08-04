@@ -6,6 +6,7 @@ import { FormDialogComponent } from '../../../../shared/components/form-dialog/f
 import { cutOffRunway, positiveInteger, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { db } from '../../data-access/mock-data';
 import { WaveRow, WavesService } from '../../data-access/waves.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 /** A wave needs enough runway between now and cut-off to be picked and shipped. */
 const MIN_RUNWAY_MINUTES = 45;
@@ -32,6 +33,7 @@ export const WAVE_LIMITS = {
   styleUrl: './wave-form.component.scss',
 })
 export class WaveFormComponent {
+  readonly i18n = inject(I18nService);
   private readonly wavesService = inject(WavesService);
   private readonly scope = inject(WarehouseScopeService);
 

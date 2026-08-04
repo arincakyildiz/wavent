@@ -13,6 +13,7 @@ import {
   LedgerEntry,
 } from '../../data-access/inventory.service';
 import { stockIsBalanced } from '../../data-access/selectors';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -23,6 +24,7 @@ type LoadState = 'loading' | 'success' | 'error';
   styleUrl: './inventory-detail.component.scss',
 })
 export class InventoryDetailComponent {
+  readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly inventoryService = inject(InventoryService);

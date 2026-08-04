@@ -1,12 +1,12 @@
 <app-form-dialog
-  title="Seri Kaydı Ekle"
-  subtitle="Seri numarası ürün bazında benzersiz olmalıdır; her seri tek birim taşır."
+  [title]="i18n.t('serial.title')"
+  [subtitle]="i18n.t('serial.subtitle')"
   (dismissed)="dismissed.emit()"
 >
   <form [formGroup]="form" (ngSubmit)="submit()" class="form">
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Ürün <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('common.product') }} <span class="req">*</span></span>
         <select
           formControlName="skuCode"
           (change)="onSku($any($event.target).value)"
@@ -16,7 +16,7 @@
             <option [value]="s.code">{{ s.code }} — {{ s.name }}</option>
           }
         </select>
-        <span class="field__hint">Yalnızca seri takipli ürünler listelenir.</span>
+        <span class="field__hint">{{ i18n.t('serial.onlySerialTracked') }}</span>
       </label>
 
       <label class="field">
@@ -31,17 +31,17 @@
           [attr.aria-invalid]="invalid('serial')"
         />
         @if (serialControl.pending) {
-          <span class="field__hint">Seri numarası kontrol ediliyor...</span>
+          <span class="field__hint">{{ i18n.t('serial.checking') }}</span>
         } @else if (invalid('serial')) {
           <span class="field__error" role="alert">
             @if (serialControl.hasError('required')) {
-              Seri numarası zorunludur.
+              {{ i18n.t('serial.required') }}
             } @else if (serialControl.hasError('serialPattern')) {
-              En az 4 karakter; harf, rakam ve tire kullanın.
+              {{ i18n.t('serial.format') }}
             } @else if (serialControl.hasError('maxlength')) {
               En fazla 40 karakter olabilir.
             } @else if (serialControl.hasError('notUnique')) {
-              Bu seri numarası seçili ürün için zaten kayıtlı.
+              {{ i18n.t('serial.taken') }}
             }
           </span>
         } @else {
@@ -71,14 +71,14 @@
         <span class="field__label">Lokasyon <span class="req">*</span></span>
         <select formControlName="locationPath" [class.invalid]="invalid('locationPath')">
           @if (!locationPaths().length) {
-            <option value="">Lokasyon yükleniyor...</option>
+            <option value="">{{ i18n.t('serial.locationLoading') }}</option>
           }
           @for (path of locationPaths(); track path) {
             <option [value]="path">{{ path }}</option>
           }
         </select>
         @if (invalid('locationPath')) {
-          <span class="field__error" role="alert">Lokasyon seçilmelidir.</span>
+          <span class="field__error" role="alert">{{ i18n.t('serial.locationRequired') }}</span>
         }
       </label>
     </div>
@@ -93,7 +93,7 @@
           autocomplete="off"
           maxlength="20"
         />
-        <span class="field__hint">Yalnızca lot takipli ürünlerde dikkate alınır.</span>
+        <span class="field__hint">{{ i18n.t('serial.lotHint') }}</span>
       </label>
     </div>
 
@@ -103,7 +103,7 @@
 
     <div class="form__actions">
       <button type="button" class="btn" (click)="dismissed.emit()" [disabled]="submitting()">
-        Vazgeç
+        {{ i18n.t('common.cancel') }}
       </button>
       <button type="submit" class="btn btn--primary" [disabled]="submitting() || form.pending">
         {{ submitting() ? 'Kaydediliyor...' : 'Seriyi kaydet' }}

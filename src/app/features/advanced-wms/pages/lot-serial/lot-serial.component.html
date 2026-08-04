@@ -1,8 +1,8 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Lot / Serial</h1>
-      <p class="muted">Lot ve seri zorunluluğu, SKT yaklaşan, bloke ve süresi geçen stoklar</p>
+      <h1>{{ i18n.t('lotSerial.title') }}</h1>
+      <p class="muted">{{ i18n.t('lotSerial.subtitle') }}</p>
     </div>
 
     <div class="page__actions">
@@ -12,7 +12,7 @@
         (click)="formOpen.set(true)"
         *appHasPermission="'lot.view'"
       >
-        + Seri Kaydı Ekle
+        {{ i18n.t('lotSerial.addSerial') }}
       </button>
     </div>
   </div>
@@ -24,11 +24,11 @@
   @if (serialIssues().length) {
     <div class="panel serial-alert" role="alert">
       <div class="panel__head">
-        <h2>Seri numarası kural ihlali</h2>
-        <span class="status-pill tone-danger">{{ serialIssues().length }} kayıt</span>
+        <h2>{{ i18n.t('lotSerial.serialBreach') }}</h2>
+        <span class="status-pill tone-danger">{{ i18n.t('lotSerial.recordCount', { count: serialIssues().length }) }}</span>
       </div>
       <p class="muted small">
-        Seri takipli üründe her birim benzersiz bir seri numarası taşımalıdır (§10).
+        {{ i18n.t('lotSerial.serialRule') }}
       </p>
       <ul class="serial-alert__list">
         @for (issue of serialIssues().slice(0, 5); track issue.detail) {
@@ -36,37 +36,37 @@
         }
       </ul>
       @if (serialIssues().length > 5) {
-        <p class="muted small">…ve {{ serialIssues().length - 5 }} kayıt daha.</p>
+        <p class="muted small">{{ i18n.t('lotSerial.andMore', { count: serialIssues().length - 5 }) }}</p>
       }
     </div>
   }
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
       <input
         type="search"
         maxlength="80"
-        placeholder="Lot, seri no veya SKU ara..."
+        [attr.placeholder]="i18n.t('lotSerial.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Lot ara"
+        [attr.aria-label]="i18n.t('lotSerial.searchAria')"
       />
-      <select [value]="healthFilter()" (change)="onHealth($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
-        <option value="ok">Uygun</option>
-        <option value="expiring">SKT Yaklaşıyor</option>
-        <option value="blocked">Bloke</option>
-        <option value="recalled">Süresi Geçti</option>
+      <select [value]="healthFilter()" (change)="onHealth($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
+        <option value="ok">{{ i18n.t('lotSerial.health.ok') }}</option>
+        <option value="expiring">{{ i18n.t('lotSerial.health.expiring') }}</option>
+        <option value="blocked">{{ i18n.t('lotSerial.health.blocked') }}</option>
+        <option value="recalled">{{ i18n.t('lotSerial.health.recalled') }}</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() }} kayıt</span>
+      <span class="muted small">{{ i18n.t('lotSerial.count', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -74,16 +74,16 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">Lot</th>
-              <th appSortable="serial" [sort]="sort()" (sortChange)="onSort($event)">Seri No</th>
+              <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.lot') }}</th>
+              <th appSortable="serial" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.serial') }}</th>
               <th appSortable="skuCode" [sort]="sort()" (sortChange)="onSort($event)">SKU</th>
-              <th>Ürün</th>
-              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
-              <th>Lokasyon</th>
-              <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">Miktar</th>
-              <th appSortable="expiryDate" [sort]="sort()" (sortChange)="onSort($event)">SKT</th>
-              <th appSortable="daysToExpiry" [sort]="sort()" (sortChange)="onSort($event)">Kalan Gün</th>
-              <th appSortable="health" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
+              <th>{{ i18n.t('common.product') }}</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
+              <th>{{ i18n.t('common.location') }}</th>
+              <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.quantity') }}</th>
+              <th appSortable="expiryDate" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.expiry') }}</th>
+              <th appSortable="daysToExpiry" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('lotSerial.daysLeft') }}</th>
+              <th appSortable="health" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -121,7 +121,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen kayıt bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('lotSerial.empty') }}</div>
     }
   }
 </div>

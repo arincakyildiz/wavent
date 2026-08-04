@@ -8,7 +8,7 @@
       @if (wave(); as w) {
         <h1 class="mt">{{ w.name }}</h1>
         <p class="muted">
-          {{ w.warehouseCode }}@if (w.zone) { · Bölge {{ w.zone }} } · {{ w.carrier }} · Cut-off {{ w.cutOffTime }}
+          {{ w.warehouseCode }}@if (w.zone) { {{ i18n.t('waveDetail.zoneLine', { zone: w.zone }) }} } · {{ w.carrier }} · Cut-off {{ w.cutOffTime }}
         </p>
       }
     </div>
@@ -28,7 +28,7 @@
             (click)="releaseWave()"
             *appHasPermission="'wave.release'"
           >
-            {{ releasing() ? 'Yayınlanıyor...' : 'Dalgayı Yayınla' }}
+            {{ releasing() ? i18n.t('waveDetail.releasing') : i18n.t('waveDetail.release') }}
           </button>
         }
       </div>
@@ -37,27 +37,27 @@
 
   @switch (state()) {
     @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
+      <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
     }
     @case ('error') {
       <div class="state state--error" role="alert">
         {{ errorMessage() }}
-        <button type="button" (click)="load()">Tekrar dene</button>
+        <button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
       </div>
     }
     @case ('success') {
       @if (wave(); as w) {
         <div class="kpi-row">
           <div class="kpi-card">
-            <div class="kpi-card__label">Siparişler</div>
+            <div class="kpi-card__label">{{ i18n.t('waveDetail.orders') }}</div>
             <div class="kpi-card__value">{{ w.orderCount }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-card__label">Kapasite Kullanımı</div>
+            <div class="kpi-card__label">{{ i18n.t('waveDetail.capacityUsed') }}</div>
             <div class="kpi-card__value">{{ w.capacityUsedPct }}%</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-card__label">Risk Altındaki Sipariş</div>
+            <div class="kpi-card__label">{{ i18n.t('waveDetail.ordersAtRisk') }}</div>
             <div class="kpi-card__value">{{ riskyCount() }}</div>
           </div>
           <div class="kpi-card">
@@ -68,15 +68,15 @@
 
         @if (lastRelease(); as r) {
           <div class="panel release-summary">
-            <h2>Son Yayınlama Sonucu</h2>
+            <h2>{{ i18n.t('waveDetail.lastResult') }}</h2>
             <div class="release-summary__grid">
               <div>
-                <span class="status-pill tone-success">{{ r.released.length }} yayınlandı</span>
+                <span class="status-pill tone-success">{{ i18n.t('waveDetail.releasedCount', { count: r.released.length }) }}</span>
                 <p class="muted small">{{ r.released.join(', ') }}</p>
               </div>
               @if (r.failed.length) {
                 <div>
-                  <span class="status-pill tone-danger">{{ r.failed.length }} yayınlanamadı</span>
+                  <span class="status-pill tone-danger">{{ i18n.t('waveDetail.failedCount', { count: r.failed.length }) }}</span>
                   <ul class="release-summary__failed">
                     @for (f of r.failed; track f.orderNumber) {
                       <li><strong>{{ f.orderNumber }}</strong> — {{ f.reason }}</li>
@@ -89,17 +89,17 @@
         }
 
         <div class="panel">
-          <h2>Sipariş Satırları ve Yayınlama Sonuçları</h2>
+          <h2>{{ i18n.t('waveDetail.orderLines') }}</h2>
           @if (orders().length) {
             <div class="table-scroll">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Sipariş</th>
-                    <th>Öncelik</th>
+                    <th>{{ i18n.t('common.order') }}</th>
+                    <th>{{ i18n.t('waveDetail.priority') }}</th>
                     <th>Rota</th>
-                    <th>Satır</th>
-                    <th>Durum</th>
+                    <th>{{ i18n.t('waveDetail.lines') }}</th>
+                    <th>{{ i18n.t('common.status') }}</th>
                     <th>Neden</th>
                   </tr>
                 </thead>
@@ -118,7 +118,7 @@
               </table>
             </div>
           } @else {
-            <div class="state state--empty">Bu dalgada sipariş bulunamadı.</div>
+            <div class="state state--empty">{{ i18n.t('waveDetail.empty') }}</div>
           }
         </div>
       }

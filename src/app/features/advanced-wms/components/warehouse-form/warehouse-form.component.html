@@ -1,6 +1,6 @@
 <app-form-dialog
   title="Yeni Depo"
-  subtitle="Kod ağ genelinde benzersiz olmalıdır."
+  [subtitle]="i18n.t('warehouseForm.subtitle')"
   (dismissed)="dismissed.emit()"
 >
   <form [formGroup]="form" (ngSubmit)="submit()" class="form">
@@ -21,22 +21,22 @@
         } @else if (invalid('code')) {
           <span class="field__error" role="alert">
             @if (codeControl.hasError('required')) {
-              Depo kodu zorunludur.
+              {{ i18n.t('warehouseForm.codeRequired') }}
             } @else if (codeControl.hasError('codePattern')) {
-              Format: 2-4 büyük harf, tire, 2 rakam (örn. IST-02).
+              {{ i18n.t('warehouseForm.codeFormat') }}
             } @else if (codeControl.hasError('notUnique')) {
-              Bu kod başka bir depoda kullanılıyor.
+              {{ i18n.t('warehouseForm.codeTaken') }}
             }
           </span>
         } @else {
           <span class="field__hint">
-            Format: 2-4 büyük harf, tire, 2 rakam · en fazla {{ limits.codeMax }} karakter.
+            {{ i18n.t('warehouseForm.codeHint', { max: limits.codeMax }) }}
           </span>
         }
       </label>
 
       <label class="field">
-        <span class="field__label">Depo Adı <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('warehouseForm.name') }} <span class="req">*</span></span>
         <input
           formControlName="name"
           type="text"
@@ -63,14 +63,14 @@
 
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Şehir <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('warehouseForm.city') }} <span class="req">*</span></span>
         <input formControlName="city" type="text" maxlength="40" [class.invalid]="invalid('city')" />
         @if (invalid('city')) {
           <span class="field__error" role="alert">
             @if (form.controls.city.hasError('maxlength')) {
               En fazla {{ limits.cityMax }} karakter girebilirsiniz.
             } @else {
-              Şehir zorunludur.
+              {{ i18n.t('warehouseForm.cityRequired') }}
             }
           </span>
         } @else {
@@ -79,14 +79,14 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Ülke <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('warehouseForm.country') }} <span class="req">*</span></span>
         <input formControlName="country" type="text" maxlength="40" [class.invalid]="invalid('country')" />
         @if (invalid('country')) {
           <span class="field__error" role="alert">
             @if (form.controls.country.hasError('maxlength')) {
               En fazla {{ limits.countryMax }} karakter girebilirsiniz.
             } @else {
-              Ülke zorunludur.
+              {{ i18n.t('warehouseForm.countryRequired') }}
             }
           </span>
         } @else {
@@ -106,15 +106,15 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Açılış <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('warehouseForm.open') }} <span class="req">*</span></span>
         <input formControlName="open" type="time" [class.invalid]="invalid('open')" />
       </label>
 
       <label class="field">
-        <span class="field__label">Kapanış <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('warehouseForm.close') }} <span class="req">*</span></span>
         <input formControlName="close" type="time" [class.invalid]="invalid('close')" />
         @if (invalid('close') && form.controls.close.hasError('hoursRange')) {
-          <span class="field__error" role="alert">Kapanış saati açılıştan sonra olmalıdır.</span>
+          <span class="field__error" role="alert">{{ i18n.t('warehouseForm.closeAfterOpen') }}</span>
         }
       </label>
     </div>
@@ -124,9 +124,9 @@
     }
 
     <div class="form__actions">
-      <button class="btn" type="button" (click)="dismissed.emit()">Vazgeç</button>
+      <button class="btn" type="button" (click)="dismissed.emit()">{{ i18n.t('common.cancel') }}</button>
       <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
-        {{ submitting() ? 'Kaydediliyor...' : 'Depoyu Oluştur' }}
+        {{ submitting() ? i18n.t('common.saving') : i18n.t('warehouseForm.submit') }}
       </button>
     </div>
   </form>

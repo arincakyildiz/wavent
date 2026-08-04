@@ -8,6 +8,7 @@ import {
   uniqueValue,
 } from '../../../../shared/validators/wms-validators';
 import { WarehouseSummary, WarehousesService } from '../../data-access/warehouses.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 /** Bounds are declared here so the form enforces them and the UI can state them. */
 export const WAREHOUSE_LIMITS = {
@@ -33,6 +34,7 @@ const TIMEZONES = [
   styleUrl: './warehouse-form.component.scss',
 })
 export class WarehouseFormComponent {
+  readonly i18n = inject(I18nService);
   private readonly warehousesService = inject(WarehousesService);
 
   readonly created = output<WarehouseSummary>();

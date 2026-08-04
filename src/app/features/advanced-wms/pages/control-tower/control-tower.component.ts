@@ -8,6 +8,7 @@ import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.se
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { bindQueryParams } from '../../../../shared/utils/query-params';
 import { ControlTowerService, TowerEvent, TowerSnapshot } from '../../data-access/control-tower.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type LoadState = 'loading' | 'success' | 'error';
 type ToneFilter = 'all' | 'success' | 'info' | 'warning' | 'danger';
@@ -23,6 +24,7 @@ const MAX_FEED = 10;
   styleUrl: './control-tower.component.scss',
 })
 export class ControlTowerComponent {
+  readonly i18n = inject(I18nService);
   private readonly towerService = inject(ControlTowerService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly destroyRef = inject(DestroyRef);

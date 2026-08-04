@@ -8,6 +8,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { ReleaseResult, WaveOrderStatus, WaveRow, WavesService } from '../../data-access/waves.service';
 import { WavePlanningStore } from '../../state/wave-planning.store';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -18,6 +19,7 @@ type LoadState = 'loading' | 'success' | 'error';
   styleUrl: './wave-detail.component.scss',
 })
 export class WaveDetailComponent {
+  readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly wavesService = inject(WavesService);

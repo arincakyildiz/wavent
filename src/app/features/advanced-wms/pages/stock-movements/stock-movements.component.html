@@ -52,7 +52,7 @@
         <option value="shipment">Shipment</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} hareket · sanal kaydırma</span>
+      <span class="muted small">{{ i18n.t('movements.count', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {

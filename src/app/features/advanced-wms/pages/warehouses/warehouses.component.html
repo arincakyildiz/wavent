@@ -1,41 +1,41 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Warehouses</h1>
-      <p class="muted">Depo topolojisi ve kapasite genel bakışı</p>
+      <h1>{{ i18n.t('warehouses.title') }}</h1>
+      <p class="muted">{{ i18n.t('warehouses.subtitle') }}</p>
     </div>
 
     <div class="page__actions">
       <button class="btn" type="button" (click)="reload()">
         <app-icon name="refresh" [size]="14" />
-        Yenile
+        {{ i18n.t('common.refresh') }}
       </button>
       <button class="btn btn--primary" type="button" (click)="formOpen.set(true)" *appHasPermission="'warehouse.create'">
         <app-icon name="plus" [size]="15" />
-        Add Warehouse
+        {{ i18n.t('warehouses.add') }}
       </button>
     </div>
   </div>
 
   @if (loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (errorMessage()) {
     <div class="state state--error" role="alert">
       {{ errorMessage() }}
-      <button type="button" (click)="reload()">Tekrar dene</button>
+      <button type="button" (click)="reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="kpi-row">
       <div class="kpi-card">
-        <div class="kpi-card__label">Kapsamdaki Depo</div>
+        <div class="kpi-card__label">{{ i18n.t('warehouses.inScope') }}</div>
         <div class="kpi-card__value">{{ total() }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Aktif (bu sayfada)</div>
+        <div class="kpi-card__label">{{ i18n.t('warehouses.activeOnPage') }}</div>
         <div class="kpi-card__value">{{ activeCount() }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Ort. Kapasite (bu sayfada)</div>
+        <div class="kpi-card__label">{{ i18n.t('warehouses.avgCapacity') }}</div>
         <div class="kpi-card__value">{{ avgCapacity() }}%</div>
       </div>
     </div>
@@ -44,18 +44,18 @@
       <input
         type="search"
         maxlength="80"
-        placeholder="Depo, kod veya şehir ara..."
+        [attr.placeholder]="i18n.t('warehouses.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Depo ara"
+        [attr.aria-label]="i18n.t('warehouses.searchAria')"
       />
-      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
-        <option value="active">Aktif</option>
-        <option value="inactive">Pasif</option>
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.status') + ' ' + i18n.t('common.search')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
+        <option value="active">{{ i18n.t('warehouses.active') }}</option>
+        <option value="inactive">{{ i18n.t('warehouses.inactive') }}</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ total() }} depo</span>
+      <span class="muted small">{{ i18n.t('warehouses.count', { count: total() }) }}</span>
     </div>
 
     @if (rows().length) {
@@ -63,14 +63,14 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Kod</th>
-              <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">Depo Adı</th>
-              <th appSortable="city" [sort]="sort()" (sortChange)="onSort($event)">Şehir / Ülke</th>
-              <th>Çalışma Saatleri</th>
-              <th appSortable="locationCount" [sort]="sort()" (sortChange)="onSort($event)">Lokasyon</th>
-              <th appSortable="inventoryUnits" [sort]="sort()" (sortChange)="onSort($event)">Envanter</th>
-              <th appSortable="capacityUsedPct" [sort]="sort()" (sortChange)="onSort($event)">Kapasite</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('warehouses.code') }}</th>
+              <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('warehouses.name') }}</th>
+              <th appSortable="city" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('warehouses.cityCountry') }}</th>
+              <th>{{ i18n.t('warehouses.hours') }}</th>
+              <th appSortable="locationCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('warehouses.locations') }}</th>
+              <th appSortable="inventoryUnits" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('warehouses.inventory') }}</th>
+              <th appSortable="capacityUsedPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('warehouses.capacity') }}</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -90,7 +90,7 @@
                 </td>
                 <td>
                   <span class="status-pill" [class]="w.isActive ? 'tone-success' : 'tone-neutral'">
-                    {{ w.isActive ? 'Aktif' : 'Pasif' }}
+                    {{ w.isActive ? i18n.t('warehouses.active') : i18n.t('warehouses.inactive') }}
                   </span>
                 </td>
               </tr>
@@ -108,7 +108,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen depo bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('warehouses.empty') }}</div>
     }
   }
 

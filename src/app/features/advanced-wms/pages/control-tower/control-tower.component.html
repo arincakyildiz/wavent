@@ -2,7 +2,7 @@
   <div class="page__header">
     <div>
       <h1>Control Tower</h1>
-      <p class="muted">On-hand, available, reserved, quarantine, damaged ve in-transit miktarlar gerçek zamanlı</p>
+      <p class="muted">{{ i18n.t('tower.subtitle') }}</p>
     </div>
 
     <div class="page__actions">
@@ -11,7 +11,7 @@
         {{ streaming() ? 'Live' : 'Paused' }}
       </span>
       <button class="btn" type="button" (click)="toggleStream()">
-        {{ streaming() ? 'Akışı durdur' : 'Akışı başlat' }}
+        {{ streaming() ? i18n.t('tower.stopStream') : i18n.t('tower.startStream') }}
       </button>
       <button class="btn" type="button" (click)="load()">
         <app-icon name="refresh" [size]="14" />
@@ -22,12 +22,12 @@
 
   @switch (state()) {
     @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
+      <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
     }
     @case ('error') {
       <div class="state state--error" role="alert">
         {{ errorMessage() }}
-        <button type="button" (click)="load()">Tekrar dene</button>
+        <button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
       </div>
     }
     @case ('success') {
@@ -51,7 +51,7 @@
         <div class="grid-2">
           <section class="panel">
             <div class="panel__head">
-              <h2>Aktif Uyarılar</h2>
+              <h2>{{ i18n.t('tower.activeAlerts') }}</h2>
               <span class="status-pill" [class]="data.alerts.length ? 'tone-danger' : 'tone-success'">
                 {{ data.alerts.length }}
               </span>
@@ -75,18 +75,18 @@
                 }
               </ul>
             } @else {
-              <div class="state state--empty">Bu kapsamda aktif uyarı yok.</div>
+              <div class="state state--empty">{{ i18n.t('tower.noAlerts') }}</div>
             }
           </section>
 
           <section class="panel">
             <div class="panel__head">
-              <h2>Canlı Görev Akışı</h2>
+              <h2>{{ i18n.t('tower.liveFeed') }}</h2>
               <div class="feed__controls">
                 <select
                   [value]="toneFilter()"
                   (change)="toneFilter.set($any($event.target).value)"
-                  aria-label="Olay türü filtresi"
+                  [attr.aria-label]="i18n.t('tower.eventFilter')"
                 >
                   @for (t of toneFilters; track t) {
                     <option [value]="t">{{ toneLabel(t) }}</option>
@@ -111,10 +111,10 @@
                 }
               </ul>
             } @else if (events().length) {
-              <div class="state state--empty">Bu filtreyle eşleşen olay yok.</div>
+              <div class="state state--empty">{{ i18n.t('tower.noEvents') }}</div>
             } @else {
               <div class="state state--empty">
-                {{ streaming() ? 'Olay bekleniyor...' : 'Akış duraklatıldı.' }}
+                {{ streaming() ? i18n.t('tower.waiting') : i18n.t('tower.paused') }}
               </div>
             }
           </section>

@@ -1,12 +1,12 @@
 <app-form-dialog
-  title="Yeni Sayım"
-  subtitle="Sayım planlanır; fark eşiği aşılırsa ikinci sayım otomatik gerekli olur."
+  [title]="i18n.t('cycleCount.title')"
+  [subtitle]="i18n.t('cycleCount.subtitle')"
   (dismissed)="dismissed.emit()"
 >
   <form [formGroup]="form" (ngSubmit)="submit()" class="form">
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Sayım Kodu <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('cycleCount.code') }} <span class="req">*</span></span>
         <input
           formControlName="code"
           type="text"
@@ -20,9 +20,9 @@
         } @else if (invalid('code')) {
           <span class="field__error" role="alert">
             @if (codeControl.hasError('notUnique')) {
-              Bu kod zaten kullanılıyor.
+              {{ i18n.t('cycleCount.codeTaken') }}
             } @else {
-              Format: CC- ve 3 rakam (örn. CC-140).
+              {{ i18n.t('cycleCount.codeFormat') }}
             }
           </span>
         }
@@ -44,7 +44,7 @@
         <input
           formControlName="scopeLabel"
           type="text"
-          placeholder="A/01/01 bölgesi veya SKU-1001"
+          [attr.placeholder]="i18n.t('cycleCount.scopePlaceholder')"
           [attr.maxlength]="limits.scopeMax"
           [class.invalid]="invalid('scopeLabel')"
           [attr.aria-invalid]="invalid('scopeLabel')"
@@ -77,11 +77,11 @@
         />
         @if (invalid('expectedQuantity')) {
           <span class="field__error" role="alert">
-            {{ limits.quantityMin }}–{{ limits.quantityMax | number }} arasında bir tam sayı girin.
+            {{ i18n.t('cycleCount.quantityRange', { min: limits.quantityMin, max: limits.quantityMax }) }}
           </span>
         } @else {
           <span class="field__hint">
-            En fazla {{ limits.quantityMax | number }} adet sayılabilir.
+            {{ i18n.t('cycleCount.quantityMax', { max: limits.quantityMax }) }}
           </span>
         }
       </label>
@@ -92,9 +92,9 @@
     }
 
     <div class="form__actions">
-      <button class="btn" type="button" (click)="dismissed.emit()">Vazgeç</button>
+      <button class="btn" type="button" (click)="dismissed.emit()">{{ i18n.t('common.cancel') }}</button>
       <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
-        {{ submitting() ? 'Kaydediliyor...' : 'Sayımı Oluştur' }}
+        {{ submitting() ? i18n.t('common.saving') : i18n.t('cycleCount.submit') }}
       </button>
     </div>
   </form>

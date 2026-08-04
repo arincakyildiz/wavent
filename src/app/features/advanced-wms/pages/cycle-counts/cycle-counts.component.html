@@ -2,7 +2,7 @@
   <div class="page__header">
     <div>
       <h1>Cycle Counts</h1>
-      <p class="muted">Sayım kapsamı, beklenen, sayılan ve fark — eşik %{{ threshold }}</p>
+      <p class="muted">{{ i18n.t('cycleCounts.subtitle', { threshold: threshold }) }}</p>
     </div>
 
     <div class="page__actions">
@@ -14,11 +14,11 @@
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
@@ -28,17 +28,17 @@
         placeholder="Kod, kapsam veya depo ara..."
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Sayım ara"
+        [attr.aria-label]="i18n.t('cycleCounts.searchAria')"
       />
-      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
         <option value="scheduled">Scheduled</option>
         <option value="in-progress">In Progress</option>
         <option value="variance-review">Variance Review</option>
         <option value="closed">Closed</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} sayım · {{ secondCountNeeded() }} ikinci sayım</span>
+      <span class="muted small">{{ i18n.t('cycleCounts.count', { count: list.total(), second: secondCountNeeded() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -47,14 +47,14 @@
           <thead>
             <tr>
               <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Kod</th>
-              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
               <th appSortable="scopeLabel" [sort]="sort()" (sortChange)="onSort($event)">Kapsam</th>
               <th appSortable="expectedQuantity" [sort]="sort()" (sortChange)="onSort($event)">Beklenen</th>
-              <th appSortable="countedQuantity" [sort]="sort()" (sortChange)="onSort($event)">Sayılan</th>
+              <th appSortable="countedQuantity" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('cycleCounts.counted') }}</th>
               <th appSortable="variance" [sort]="sort()" (sortChange)="onSort($event)">Fark</th>
               <th appSortable="variancePct" [sort]="sort()" (sortChange)="onSort($event)">Fark %</th>
-              <th>2. Sayım</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
+              <th>{{ i18n.t('cycleCounts.secondCount') }}</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -91,7 +91,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen sayım bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('cycleCounts.empty') }}</div>
     }
   }
 

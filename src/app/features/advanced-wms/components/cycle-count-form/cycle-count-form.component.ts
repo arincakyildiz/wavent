@@ -1,11 +1,11 @@
 import { Component, inject, output, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
 import { codePattern, positiveInteger, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { CycleCountRow, CycleCountsService } from '../../data-access/cycle-counts.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 /** Bounds are declared here so the form enforces them and the UI can state them. */
 export const CYCLE_COUNT_LIMITS = {
@@ -19,11 +19,12 @@ export const CYCLE_COUNT_LIMITS = {
 
 @Component({
   selector: 'app-cycle-count-form',
-  imports: [ReactiveFormsModule, FormDialogComponent, DecimalPipe],
+  imports: [ReactiveFormsModule, FormDialogComponent],
   templateUrl: './cycle-count-form.component.html',
   styleUrl: './cycle-count-form.component.scss',
 })
 export class CycleCountFormComponent {
+  readonly i18n = inject(I18nService);
   private readonly cycleCountsService = inject(CycleCountsService);
   private readonly scope = inject(WarehouseScopeService);
 

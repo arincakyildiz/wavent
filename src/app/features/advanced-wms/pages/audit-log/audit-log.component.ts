@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { AuditService } from '../../../../core/observability/audit.service';
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
@@ -13,7 +12,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-audit-log',
-  imports: [DecimalPipe, SortableDirective, PaginationComponent],
+  imports: [SortableDirective, PaginationComponent],
   templateUrl: './audit-log.component.html',
   styleUrl: './audit-log.component.scss',
 })

@@ -2,33 +2,33 @@
   <div class="page__header">
     <div>
       <h1>Exceptions</h1>
-      <p class="muted">İstisna, kanıt, karar ve yeniden atama akışı</p>
+      <p class="muted">{{ i18n.t('exceptions.subtitle') }}</p>
     </div>
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="kpi-row">
       <div class="kpi-card">
-        <div class="kpi-card__label">Açık</div>
+        <div class="kpi-card__label">{{ i18n.t('exceptions.open') }}</div>
         <div class="kpi-card__value">{{ totals().open | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">İnceleniyor</div>
+        <div class="kpi-card__label">{{ i18n.t('exceptions.inReview') }}</div>
         <div class="kpi-card__value">{{ totals().investigating | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Kritik (açık)</div>
+        <div class="kpi-card__label">{{ i18n.t('exceptions.criticalOpen') }}</div>
         <div class="kpi-card__value">{{ totals().critical | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Çözüldü</div>
+        <div class="kpi-card__label">{{ i18n.t('exceptions.resolved') }}</div>
         <div class="kpi-card__value">{{ totals().resolved | number }}</div>
       </div>
     </div>
@@ -37,13 +37,13 @@
       <input
         type="search"
         maxlength="80"
-        placeholder="Tür, referans veya sahip ara..."
+        [attr.placeholder]="i18n.t('exceptions.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="İstisna ara"
+        [attr.aria-label]="i18n.t('exceptions.searchAria')"
       />
-      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
         <option value="open">Open</option>
         <option value="investigating">Investigating</option>
         <option value="resolved">Resolved</option>
@@ -57,13 +57,13 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">Tür</th>
-              <th appSortable="severity" [sort]="sort()" (sortChange)="onSort($event)">Önem</th>
+              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('exceptions.type') }}</th>
+              <th appSortable="severity" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('exceptions.severity') }}</th>
               <th appSortable="referenceId" [sort]="sort()" (sortChange)="onSort($event)">Referans</th>
-              <th appSortable="owner" [sort]="sort()" (sortChange)="onSort($event)">Sahip</th>
-              <th appSortable="createdAt" [sort]="sort()" (sortChange)="onSort($event)">Oluşturma</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
-              <th>Çözüm</th>
+              <th appSortable="owner" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.owner') }}</th>
+              <th appSortable="createdAt" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('exceptions.createdAt') }}</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('exceptions.resolution') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -89,7 +89,7 @@
                       (click)="toggleWorkbench(e)"
                       *appHasPermission="'exception.resolve'"
                     >
-                      {{ activeRow()?.id === e.id ? 'Kapat' : 'İncele' }}
+                      {{ activeRow()?.id === e.id ? i18n.t('common.close') : i18n.t('exceptions.inspect') }}
                     </button>
                   }
                 </td>
@@ -123,7 +123,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen istisna bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('exceptions.empty') }}</div>
     }
   }
 </div>

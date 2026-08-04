@@ -11,7 +11,7 @@
           [value]="selectedScope()"
           (change)="selectScope($any($event.target).value)"
           [disabled]="!canChooseScope()"
-          aria-label="Depo kapsamı"
+          [attr.aria-label]="i18n.t('overview.scopeAria')"
         >
           <option value="all">All Warehouses</option>
           @for (w of warehouses(); track w.code) {
@@ -23,7 +23,7 @@
 
       <label class="select-control">
         <app-icon name="calendar" [size]="15" />
-        <select [value]="period()" (change)="period.set($any($event.target).value)" aria-label="Dönem">
+        <select [value]="period()" (change)="period.set($any($event.target).value)" [attr.aria-label]="i18n.t('overview.periodAria')">
           @for (p of periods; track p) {
             <option [value]="p">{{ periodLabels[p] }}</option>
           }
@@ -42,26 +42,26 @@
   </div>
 
   @if (loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (errorMessage() && !summary()) {
     <div class="state state--error" role="alert">
       {{ errorMessage() }}
-      <button type="button" (click)="reload()">Tekrar dene</button>
+      <button type="button" (click)="reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     @if (errorMessage()) {
       <!-- Live call failed but a cached snapshot exists: show it, clearly labelled. -->
       <div class="offline-banner" role="alert">
         <div class="offline-banner__text">
-          <strong>Çevrimdışı veri gösteriliyor</strong>
+          <strong>{{ i18n.t('overview.offline') }}</strong>
           <span class="muted small">
             {{ errorMessage() }}
             @if (staleSince(); as at) {
-              · Anlık görüntü {{ at | date: 'dd.MM.yyyy HH:mm' }} tarihli
+              {{ i18n.t('overview.snapshotAt', { at: (at | date: 'dd.MM.yyyy HH:mm') ?? '' }) }}
             }
           </span>
         </div>
-        <button type="button" class="btn" (click)="reload()">Tekrar dene</button>
+        <button type="button" class="btn" (click)="reload()">{{ i18n.t('common.retry') }}</button>
       </div>
     }
 
@@ -150,7 +150,7 @@
             }
           </ul>
         } @else {
-          <div class="state state--empty">Açık istisna yok.</div>
+          <div class="state state--empty">{{ i18n.t('overview.noExceptions') }}</div>
         }
       </section>
     </div>
@@ -205,7 +205,7 @@
             }
           </div>
         } @else {
-          <div class="state state--empty">Bu kapsamda atanmış görev yok.</div>
+          <div class="state state--empty">{{ i18n.t('overview.noTasks') }}</div>
         }
       </section>
 

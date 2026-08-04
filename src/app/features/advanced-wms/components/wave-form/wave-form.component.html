@@ -1,12 +1,12 @@
 <app-form-dialog
   title="Yeni Dalga"
-  subtitle="Kural, dalgaya alınmamış ve rezervasyonu olan siparişlere uygulanır."
+  [subtitle]="i18n.t('waveForm.subtitle')"
   (dismissed)="dismissed.emit()"
 >
   <form [formGroup]="form" (ngSubmit)="submit()" class="form">
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Dalga Adı <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('waveForm.name') }} <span class="req">*</span></span>
         <input
           formControlName="name"
           type="text"
@@ -48,16 +48,16 @@
 
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Bölge</span>
+        <span class="field__label">{{ i18n.t('waveForm.zone') }}</span>
         <select formControlName="zone">
           @for (z of zones; track z) {
-            <option [value]="z">{{ z || 'Tümü' }}</option>
+            <option [value]="z">{{ z || i18n.t('common.all') }}</option>
           }
         </select>
       </label>
 
       <label class="field">
-        <span class="field__label">Taşıyıcı <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('waveForm.carrier') }} <span class="req">*</span></span>
         <select formControlName="carrier">
           @for (c of carriers; track c) {
             <option [value]="c">{{ c }}</option>
@@ -70,7 +70,7 @@
         <input formControlName="cutOffTime" type="time" [class.invalid]="invalid('cutOffTime')" />
         @if (form.controls.cutOffTime.hasError('cutOffRunway')) {
           <span class="field__error" role="alert">
-            Cut-off'a en az {{ minRunway }} dakika kalmalı.
+            {{ i18n.t('waveForm.runway', { min: minRunway }) }}
           </span>
         }
       </label>
@@ -78,7 +78,7 @@
 
     <div class="form__row">
       <label class="field">
-        <span class="field__label">En düşük öncelik <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('waveForm.minPriority') }} <span class="req">*</span></span>
         <input
           formControlName="minPriority"
           type="number"
@@ -89,17 +89,17 @@
         />
         @if (invalid('minPriority')) {
           <span class="field__error" role="alert">
-            Öncelik {{ limits.priorityMin }}–{{ limits.priorityMax }} arasında bir tam sayı olmalıdır.
+            {{ i18n.t('waveForm.priorityRange', { min: limits.priorityMin, max: limits.priorityMax }) }}
           </span>
         } @else {
           <span class="field__hint">
-            {{ limits.priorityMin }}–{{ limits.priorityMax }} arası. Bu değer ve daha öncelikli siparişler alınır.
+            {{ i18n.t('waveForm.priorityHint', { min: limits.priorityMin, max: limits.priorityMax }) }}
           </span>
         }
       </label>
 
       <label class="field">
-        <span class="field__label">Maks. sipariş <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('waveForm.maxOrders') }} <span class="req">*</span></span>
         <input
           formControlName="maxOrders"
           type="number"
@@ -110,12 +110,12 @@
         />
         @if (invalid('maxOrders')) {
           <span class="field__error" role="alert">
-            Bir dalgaya en fazla {{ limits.ordersMax }} sipariş alınabilir
+            {{ i18n.t('waveForm.ordersMaxError', { max: limits.ordersMax }) }}
             (en az {{ limits.ordersMin }}).
           </span>
         } @else {
           <span class="field__hint">
-            {{ limits.ordersMin }}–{{ limits.ordersMax }} arası sipariş alınabilir.
+            {{ i18n.t('waveForm.ordersHint', { min: limits.ordersMin, max: limits.ordersMax }) }}
           </span>
         }
       </label>
@@ -126,9 +126,9 @@
     }
 
     <div class="form__actions">
-      <button class="btn" type="button" (click)="dismissed.emit()">Vazgeç</button>
+      <button class="btn" type="button" (click)="dismissed.emit()">{{ i18n.t('common.cancel') }}</button>
       <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
-        {{ submitting() ? 'Oluşturuluyor...' : 'Dalgayı Oluştur' }}
+        {{ submitting() ? i18n.t('waveForm.creating') : i18n.t('waveForm.submit') }}
       </button>
     </div>
   </form>

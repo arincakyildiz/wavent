@@ -2,21 +2,21 @@
   <div class="page__header">
     <div>
       <h1>Picking Tasks</h1>
-      <p class="muted">Single, batch ve zone picking görevleri</p>
+      <p class="muted">{{ i18n.t('picking.subtitle') }}</p>
     </div>
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="kpi-row">
       <div class="kpi-card">
-        <div class="kpi-card__label">Toplam Görev</div>
+        <div class="kpi-card__label">{{ i18n.t('picking.totalTasks') }}</div>
         <div class="kpi-card__value">{{ totals().total | number }}</div>
       </div>
       <div class="kpi-card">
@@ -24,7 +24,7 @@
         <div class="kpi-card__value">{{ totals().inProgress | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">İstisna</div>
+        <div class="kpi-card__label">{{ i18n.t('picking.exception') }}</div>
         <div class="kpi-card__value">{{ totals().exceptions | number }}</div>
       </div>
     </div>
@@ -33,20 +33,20 @@
       <input
         type="search"
         maxlength="80"
-        placeholder="Görev kodu, dalga veya operatör ara..."
+        [attr.placeholder]="i18n.t('picking.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Görev ara"
+        [attr.aria-label]="i18n.t('picking.searchAria')"
       />
-      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
         <option value="pending">Pending</option>
         <option value="in-progress">In Progress</option>
         <option value="exception">Exception</option>
         <option value="completed">Completed</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} görev</span>
+      <span class="muted small">{{ i18n.t('picking.count', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -54,14 +54,14 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Görev</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.task') }}</th>
               <th appSortable="waveName" [sort]="sort()" (sortChange)="onSort($event)">Dalga</th>
               <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">Tip</th>
               <th appSortable="assignedTo" [sort]="sort()" (sortChange)="onSort($event)">Atanan</th>
-              <th appSortable="locationCount" [sort]="sort()" (sortChange)="onSort($event)">Lokasyon</th>
-              <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">İlerleme</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
-              <th>İstisna</th>
+              <th appSortable="locationCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.location') }}</th>
+              <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.progress') }}</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('picking.exception') }}</th>
               <th>Rota</th>
             </tr>
           </thead>
@@ -88,7 +88,7 @@
                     [attr.aria-expanded]="activeRow()?.id === t.id"
                     (click)="toggleRoute(t)"
                   >
-                    {{ activeRow()?.id === t.id ? 'Kapat' : 'Rotayı gör' }}
+                    {{ activeRow()?.id === t.id ? i18n.t('common.close') : i18n.t('picking.viewRoute') }}
                   </button>
                 </td>
               </tr>
@@ -114,7 +114,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen görev bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('picking.empty') }}</div>
     }
   }
 </div>

@@ -9,6 +9,7 @@ import { SortableDirective } from '../../../../shared/directives/sortable.direct
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { LocationRow, LocationsService } from '../../data-access/locations.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 /** The tree needs the whole hierarchy, not the current page of it. */
@@ -21,6 +22,7 @@ const TREE_PAGE_SIZE = 500;
   styleUrl: './locations.component.scss',
 })
 export class LocationsComponent {
+  readonly i18n = inject(I18nService);
   private readonly locationsService = inject(LocationsService);
   private readonly scope = inject(WarehouseScopeService);
 
@@ -131,12 +133,6 @@ export class LocationsComponent {
   }
 
   statusLabel(status: LocationRow['status']): string {
-    const label: Record<LocationRow['status'], string> = {
-      active: 'Aktif',
-      full: 'Dolu',
-      blocked: 'Bloke',
-      inactive: 'Pasif',
-    };
-    return label[status];
+    return this.i18n.t(`status.${status}`);
   }
 }

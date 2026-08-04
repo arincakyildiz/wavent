@@ -21,19 +21,19 @@
 
   @switch (state()) {
     @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
+      <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
     }
     @case ('error') {
       <div class="state state--error" role="alert">
         {{ errorMessage() }}
-        <button type="button" (click)="load()">Tekrar dene</button>
+        <button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
       </div>
     }
     @case ('success') {
       @if (item(); as it) {
         @if (!balanced()) {
           <div class="state state--error" role="alert">
-            Tutarsızlık: on-hand, durum kırılımlarının toplamına eşit değil.
+            {{ i18n.t('inventoryDetail.imbalance') }}
           </div>
         }
 
@@ -62,18 +62,18 @@
 
         <div class="grid-2">
           <div class="panel">
-            <h2>Lot / Lokasyon Dağılımı</h2>
+            <h2>{{ i18n.t('inventory.lotLocationBreakdown') }}</h2>
             @if (lots().length) {
               <div class="table-scroll">
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Lot</th>
+                      <th>{{ i18n.t('common.lot') }}</th>
                       <th>Seri</th>
-                      <th>Lokasyon</th>
-                      <th>Miktar</th>
-                      <th>Durum</th>
-                      <th>SKT</th>
+                      <th>{{ i18n.t('common.location') }}</th>
+                      <th>{{ i18n.t('common.quantity') }}</th>
+                      <th>{{ i18n.t('common.status') }}</th>
+                      <th>{{ i18n.t('common.expiry') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -91,7 +91,7 @@
                 </table>
               </div>
             } @else {
-              <div class="state state--empty">Bu SKU için kayıt yok.</div>
+              <div class="state state--empty">{{ i18n.t('inventoryDetail.empty') }}</div>
             }
           </div>
 

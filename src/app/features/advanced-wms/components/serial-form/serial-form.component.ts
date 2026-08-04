@@ -6,6 +6,7 @@ import { FormDialogComponent } from '../../../../shared/components/form-dialog/f
 import { codePattern, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { LocationsService } from '../../data-access/locations.service';
 import { LotRow, LotSerialService } from '../../data-access/lot-serial.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 /**
  * Registers one serialised unit (§10). The serial is checked for uniqueness twice:
@@ -19,6 +20,7 @@ import { LotRow, LotSerialService } from '../../data-access/lot-serial.service';
   styleUrl: './serial-form.component.scss',
 })
 export class SerialFormComponent {
+  readonly i18n = inject(I18nService);
   private readonly lotSerialService = inject(LotSerialService);
   private readonly locationsService = inject(LocationsService);
   private readonly scope = inject(WarehouseScopeService);

@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { describeError } from '../../../../core/api/api-error';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { AsnRow, ReceiptLineRow, ReceivingService } from '../../data-access/receiving.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -14,6 +15,7 @@ type LoadState = 'loading' | 'success' | 'error';
   styleUrl: './receiving-detail.component.scss',
 })
 export class ReceivingDetailComponent {
+  readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly receivingService = inject(ReceivingService);

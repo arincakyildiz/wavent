@@ -2,7 +2,7 @@
   <div class="page__header">
     <div>
       <h1>Waves</h1>
-      <p class="muted">Rota, taşıyıcı kesim saati, öncelik, hacim ve bölgeye göre dalga planlama</p>
+      <p class="muted">{{ i18n.t('waves.subtitle') }}</p>
     </div>
 
     <div class="page__actions">
@@ -14,24 +14,24 @@
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
       <input
         type="search"
         maxlength="80"
-        placeholder="Dalga, taşıyıcı veya bölge ara..."
+        [attr.placeholder]="i18n.t('waves.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
         aria-label="Dalga ara"
       />
-      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
         <option value="draft">Draft</option>
         <option value="planned">Planned</option>
         <option value="released">Released</option>
@@ -39,7 +39,7 @@
         <option value="cancelled">Cancelled</option>
       </select>
       <span class="spacer"></span>
-      <div class="view-toggle" role="group" aria-label="Görünüm">
+      <div class="view-toggle" role="group" [attr.aria-label]="i18n.t('locations.view')">
         <button
           type="button"
           class="view-toggle__btn"
@@ -75,20 +75,20 @@
           <thead>
             <tr>
               <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">Dalga</th>
-              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
-              <th appSortable="zone" [sort]="sort()" (sortChange)="onSort($event)">Bölge</th>
-              <th appSortable="carrier" [sort]="sort()" (sortChange)="onSort($event)">Taşıyıcı</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
+              <th appSortable="zone" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('waves.zone') }}</th>
+              <th appSortable="carrier" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.carrier') }}</th>
               <th appSortable="cutOffTime" [sort]="sort()" (sortChange)="onSort($event)">Cut-off</th>
-              <th appSortable="orderCount" [sort]="sort()" (sortChange)="onSort($event)">Sipariş</th>
+              <th appSortable="orderCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.order') }}</th>
               <th appSortable="riskCount" [sort]="sort()" (sortChange)="onSort($event)">Risk</th>
               <th appSortable="capacityUsedPct" [sort]="sort()" (sortChange)="onSort($event)">Kapasite</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
-              <th class="col-detail">Detay</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
+              <th class="col-detail">{{ i18n.t('common.detail') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (w of list.rows(); track w.id) {
-              <tr appActivatable (activated)="open(w.id)" [attr.aria-label]="w.name + ' detayını aç'">
+              <tr appActivatable (activated)="open(w.id)" [attr.aria-label]="i18n.t('waves.openDetail', { name: w.name })">
                 <td>{{ w.name }}</td>
                 <td>{{ w.warehouseCode }}</td>
                 <td>{{ w.zone ?? '—' }}</td>
@@ -111,7 +111,7 @@
                 <td><span class="status-pill" [class]="statusTone(w.status)">{{ w.status }}</span></td>
                 <td class="col-detail">
                   <span class="row-detail">
-                    <span class="row-detail__text">Detay</span>
+                    <span class="row-detail__text">{{ i18n.t('common.detail') }}</span>
                     <span class="row-detail__chevron" aria-hidden="true">›</span>
                   </span>
                 </td>
@@ -129,7 +129,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen dalga bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('waves.empty') }}</div>
     }
   }
 

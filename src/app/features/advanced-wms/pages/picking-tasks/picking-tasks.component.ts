@@ -10,6 +10,7 @@ import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { PickTaskRow, PickingService } from '../../data-access/picking.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const EMPTY_TOTALS = { total: 0, exceptions: 0, inProgress: 0 };
@@ -21,6 +22,7 @@ const EMPTY_TOTALS = { total: 0, exceptions: 0, inProgress: 0 };
   styleUrl: './picking-tasks.component.scss',
 })
 export class PickingTasksComponent {
+  readonly i18n = inject(I18nService);
   private readonly pickingService = inject(PickingService);
   private readonly scope = inject(WarehouseScopeService);
 

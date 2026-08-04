@@ -2,29 +2,29 @@
   <div class="page__header">
     <div>
       <h1>Shipping</h1>
-      <p class="muted">Yükleme sırası, kapı ve sevkiyat kapanış kuralları</p>
+      <p class="muted">{{ i18n.t('shipping.subtitle') }}</p>
     </div>
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
       <input
         type="search"
         maxlength="80"
-        placeholder="Sevkiyat, taşıyıcı veya kapı ara..."
+        [attr.placeholder]="i18n.t('shipping.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
         aria-label="Sevkiyat ara"
       />
-      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" aria-label="Durum filtresi">
-        <option value="all">Tüm durumlar</option>
+      <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
+        <option value="all">{{ i18n.t('common.allStatuses') }}</option>
         <option value="staged">Staged</option>
         <option value="loading">Loading</option>
         <option value="in-transit">In Transit</option>
@@ -41,19 +41,19 @@
           <thead>
             <tr>
               <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Sevkiyat</th>
-              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
-              <th appSortable="carrier" [sort]="sort()" (sortChange)="onSort($event)">Taşıyıcı</th>
-              <th appSortable="door" [sort]="sort()" (sortChange)="onSort($event)">Kapı</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
+              <th appSortable="carrier" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.carrier') }}</th>
+              <th appSortable="door" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('shipping.door') }}</th>
               <th appSortable="packageCount" [sort]="sort()" (sortChange)="onSort($event)">Paket</th>
-              <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">İlerleme</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
-              <th>Kapanış</th>
-              <th class="col-detail">Detay</th>
+              <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.progress') }}</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('shipping.closing') }}</th>
+              <th class="col-detail">{{ i18n.t('common.detail') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (s of list.rows(); track s.id) {
-              <tr appActivatable (activated)="open(s.id)" [attr.aria-label]="s.code + ' detayını aç'">
+              <tr appActivatable (activated)="open(s.id)" [attr.aria-label]="i18n.t('shipping.openDetail', { code: s.code })">
                 <td>{{ s.code }}</td>
                 <td>{{ s.warehouseCode }}</td>
                 <td>{{ s.carrier }}</td>
@@ -69,7 +69,7 @@
                 <td class="muted small">{{ s.closedAt ?? '—' }}</td>
                 <td class="col-detail">
                   <span class="row-detail">
-                    <span class="row-detail__text">Detay</span>
+                    <span class="row-detail__text">{{ i18n.t('common.detail') }}</span>
                     <span class="row-detail__chevron" aria-hidden="true">›</span>
                   </span>
                 </td>
@@ -87,7 +87,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen sevkiyat bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('shipping.empty') }}</div>
     }
   }
 </div>

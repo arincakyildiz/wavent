@@ -1,30 +1,30 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Inventory</h1>
-      <p class="muted">SKU-lot-seri-lokasyon bazlı miktarlar</p>
+      <h1>{{ i18n.t('inventory.title') }}</h1>
+      <p class="muted">{{ i18n.t('inventory.subtitle') }}</p>
     </div>
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
       <input
         type="search"
         maxlength="80"
-        placeholder="SKU veya ürün adı ara..."
+        [attr.placeholder]="i18n.t('inventory.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="SKU ara"
+        [attr.aria-label]="i18n.t('common.skuSearchAria')"
       />
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() }} SKU</span>
+      <span class="muted small">{{ i18n.t('inventory.count', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -33,20 +33,20 @@
           <thead>
             <tr>
               <th appSortable="skuCode" [sort]="sort()" (sortChange)="onSort($event)">SKU</th>
-              <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">Ürün</th>
-              <th appSortable="onHand" [sort]="sort()" (sortChange)="onSort($event)">On-hand</th>
-              <th appSortable="available" [sort]="sort()" (sortChange)="onSort($event)">Available</th>
-              <th appSortable="reserved" [sort]="sort()" (sortChange)="onSort($event)">Reserved</th>
-              <th appSortable="quarantine" [sort]="sort()" (sortChange)="onSort($event)">Quarantine</th>
-              <th appSortable="damaged" [sort]="sort()" (sortChange)="onSort($event)">Damaged</th>
-              <th appSortable="nearestExpiry" [sort]="sort()" (sortChange)="onSort($event)">SKT</th>
-              <th>İzlenebilirlik</th>
-              <th class="col-detail">Detay</th>
+              <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.product') }}</th>
+              <th appSortable="onHand" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('inventory.onHand') }}</th>
+              <th appSortable="available" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('inventory.available') }}</th>
+              <th appSortable="reserved" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('inventory.reserved') }}</th>
+              <th appSortable="quarantine" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('inventory.quarantine') }}</th>
+              <th appSortable="damaged" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('inventory.damaged') }}</th>
+              <th appSortable="nearestExpiry" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.expiry') }}</th>
+              <th>{{ i18n.t('inventory.traceability') }}</th>
+              <th class="col-detail">{{ i18n.t('common.detail') }}</th>
             </tr>
           </thead>
           <tbody>
             @for (r of list.rows(); track r.skuCode) {
-              <tr appActivatable (activated)="openDetail(r.skuCode)" [attr.aria-label]="r.skuCode + ' detayını aç'">
+              <tr appActivatable (activated)="openDetail(r.skuCode)" [attr.aria-label]="i18n.t('inventory.openDetail', { code: r.skuCode })">
                 <td>{{ r.skuCode }}</td>
                 <td>{{ r.name }}</td>
                 <td>{{ r.onHand | number }}</td>
@@ -77,7 +77,7 @@
                     <span class="status-pill tone-info">Lot</span>
                   }
                   @if (r.serialTracked) {
-                    <span class="status-pill tone-info">Seri</span>
+                    <span class="status-pill tone-info">{{ i18n.t('common.serial') }}</span>
                   }
                   @if (!r.lotTracked && !r.serialTracked) {
                     <span class="muted small">—</span>
@@ -85,7 +85,7 @@
                 </td>
                 <td class="col-detail">
                   <span class="row-detail">
-                    <span class="row-detail__text">Detay</span>
+                    <span class="row-detail__text">{{ i18n.t('common.detail') }}</span>
                     <span class="row-detail__chevron" aria-hidden="true">›</span>
                   </span>
                 </td>
@@ -103,7 +103,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Aramayla eşleşen SKU bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('inventory.empty') }}</div>
     }
   }
 </div>

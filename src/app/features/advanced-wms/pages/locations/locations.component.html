@@ -1,37 +1,37 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Locations</h1>
-      <p class="muted">Hiyerarşi, kapasite, sınıf ve durum bilgisi</p>
+      <h1>{{ i18n.t('locations.title') }}</h1>
+      <p class="muted">{{ i18n.t('locations.subtitle') }}</p>
     </div>
   </div>
 
   @if (loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (errorMessage()) {
     <div class="state state--error" role="alert">
       {{ errorMessage() }}
-      <button type="button" (click)="reload()">Tekrar dene</button>
+      <button type="button" (click)="reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
       <input
         type="search"
         maxlength="80"
-        placeholder="Lokasyon veya depo kodu ara..."
+        [attr.placeholder]="i18n.t('locations.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Lokasyon ara"
+        [attr.aria-label]="i18n.t('locations.searchAria')"
       />
-      <select [value]="classFilter()" (change)="onClass($any($event.target).value)" aria-label="Sınıf filtresi">
-        <option value="all">Tüm sınıflar</option>
+      <select [value]="classFilter()" (change)="onClass($any($event.target).value)" [attr.aria-label]="i18n.t('locations.classFilter')">
+        <option value="all">{{ i18n.t('locations.allClasses') }}</option>
         <option value="ambient">Ambient</option>
         <option value="chilled">Chilled</option>
         <option value="frozen">Frozen</option>
         <option value="hazmat">Hazmat</option>
       </select>
       <span class="spacer"></span>
-      <div class="view-toggle" role="group" aria-label="Görünüm">
+      <div class="view-toggle" role="group" [attr.aria-label]="i18n.t('locations.view')">
         <button
           type="button"
           class="view-toggle__btn"
@@ -39,7 +39,7 @@
           [attr.aria-pressed]="view() === 'table'"
           (click)="setView('table')"
         >
-          Tablo
+          {{ i18n.t('locations.viewTable') }}
         </button>
         <button
           type="button"
@@ -48,17 +48,17 @@
           [attr.aria-pressed]="view() === 'tree'"
           (click)="setView('tree')"
         >
-          Hiyerarşi
+          {{ i18n.t('locations.viewTree') }}
         </button>
       </div>
-      <span class="muted small">{{ total() }} lokasyon</span>
+      <span class="muted small">{{ i18n.t('locations.count', { count: total() }) }}</span>
     </div>
 
     @if (view() === 'tree') {
       <div class="panel">
         <app-warehouse-tree
           [locations]="rows()"
-          emptyMessage="Filtreyle eşleşen lokasyon bulunamadı."
+          [emptyMessage]="i18n.t('locations.empty')"
         />
       </div>
     } @else if (rows().length) {
@@ -66,13 +66,13 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="path" [sort]="sort()" (sortChange)="onSort($event)">Yol</th>
-              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">Depo</th>
-              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">Tip</th>
-              <th appSortable="locationClass" [sort]="sort()" (sortChange)="onSort($event)">Sınıf</th>
-              <th appSortable="capacityPct" [sort]="sort()" (sortChange)="onSort($event)">Ağırlık Kapasitesi</th>
-              <th>Hacim Kapasitesi</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
+              <th appSortable="path" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('locations.path') }}</th>
+              <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
+              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('locations.type') }}</th>
+              <th appSortable="locationClass" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('locations.class') }}</th>
+              <th appSortable="capacityPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('locations.weightCapacity') }}</th>
+              <th>{{ i18n.t('locations.volumeCapacity') }}</th>
+              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -107,7 +107,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen lokasyon bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('locations.empty') }}</div>
     }
   }
 </div>

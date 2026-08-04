@@ -20,6 +20,7 @@ import {
   ExceptionRow,
   ExceptionsService,
 } from '../../data-access/exceptions.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const EMPTY_TOTALS = { open: 0, investigating: 0, resolved: 0, critical: 0 };
@@ -37,6 +38,7 @@ const EMPTY_TOTALS = { open: 0, investigating: 0, resolved: 0, critical: 0 };
   styleUrl: './exceptions.component.scss',
 })
 export class ExceptionsComponent {
+  readonly i18n = inject(I18nService);
   private readonly exceptionsService = inject(ExceptionsService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly notifications = inject(NotificationService);

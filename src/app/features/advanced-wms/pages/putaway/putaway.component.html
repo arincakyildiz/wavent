@@ -2,16 +2,16 @@
   <div class="page__header">
     <div>
       <h1>Putaway</h1>
-      <p class="muted">Ürün ve lokasyon kısıtlarına göre puanlanmış öneriler</p>
+      <p class="muted">{{ i18n.t('putaway.subtitle') }}</p>
     </div>
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <app-barcode-input (scanned)="onLocationScanned($event)" />
@@ -23,10 +23,10 @@
         placeholder="SKU, lot, lokasyon veya ASN ara..."
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Öneri ara"
+        [attr.aria-label]="i18n.t('putaway.searchAria')"
       />
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} öneri</span>
+      <span class="muted small">{{ i18n.t('putaway.count', { count: list.total() }) }}</span>
     </div>
 
     @if (rows().length) {
@@ -35,12 +35,12 @@
           <thead>
             <tr>
               <th appSortable="skuCode" [sort]="sort()" (sortChange)="onSort($event)">SKU</th>
-              <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">Lot</th>
-              <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">Miktar</th>
-              <th appSortable="suggestedLocationPath" [sort]="sort()" (sortChange)="onSort($event)">Önerilen Lokasyon</th>
+              <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.lot') }}</th>
+              <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.quantity') }}</th>
+              <th appSortable="suggestedLocationPath" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('putaway.suggestedLocation') }}</th>
               <th appSortable="score" [sort]="sort()" (sortChange)="onSort($event)">Skor</th>
-              <th>Gerekçeler</th>
-              <th appSortable="accepted" [sort]="sort()" (sortChange)="onSort($event)">Durum</th>
+              <th>{{ i18n.t('putaway.reasons') }}</th>
+              <th appSortable="accepted" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th></th>
             </tr>
           </thead>
@@ -54,7 +54,7 @@
                   {{ s.suggestedLocationPath }}
                   @if (!s.capacityOk) {
                     <span class="status-pill tone-danger" [title]="s.capacityViolations.join('; ')">
-                      Kısıt ihlali
+                      {{ i18n.t('putaway.constraintBreach') }}
                     </span>
                     <span class="muted small block">{{ s.capacityViolations.join(' · ') }}</span>
                   }
@@ -95,7 +95,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Bekleyen putaway önerisi yok.</div>
+      <div class="state state--empty">{{ i18n.t('putaway.empty') }}</div>
     }
   }
 </div>

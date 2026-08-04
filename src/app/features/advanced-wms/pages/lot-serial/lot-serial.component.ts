@@ -13,6 +13,7 @@ import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { SerialFormComponent } from '../../components/serial-form/serial-form.component';
 import { LotHealth, LotRow, LotSerialService, SerialIssue } from '../../data-access/lot-serial.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -29,6 +30,7 @@ const DEFAULT_PAGE_SIZE = 20;
   styleUrl: './lot-serial.component.scss',
 })
 export class LotSerialComponent {
+  readonly i18n = inject(I18nService);
   private readonly lotSerialService = inject(LotSerialService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly notifications = inject(NotificationService);
@@ -105,7 +107,7 @@ export class LotSerialComponent {
       newValue: `${row.warehouseCode} · ${row.locationPath}`,
     });
 
-    this.notifications.success('Seri kaydedildi', `${row.serial} · ${row.locationPath}`);
+    this.notifications.success(this.i18n.t('lotSerial.serialSaved'), `${row.serial} · ${row.locationPath}`);
     this.list.reload();
   }
 
@@ -120,12 +122,6 @@ export class LotSerialComponent {
   }
 
   healthLabel(health: LotHealth): string {
-    const label: Record<LotHealth, string> = {
-      ok: 'Uygun',
-      expiring: 'SKT Yaklaşıyor',
-      blocked: 'Bloke',
-      recalled: 'Süresi Geçti',
-    };
-    return label[health];
+    return this.i18n.t(`lotSerial.health.${health}`);
   }
 }

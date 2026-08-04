@@ -15,6 +15,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { LotCandidate, ReservationRow, ReservationsService } from '../../data-access/reservations.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const EMPTY_TOTALS = { total: 0, partial: 0, backorder: 0, overrides: 0 };
@@ -32,6 +33,7 @@ const EMPTY_TOTALS = { total: 0, partial: 0, backorder: 0, overrides: 0 };
   styleUrl: './reservations.component.scss',
 })
 export class ReservationsComponent {
+  readonly i18n = inject(I18nService);
   private readonly reservationsService = inject(ReservationsService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly confirm = inject(ConfirmDialogService);

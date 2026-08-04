@@ -6,9 +6,9 @@
 
     <h1>403 — Yetkiniz yok</h1>
     <p class="muted">
-      Bu ekran aktif rolünüz (<strong>{{ roleLabel() }}</strong>) için kapalı.
+      {{ i18n.t('unauthorized.body', { role: roleLabel() }) }}
       @if (from) {
-        İstenen yol: <code>/wms/{{ from }}</code>
+        {{ i18n.t('unauthorized.path') }} <code>/wms/{{ from }}</code>
       }
     </p>
 

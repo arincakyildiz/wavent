@@ -24,12 +24,12 @@
 
   @switch (state()) {
     @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
+      <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
     }
     @case ('error') {
       <div class="state state--error" role="alert">
         {{ errorMessage() }}
-        <button type="button" (click)="load()">Tekrar dene</button>
+        <button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
       </div>
     }
     @case ('success') {
@@ -39,7 +39,7 @@
           <div class="kpi-card__value">{{ expectedTotal() | number }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card__label">Alınan</div>
+          <div class="kpi-card__label">{{ i18n.t('receivingDetail.received') }}</div>
           <div class="kpi-card__value">{{ receivedTotal() | number }}</div>
         </div>
         <div class="kpi-card">
@@ -49,25 +49,25 @@
           </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card__label">Hasarlı</div>
+          <div class="kpi-card__label">{{ i18n.t('receivingDetail.damaged') }}</div>
           <div class="kpi-card__value">{{ damagedTotal() | number }}</div>
         </div>
       </div>
 
       <div class="panel">
-        <h2>Kabul Satırları</h2>
+        <h2>{{ i18n.t('receivingDetail.lines') }}</h2>
         @if (lines().length) {
           <div class="table-scroll">
             <table class="data-table">
               <thead>
                 <tr>
                   <th>SKU</th>
-                  <th>Ürün</th>
-                  <th>Lot</th>
+                  <th>{{ i18n.t('common.product') }}</th>
+                  <th>{{ i18n.t('common.lot') }}</th>
                   <th>Beklenen</th>
-                  <th>Alınan</th>
-                  <th>Hasarlı</th>
-                  <th>Durum</th>
+                  <th>{{ i18n.t('receivingDetail.received') }}</th>
+                  <th>{{ i18n.t('receivingDetail.damaged') }}</th>
+                  <th>{{ i18n.t('common.status') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -86,7 +86,7 @@
             </table>
           </div>
         } @else {
-          <div class="state state--empty">Bu ASN için kabul satırı bulunamadı.</div>
+          <div class="state state--empty">{{ i18n.t('receivingDetail.empty') }}</div>
         }
       </div>
     }

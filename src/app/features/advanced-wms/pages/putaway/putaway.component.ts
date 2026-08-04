@@ -13,6 +13,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { PutawayService, PutawaySuggestionRow } from '../../data-access/putaway.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -23,6 +24,7 @@ const DEFAULT_PAGE_SIZE = 20;
   styleUrl: './putaway.component.scss',
 })
 export class PutawayComponent {
+  readonly i18n = inject(I18nService);
   private readonly putawayService = inject(PutawayService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly notifications = inject(NotificationService);

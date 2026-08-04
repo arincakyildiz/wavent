@@ -13,6 +13,7 @@ import { ScaleInputComponent } from '../../../../shared/components/scale-input/s
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { PackageRow, PackingService } from '../../data-access/packing.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -29,6 +30,7 @@ const DEFAULT_PAGE_SIZE = 20;
   styleUrl: './packing.component.scss',
 })
 export class PackingComponent {
+  readonly i18n = inject(I18nService);
   private readonly packingService = inject(PackingService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly notifications = inject(NotificationService);

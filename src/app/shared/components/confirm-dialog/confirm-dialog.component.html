@@ -29,7 +29,7 @@
                 @if (form.controls.reason.hasError('required')) {
                   {{ i18n.t('common.reason') }} zorunludur.
                 } @else if (form.controls.reason.hasError('minlength')) {
-                  {{ i18n.t('common.reason') }} en az 6 karakter olmalıdır.
+                  {{ i18n.t('confirm.reasonMin', { label: d.reasonLabel ?? i18n.t('common.reason'), min: 6 }) }}
                 } @else {
                   {{ i18n.t('common.reason') }} en fazla 300 karakter olabilir.
                 }

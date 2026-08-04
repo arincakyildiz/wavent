@@ -13,6 +13,7 @@ import { bindQueryParams, parseNumber, parseString } from '../../../../shared/ut
 import { CycleCountFormComponent } from '../../components/cycle-count-form/cycle-count-form.component';
 import { CycleCountRow, CycleCountsService } from '../../data-access/cycle-counts.service';
 import { VARIANCE_THRESHOLD_PCT } from '../../data-access/selectors';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -29,6 +30,7 @@ const DEFAULT_PAGE_SIZE = 20;
   styleUrl: './cycle-counts.component.scss',
 })
 export class CycleCountsComponent {
+  readonly i18n = inject(I18nService);
   private readonly cycleCountsService = inject(CycleCountsService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly notifications = inject(NotificationService);

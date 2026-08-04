@@ -5,6 +5,7 @@ import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.se
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
 import { codePattern, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { AsnRow, ReceivingService } from '../../data-access/receiving.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const SUPPLIERS = [
   'FreshFarm Co.',
@@ -31,6 +32,7 @@ function notInPast(control: { value: unknown }): Record<string, boolean> | null 
   styleUrl: './asn-form.component.scss',
 })
 export class AsnFormComponent {
+  readonly i18n = inject(I18nService);
   private readonly receivingService = inject(ReceivingService);
   private readonly scope = inject(WarehouseScopeService);
 

@@ -2,7 +2,7 @@
   <div class="page__header">
     <div>
       <h1>Settings</h1>
-      <p class="muted">Rol, iş kuralı eşikleri, görünüm ve hata simülasyonu</p>
+      <p class="muted">{{ i18n.t('settings.subtitle') }}</p>
     </div>
     @if (saved()) {
       <span class="status-pill tone-success" role="status">Kaydedildi</span>
@@ -13,13 +13,11 @@
     <section class="panel">
       <div class="panel__head">
         <h2>Aktif Rol</h2>
-        <span class="muted small">demo kullanıcı: {{ currentUser().name }}</span>
+        <span class="muted small">{{ i18n.t('settings.demoUser', { name: currentUser().name }) }}</span>
       </div>
       <p class="muted small">
-        Aşağıdan bir role tıklamak, oturumu kapatmadan geçici bir önizleme yapar: menü, route
-        guard'ları ve aksiyon butonları anında bu role göre daralır. Farklı bir hesapla baştan
-        giriş yapmak için
-        <button type="button" class="link-action" (click)="switchAccount()">hesabı değiştirin</button>.
+        {{ i18n.t('settings.roleHelp') }}
+        <button type="button" class="link-action" (click)="switchAccount()">{{ i18n.t('settings.switchAccount') }}</button>.
       </p>
       <div class="option-list">
         @for (r of roles; track r.value) {
@@ -46,7 +44,7 @@
     <div class="stack">
       <section class="panel">
         <div class="panel__head">
-          <h2>Görünüm</h2>
+          <h2>{{ i18n.t('settings.appearance') }}</h2>
         </div>
         <div class="segmented">
           <button
@@ -63,17 +61,17 @@
             [class.segmented__btn--active]="theme() === 'light'"
             (click)="setTheme('light')"
           >
-            Açık
+            {{ i18n.t('settings.light') }}
           </button>
         </div>
       </section>
 
       <section class="panel">
         <div class="panel__head">
-          <h2>Eşikler</h2>
+          <h2>{{ i18n.t('settings.thresholds') }}</h2>
         </div>
         <div class="field">
-          <label for="variance">Sayım farkı eşiği (%)</label>
+          <label for="variance">{{ i18n.t('settings.varianceThreshold') }}</label>
           <input
             id="variance"
             type="number"
@@ -83,21 +81,21 @@
             [value]="varianceThreshold()"
             (input)="updateVariance($any($event.target).value)"
           />
-          <span class="field__hint">Bu oranın üzerindeki farklarda ikinci sayım zorunlu olur.</span>
+          <span class="field__hint">{{ i18n.t('settings.varianceHint') }}</span>
         </div>
       </section>
 
       <section class="panel" *appHasPermission="'settings.manage'">
         <div class="panel__head">
-          <h2>Hata Simülasyonu</h2>
-          <button class="link-action" type="button" (click)="resetFaults()">Sıfırla</button>
+          <h2>{{ i18n.t('settings.faultSimulation') }}</h2>
+          <button class="link-action" type="button" (click)="resetFaults()">{{ i18n.t('settings.reset') }}</button>
         </div>
         <p class="muted small">
-          Yükleme, hata, yetkisiz erişim ve çakışma durumlarını gerçek ekranlarda tetiklemek için.
+          {{ i18n.t('settings.faultHelp') }}
         </p>
 
         <div class="field">
-          <label for="readFail">Okuma hatası oranı: %{{ (faultProfile().readFailRate * 100).toFixed(0) }}</label>
+          <label for="readFail">{{ i18n.t('settings.readFailRate', { pct: (faultProfile().readFailRate * 100).toFixed(0) }) }}</label>
           <input
             id="readFail"
             type="range"
@@ -110,7 +108,7 @@
         </div>
 
         <div class="field">
-          <label for="writeFail">Yazma hatası oranı: %{{ (faultProfile().writeFailRate * 100).toFixed(0) }}</label>
+          <label for="writeFail">{{ i18n.t('settings.writeFailRate', { pct: (faultProfile().writeFailRate * 100).toFixed(0) }) }}</label>
           <input
             id="writeFail"
             type="range"
@@ -136,14 +134,14 @@
         </div>
 
         <div class="fault-actions">
-          <span class="muted small">Sonraki isteği zorla:</span>
-          <button class="btn" type="button" (click)="armFailure('network')">Ağ hatası</button>
+          <span class="muted small">{{ i18n.t('settings.forceNext') }}</span>
+          <button class="btn" type="button" (click)="armFailure('network')">{{ i18n.t('settings.networkError') }}</button>
           <button class="btn" type="button" (click)="armFailure('forbidden')">403</button>
-          <button class="btn" type="button" (click)="armFailure('conflict')">409 çakışma</button>
+          <button class="btn" type="button" (click)="armFailure('conflict')">{{ i18n.t('settings.conflictError') }}</button>
         </div>
         @if (faultProfile().nextFailure) {
           <div class="form__error" role="status">
-            Sonraki istek "{{ faultProfile().nextFailure }}" hatasıyla dönecek.
+            {{ i18n.t('settings.armed', { kind: faultProfile().nextFailure ?? '' }) }}
           </div>
         }
       </section>
@@ -152,7 +150,7 @@
 
   <section class="panel rules">
     <div class="panel__head">
-      <h2>İş Kuralları</h2>
+      <h2>{{ i18n.t('settings.businessRules') }}</h2>
     </div>
     <div class="rule-list">
       @for (rule of rules(); track rule.key) {
