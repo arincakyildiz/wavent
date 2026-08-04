@@ -1,17 +1,17 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Traceability</h1>
-      <p class="muted">Lot/seri hareketini kabulden sevkiyata kadar izler</p>
+      <h1>{{ i18n.t('traceability.title') }}</h1>
+      <p class="muted">{{ i18n.t('traceability.subtitle') }}</p>
     </div>
   </div>
 
   @switch (state()) {
     @case ('loading') {
-      <div class="state state--loading">Yükleniyor...</div>
+      <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
     }
     @case ('error') {
-      <div class="state state--error">Veriler yüklenemedi.</div>
+      <div class="state state--error">{{ i18n.t('common.loadError') }}</div>
     }
     @case ('success') {
       <div class="toolbar">
@@ -23,7 +23,7 @@
       </div>
 
       <div class="panel">
-        <h2>{{ selectedLot() }} — Zaman Çizelgesi</h2>
+        <h2>{{ i18n.t('traceability.timelineFor', { lot: selectedLot() }) }}</h2>
         <app-traceability-timeline [events]="events()" />
       </div>
     }

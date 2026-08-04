@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-unauthorized',
@@ -10,6 +11,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
   styleUrl: './unauthorized.component.scss',
 })
 export class UnauthorizedComponent {
+  readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);

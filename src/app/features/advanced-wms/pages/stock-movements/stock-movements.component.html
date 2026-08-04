@@ -1,17 +1,17 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Stock Movements</h1>
-      <p class="muted">Kaynak/hedef, miktar, neden ve referans bilgisiyle tüm stok hareketleri</p>
+      <h1>{{ i18n.t('movements.title') }}</h1>
+      <p class="muted">{{ i18n.t('movements.subtitle') }}</p>
     </div>
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="kpi-row">
@@ -20,15 +20,15 @@
         <div class="kpi-card__value">{{ totals().count | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Giriş (adet)</div>
+        <div class="kpi-card__label">{{ i18n.t('movements.inbound') }}</div>
         <div class="kpi-card__value positive">+{{ totals().inbound | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Çıkış (adet)</div>
+        <div class="kpi-card__label">{{ i18n.t('movements.outbound') }}</div>
         <div class="kpi-card__value negative">{{ totals().outbound | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Net Değişim</div>
+        <div class="kpi-card__label">{{ i18n.t('movements.net') }}</div>
         <div class="kpi-card__value">{{ totals().inbound + totals().outbound | number }}</div>
       </div>
     </div>
@@ -43,7 +43,7 @@
         aria-label="Hareket ara"
       />
       <select [value]="typeFilter()" (change)="typeFilter.set($any($event.target).value)" aria-label="Tip filtresi">
-        <option value="all">Tüm tipler</option>
+        <option value="all">{{ i18n.t('movements.allTypes') }}</option>
         <option value="receipt">Receipt</option>
         <option value="putaway">Putaway</option>
         <option value="pick">Pick</option>
@@ -67,7 +67,7 @@
           <span role="columnheader">Hedef</span>
           <span role="columnheader" appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">Tip</span>
           <span role="columnheader" appSortable="reasonCode" [sort]="sort()" (sortChange)="onSort($event)">Referans</span>
-          <span role="columnheader" appSortable="performedBy" [sort]="sort()" (sortChange)="onSort($event)">Kullanıcı</span>
+          <span role="columnheader" appSortable="performedBy" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('audit.user') }}</span>
         </div>
 
         <cdk-virtual-scroll-viewport [itemSize]="rowHeight" class="vtable__viewport">
@@ -87,7 +87,7 @@
         </cdk-virtual-scroll-viewport>
       </div>
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen hareket bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('movements.empty') }}</div>
     }
   }
 </div>

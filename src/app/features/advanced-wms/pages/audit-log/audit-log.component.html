@@ -1,8 +1,8 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Audit Log</h1>
-      <p class="muted">Stok, görev, dalga ve override geçmişi</p>
+      <h1>{{ i18n.t('audit.title') }}</h1>
+      <p class="muted">{{ i18n.t('audit.subtitle') }}</p>
     </div>
     @if (sessionCount() > 0) {
       <span class="status-pill tone-info">{{ sessionCount() }} işlem bu oturumda</span>
@@ -10,24 +10,24 @@
   </div>
 
   @if (list.loading()) {
-    <div class="state state--loading">Yükleniyor...</div>
+    <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (list.error()) {
     <div class="state state--error" role="alert">
       {{ list.error() }}
-      <button type="button" (click)="list.reload()">Tekrar dene</button>
+      <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
     <div class="toolbar">
       <input
         type="search"
         maxlength="80"
-        placeholder="Kullanıcı, işlem türü veya hedef kayıt ara..."
+        [attr.placeholder]="i18n.t('audit.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Audit ara"
+        [attr.aria-label]="i18n.t('audit.searchAria')"
       />
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} olay</span>
+      <span class="muted small">{{ i18n.t('audit.eventCount', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -35,13 +35,13 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="date" [sort]="sort()" (sortChange)="onSort($event)">Zaman</th>
-              <th appSortable="actor" [sort]="sort()" (sortChange)="onSort($event)">Kullanıcı</th>
-              <th appSortable="actionType" [sort]="sort()" (sortChange)="onSort($event)">İşlem Türü</th>
-              <th appSortable="targetId" [sort]="sort()" (sortChange)="onSort($event)">Hedef Kayıt</th>
-              <th>Eski Değer</th>
-              <th>Yeni Değer</th>
-              <th>Gerekçe</th>
+              <th appSortable="date" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('audit.time') }}</th>
+              <th appSortable="actor" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('audit.user') }}</th>
+              <th appSortable="actionType" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('audit.actionType') }}</th>
+              <th appSortable="targetId" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('audit.target') }}</th>
+              <th>{{ i18n.t('audit.oldValue') }}</th>
+              <th>{{ i18n.t('audit.newValue') }}</th>
+              <th>{{ i18n.t('common.reason') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -50,7 +50,7 @@
                 <td>
                   {{ e.date }}
                   @if (e.live) {
-                    <span class="status-pill tone-info">yeni</span>
+                    <span class="status-pill tone-info">{{ i18n.t('audit.new') }}</span>
                   }
                 </td>
                 <td>{{ e.actor }}</td>
@@ -73,7 +73,7 @@
         (pageSizeChange)="onPageSize($event)"
       />
     } @else {
-      <div class="state state--empty">Filtreyle eşleşen kayıt bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('audit.empty') }}</div>
     }
   }
 </div>

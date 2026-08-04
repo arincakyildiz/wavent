@@ -22,8 +22,8 @@
     }
 
     <div class="denied__actions">
-      <button class="btn btn--primary" type="button" (click)="goOverview()">Overview'a dön</button>
-      <button class="btn" type="button" (click)="goSettings()">Rolü değiştir</button>
+      <button class="btn btn--primary" type="button" (click)="goOverview()">{{ i18n.t('unauthorized.backToOverview') }}</button>
+      <button class="btn" type="button" (click)="goSettings()">{{ i18n.t('unauthorized.changeRole') }}</button>
     </div>
   </div>
 </div>

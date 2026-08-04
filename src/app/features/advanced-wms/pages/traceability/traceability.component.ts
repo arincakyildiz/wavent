@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { TraceabilityTimelineComponent } from '../../../../shared/components/traceability-timeline/traceability-timeline.component';
 import { TraceabilityService, TraceEvent } from '../../data-access/traceability.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -11,6 +12,7 @@ type LoadState = 'loading' | 'success' | 'error';
   styleUrl: './traceability.component.scss',
 })
 export class TraceabilityComponent {
+  readonly i18n = inject(I18nService);
   private readonly traceabilityService = inject(TraceabilityService);
 
   readonly state = signal<LoadState>('loading');

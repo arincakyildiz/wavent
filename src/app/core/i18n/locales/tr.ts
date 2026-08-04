@@ -183,4 +183,42 @@ export const TR: Record<string, string> = {
   'board.reasonOver': 'Vardiya kapasitesi %{pct} dolulukta',
   'board.reasonTight': "Cut-off'a yalnızca {minutes} dk kaldı",
   'board.reasonBoth': "Kapasite %{pct} ve cut-off'a {minutes} dk kaldı",
+
+  /* ---------- Unauthorized (403) ---------- */
+  'unauthorized.backToOverview': "Genel Bakış'a dön",
+  'unauthorized.changeRole': 'Rolü değiştir',
+
+  /* ---------- Traceability ---------- */
+  'traceability.title': 'İzlenebilirlik',
+  'traceability.subtitle': 'Lot/seri hareketini kabulden sevkiyata kadar izler',
+  'traceability.timelineFor': '{lot} — Zaman Çizelgesi',
+
+  /* ---------- Audit log ---------- */
+  'audit.title': 'Denetim Kaydı',
+  'audit.subtitle': 'Stok, görev, dalga ve override geçmişi',
+  'audit.searchPlaceholder': 'Kullanıcı, işlem türü veya hedef kayıt ara...',
+  'audit.searchAria': 'Denetim kaydı ara',
+  'audit.time': 'Zaman',
+  'audit.user': 'Kullanıcı',
+  'audit.actionType': 'İşlem Türü',
+  'audit.target': 'Hedef Kayıt',
+  'audit.oldValue': 'Eski Değer',
+  'audit.newValue': 'Yeni Değer',
+  'audit.eventCount': '{count} olay',
+  'audit.empty': 'Filtreyle eşleşen kayıt bulunamadı.',
+  'audit.new': 'yeni',
+
+  /* ---------- Stock movements ---------- */
+  'movements.title': 'Stok Hareketleri',
+  'movements.subtitle': 'Kaynak/hedef, miktar, neden ve referans bilgisiyle tüm stok hareketleri',
+  'movements.searchPlaceholder': 'SKU, lot, referans veya kullanıcı ara...',
+  'movements.allTypes': 'Tüm tipler',
+  'movements.inbound': 'Giriş (adet)',
+  'movements.outbound': 'Çıkış (adet)',
+  'movements.net': 'Net Değişim',
+  'movements.from': 'Kaynak',
+  'movements.to': 'Hedef',
+  'movements.reason': 'Neden',
+  'movements.empty': 'Filtreyle eşleşen hareket bulunamadı.',
+  'movements.count': '{count} hareket',
 };

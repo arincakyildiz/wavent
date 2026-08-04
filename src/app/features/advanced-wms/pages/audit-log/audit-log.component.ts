@@ -7,6 +7,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { AuditEventRow, AuditLogService } from '../../data-access/audit-log.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -17,6 +18,7 @@ const DEFAULT_PAGE_SIZE = 20;
   styleUrl: './audit-log.component.scss',
 })
 export class AuditLogComponent {
+  readonly i18n = inject(I18nService);
   private readonly auditLogService = inject(AuditLogService);
   private readonly audit = inject(AuditService);
 

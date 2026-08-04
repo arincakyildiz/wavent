@@ -181,4 +181,42 @@ export const EN: Record<string, string> = {
   'board.reasonOver': 'Shift capacity is {pct}% used',
   'board.reasonTight': 'Only {minutes} min left to cut-off',
   'board.reasonBoth': 'Capacity {pct}% and {minutes} min to cut-off',
+
+  /* ---------- Unauthorized (403) ---------- */
+  'unauthorized.backToOverview': 'Back to Overview',
+  'unauthorized.changeRole': 'Change role',
+
+  /* ---------- Traceability ---------- */
+  'traceability.title': 'Traceability',
+  'traceability.subtitle': 'Follows a lot/serial from receipt through to shipment',
+  'traceability.timelineFor': '{lot} — Timeline',
+
+  /* ---------- Audit log ---------- */
+  'audit.title': 'Audit Log',
+  'audit.subtitle': 'History of stock, task, wave and override decisions',
+  'audit.searchPlaceholder': 'Search user, action type or target record...',
+  'audit.searchAria': 'Search audit log',
+  'audit.time': 'Time',
+  'audit.user': 'User',
+  'audit.actionType': 'Action',
+  'audit.target': 'Target Record',
+  'audit.oldValue': 'Old Value',
+  'audit.newValue': 'New Value',
+  'audit.eventCount': '{count} events',
+  'audit.empty': 'No records match the filter.',
+  'audit.new': 'new',
+
+  /* ---------- Stock movements ---------- */
+  'movements.title': 'Stock Movements',
+  'movements.subtitle': 'Every stock movement with its source/target, quantity, reason and reference',
+  'movements.searchPlaceholder': 'Search SKU, lot, reference or user...',
+  'movements.allTypes': 'All types',
+  'movements.inbound': 'Inbound (units)',
+  'movements.outbound': 'Outbound (units)',
+  'movements.net': 'Net Change',
+  'movements.from': 'From',
+  'movements.to': 'To',
+  'movements.reason': 'Reason',
+  'movements.empty': 'No movements match the filter.',
+  'movements.count': '{count} movements',
 };

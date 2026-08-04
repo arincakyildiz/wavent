@@ -9,6 +9,7 @@ import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseString } from '../../../../shared/utils/query-params';
 import { MovementType, StockMovementRow, StockMovementsService } from '../../data-access/stock-movements.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 /**
  * Movements are the densest dataset in the app, so this screen virtualises the rows
@@ -25,6 +26,7 @@ export const ROW_HEIGHT = 44;
   styleUrl: './stock-movements.component.scss',
 })
 export class StockMovementsComponent {
+  readonly i18n = inject(I18nService);
   private readonly movementsService = inject(StockMovementsService);
   private readonly scope = inject(WarehouseScopeService);
 
