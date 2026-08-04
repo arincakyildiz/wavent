@@ -10,11 +10,11 @@
         }
       </a>
       @if (!collapsed()) {
-        <button class="icon-btn" type="button" (click)="toggleSidebar()" aria-label="Menüyü daralt">
+        <button class="icon-btn" type="button" (click)="toggleSidebar()" [attr.aria-label]="i18n.t('nav.collapseMenu')">
           <app-icon name="menu" [size]="18" />
         </button>
       }
-      <button class="icon-btn sidebar__close" type="button" (click)="closeMobileNav()" aria-label="Menüyü kapat">
+      <button class="icon-btn sidebar__close" type="button" (click)="closeMobileNav()" [attr.aria-label]="i18n.t('nav.closeMenu')">
         <app-icon name="x" [size]="18" />
       </button>
     </div>
@@ -22,20 +22,20 @@
     <nav class="nav" #navEl>
       @for (group of navGroups(); track $index) {
         <div class="nav__group">
-          @if (group.label && !collapsed()) {
-            <div class="nav__group-label">{{ group.label }}</div>
+          @if (group.labelKey && !collapsed()) {
+            <div class="nav__group-label">{{ i18n.t(group.labelKey!) }}</div>
           }
           @for (item of group.items; track item.path) {
             <a
               class="nav__item"
               [routerLink]="item.path"
               routerLinkActive="nav__item--active"
-              [title]="collapsed() ? item.label : ''"
+              [title]="collapsed() ? i18n.t(item.labelKey) : ''"
               (click)="closeMobileNav()"
             >
               <app-icon [name]="item.icon" [size]="18" />
               @if (!collapsed()) {
-                <span class="nav__label">{{ item.label }}</span>
+                <span class="nav__label">{{ i18n.t(item.labelKey) }}</span>
               }
             </a>
           }
@@ -50,7 +50,7 @@
           class="theme-toggle__btn"
           [class.theme-toggle__btn--active]="theme() === 'dark'"
           (click)="setTheme('dark')"
-          aria-label="Koyu tema"
+          [attr.aria-label]="i18n.t('nav.darkTheme')"
         >
           <app-icon name="moon" [size]="16" />
         </button>
@@ -59,12 +59,26 @@
           class="theme-toggle__btn"
           [class.theme-toggle__btn--active]="theme() === 'light'"
           (click)="setTheme('light')"
-          aria-label="Açık tema"
+          [attr.aria-label]="i18n.t('nav.lightTheme')"
         >
           <app-icon name="sun" [size]="16" />
         </button>
       </div>
-      <button class="icon-btn" type="button" (click)="toggleSidebar()" aria-label="Menüyü genişlet/daralt">
+      <div class="lang-toggle" role="group" [attr.aria-label]="i18n.t('nav.language')">
+        @for (l of i18n.locales; track l.code) {
+          <button
+            type="button"
+            class="lang-toggle__btn"
+            [class.lang-toggle__btn--active]="i18n.locale() === l.code"
+            [attr.aria-pressed]="i18n.locale() === l.code"
+            [title]="l.label"
+            (click)="setLocale(l.code)"
+          >
+            {{ l.short }}
+          </button>
+        }
+      </div>
+      <button class="icon-btn" type="button" (click)="toggleSidebar()" [attr.aria-label]="i18n.t('nav.toggleMenu')">
         <app-icon [name]="collapsed() ? 'chevronRight' : 'chevronLeft'" [size]="16" />
       </button>
     </div>
@@ -72,7 +86,7 @@
 
   <div class="main">
     <header class="topbar">
-      <button class="icon-btn hamburger" type="button" (click)="toggleMobileNav()" aria-label="Menüyü aç">
+      <button class="icon-btn hamburger" type="button" (click)="toggleMobileNav()" [attr.aria-label]="i18n.t('nav.openMenu')">
         <app-icon name="menu" [size]="20" />
       </button>
 
@@ -81,8 +95,8 @@
         <app-icon name="search" [size]="16" />
         <input
           type="search"
-          placeholder="Search anything..."
-          aria-label="Genel arama"
+          [attr.placeholder]="i18n.t('nav.searchPlaceholder')"
+          [attr.aria-label]="i18n.t('nav.globalSearch')"
           maxlength="80"
           [value]="searchTerm()"
           (input)="searchTerm.set($any($event.target).value)"
@@ -90,7 +104,7 @@
       </form>
 
       <div class="topbar__actions">
-        <button class="icon-btn icon-btn--badge" type="button" aria-label="Bildirimler">
+        <button class="icon-btn icon-btn--badge" type="button" [attr.aria-label]="i18n.t('nav.notifications')">
           <app-icon name="bell" [size]="18" />
           @if (notificationCount() > 0) {
             <span class="badge badge--danger">{{ notificationCount() }}</span>
@@ -105,7 +119,7 @@
             (click)="toggleScopeMenu()"
             [disabled]="!canChooseScope()"
             [attr.aria-expanded]="scopeMenuOpen()"
-            [attr.aria-label]="'Depo kapsamı: ' + scopeLabel()"
+            [attr.aria-label]="i18n.t('nav.scope', { scope: scopeLabel() })"
           >
             <app-icon name="globe" [size]="18" />
           </button>
@@ -118,7 +132,7 @@
                 [class.scope__item--active]="selectedScope() === allWarehouses"
                 (click)="selectScope(allWarehouses)"
               >
-                All Warehouses
+                {{ i18n.t('nav.allWarehouses') }}
               </button>
               @for (w of warehouses(); track w.code) {
                 <button
@@ -159,10 +173,10 @@
                 <div class="muted small">{{ roleLabel() }}</div>
               </div>
               <button type="button" role="menuitem" class="scope__item" routerLink="/wms/settings" (click)="userMenuOpen.set(false)">
-                Ayarlar
+                {{ i18n.t('nav.settings') }}
               </button>
               <button type="button" role="menuitem" class="scope__item" (click)="logout()">
-                Çıkış Yap
+                {{ i18n.t('nav.logout') }}
               </button>
             </div>
           }

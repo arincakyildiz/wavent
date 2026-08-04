@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewChild, computed, inject, signal } from '@ang
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Permission } from '../../../core/auth/permissions';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { NotificationService } from '../../../core/observability/notification.service';
 import { ThemeService } from '../../../core/state/theme.service';
 import { ALL_WAREHOUSES, WarehouseScopeService } from '../../../core/state/warehouse-scope.service';
@@ -10,14 +11,15 @@ import { IconComponent } from '../icon/icon.component';
 import { ToastHostComponent } from '../toast-host/toast-host.component';
 
 interface NavItem {
-  label: string;
+  /** Translation key; resolved in the template so it follows the active locale. */
+  labelKey: string;
   path: string;
   icon: string;
   permission: Permission;
 }
 
 interface NavGroup {
-  label: string | null;
+  labelKey: string | null;
   items: NavItem[];
 }
 
@@ -40,6 +42,8 @@ export class ShellComponent {
 
   private readonly auth = inject(AuthService);
   private readonly themeService = inject(ThemeService);
+  /** Public: the template reads translations straight off it. */
+  readonly i18n = inject(I18nService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
@@ -62,51 +66,51 @@ export class ShellComponent {
 
   private readonly allGroups: NavGroup[] = [
     {
-      label: null,
+      labelKey: null,
       items: [
-        { label: 'Overview', path: '/wms/overview', icon: 'dashboard', permission: 'overview.view' },
-        { label: 'Warehouses', path: '/wms/warehouses', icon: 'warehouse', permission: 'warehouse.view' },
+        { labelKey: 'nav.overview', path: '/wms/overview', icon: 'dashboard', permission: 'overview.view' },
+        { labelKey: 'nav.warehouses', path: '/wms/warehouses', icon: 'warehouse', permission: 'warehouse.view' },
       ],
     },
     {
-      label: 'Inventory',
+      labelKey: 'nav.group.inventory',
       items: [
-        { label: 'Inventory', path: '/wms/inventory', icon: 'boxes', permission: 'inventory.view' },
-        { label: 'Lot / Serial', path: '/wms/lot-serial', icon: 'barcode', permission: 'lot.view' },
-        { label: 'Stock Movements', path: '/wms/stock-movements', icon: 'transfer', permission: 'movement.view' },
-        { label: 'Reservations', path: '/wms/reservations', icon: 'bookmark', permission: 'reservation.view' },
+        { labelKey: 'nav.inventory', path: '/wms/inventory', icon: 'boxes', permission: 'inventory.view' },
+        { labelKey: 'nav.lotSerial', path: '/wms/lot-serial', icon: 'barcode', permission: 'lot.view' },
+        { labelKey: 'nav.stockMovements', path: '/wms/stock-movements', icon: 'transfer', permission: 'movement.view' },
+        { labelKey: 'nav.reservations', path: '/wms/reservations', icon: 'bookmark', permission: 'reservation.view' },
       ],
     },
     {
-      label: 'Operations',
+      labelKey: 'nav.group.operations',
       items: [
-        { label: 'Receiving', path: '/wms/receiving', icon: 'inbox', permission: 'receiving.view' },
-        { label: 'Putaway', path: '/wms/putaway', icon: 'putaway', permission: 'putaway.view' },
-        { label: 'Waves', path: '/wms/waves', icon: 'waves', permission: 'wave.view' },
-        { label: 'Picking', path: '/wms/picking/tasks', icon: 'target', permission: 'picking.view' },
-        { label: 'Packing', path: '/wms/packing', icon: 'package', permission: 'packing.view' },
-        { label: 'Shipping', path: '/wms/shipping', icon: 'truck', permission: 'shipping.view' },
+        { labelKey: 'nav.receiving', path: '/wms/receiving', icon: 'inbox', permission: 'receiving.view' },
+        { labelKey: 'nav.putaway', path: '/wms/putaway', icon: 'putaway', permission: 'putaway.view' },
+        { labelKey: 'nav.waves', path: '/wms/waves', icon: 'waves', permission: 'wave.view' },
+        { labelKey: 'nav.picking', path: '/wms/picking/tasks', icon: 'target', permission: 'picking.view' },
+        { labelKey: 'nav.packing', path: '/wms/packing', icon: 'package', permission: 'packing.view' },
+        { labelKey: 'nav.shipping', path: '/wms/shipping', icon: 'truck', permission: 'shipping.view' },
       ],
     },
     {
-      label: 'Quality',
+      labelKey: 'nav.group.quality',
       items: [
-        { label: 'Cycle Counts', path: '/wms/cycle-counts', icon: 'clipboardCheck', permission: 'cycleCount.view' },
-        { label: 'Exceptions', path: '/wms/exceptions', icon: 'alertTriangle', permission: 'exception.view' },
+        { labelKey: 'nav.cycleCounts', path: '/wms/cycle-counts', icon: 'clipboardCheck', permission: 'cycleCount.view' },
+        { labelKey: 'nav.exceptions', path: '/wms/exceptions', icon: 'alertTriangle', permission: 'exception.view' },
       ],
     },
     {
-      label: 'Visibility',
+      labelKey: 'nav.group.visibility',
       items: [
-        { label: 'Traceability', path: '/wms/traceability', icon: 'gitBranch', permission: 'traceability.view' },
-        { label: 'Control Tower', path: '/wms/control-tower', icon: 'radio', permission: 'controlTower.view' },
+        { labelKey: 'nav.traceability', path: '/wms/traceability', icon: 'gitBranch', permission: 'traceability.view' },
+        { labelKey: 'nav.controlTower', path: '/wms/control-tower', icon: 'radio', permission: 'controlTower.view' },
       ],
     },
     {
-      label: 'Admin',
+      labelKey: 'nav.group.admin',
       items: [
-        { label: 'Audit Log', path: '/wms/audit-log', icon: 'fileText', permission: 'audit.view' },
-        { label: 'Settings', path: '/wms/settings', icon: 'settings', permission: 'settings.view' },
+        { labelKey: 'nav.auditLog', path: '/wms/audit-log', icon: 'fileText', permission: 'audit.view' },
+        { labelKey: 'nav.settings', path: '/wms/settings', icon: 'settings', permission: 'settings.view' },
       ],
     },
   ];
@@ -160,10 +164,11 @@ export class ShellComponent {
   }
 
   roleLabel(): string {
-    return this.currentUser()
-      .role.split('-')
-      .map((word) => word[0].toUpperCase() + word.slice(1))
-      .join(' ');
+    return this.i18n.t(`role.${this.currentUser().role}`);
+  }
+
+  setLocale(code: string): void {
+    this.i18n.set(code === 'en' ? 'en' : 'tr');
   }
 
   initials(): string {
