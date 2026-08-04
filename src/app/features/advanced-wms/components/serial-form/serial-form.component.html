@@ -44,6 +44,11 @@
               Bu seri numarası seçili ürün için zaten kayıtlı.
             }
           </span>
+        } @else {
+          <span class="field__hint">
+            4–40 karakter; harf, rakam ve tire.
+            {{ serialControl.value.length }}/40
+          </span>
         }
       </label>
     </div>

@@ -1,4 +1,5 @@
 import { Component, inject, output, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
@@ -6,9 +7,19 @@ import { FormDialogComponent } from '../../../../shared/components/form-dialog/f
 import { codePattern, positiveInteger, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { CycleCountRow, CycleCountsService } from '../../data-access/cycle-counts.service';
 
+/** Bounds are declared here so the form enforces them and the UI can state them. */
+export const CYCLE_COUNT_LIMITS = {
+  codeMax: 6,
+  scopeMin: 3,
+  scopeMax: 60,
+  quantityMin: 1,
+  /** A single count sheet beyond this is a stock-take, not a cycle count. */
+  quantityMax: 100_000,
+} as const;
+
 @Component({
   selector: 'app-cycle-count-form',
-  imports: [ReactiveFormsModule, FormDialogComponent],
+  imports: [ReactiveFormsModule, FormDialogComponent, DecimalPipe],
   templateUrl: './cycle-count-form.component.html',
   styleUrl: './cycle-count-form.component.scss',
 })
@@ -22,6 +33,7 @@ export class CycleCountFormComponent {
   readonly warehouses = this.scope.permitted;
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
+  readonly limits = CYCLE_COUNT_LIMITS;
 
   readonly form = new FormGroup({
     code: new FormControl('', {
@@ -40,7 +52,12 @@ export class CycleCountFormComponent {
     }),
     expectedQuantity: new FormControl(0, {
       nonNullable: true,
-      validators: [Validators.required, positiveInteger],
+      validators: [
+        Validators.required,
+        positiveInteger,
+        Validators.min(CYCLE_COUNT_LIMITS.quantityMin),
+        Validators.max(CYCLE_COUNT_LIMITS.quantityMax),
+      ],
     }),
   });
 

@@ -12,8 +12,9 @@
           type="text"
           placeholder="Wave #260"
           autocomplete="off"
-          maxlength="60"
+          [attr.maxlength]="limits.nameMax"
           [class.invalid]="invalid('name')"
+          [attr.aria-invalid]="invalid('name')"
         />
         @if (nameControl.pending) {
           <span class="field__hint">Ad kontrol ediliyor...</span>
@@ -22,10 +23,15 @@
             @if (nameControl.hasError('notUnique')) {
               Bu adda bir dalga zaten var.
             } @else if (nameControl.hasError('maxlength')) {
-              En fazla 60 karakter girebilirsiniz.
+              En fazla {{ limits.nameMax }} karakter girebilirsiniz.
             } @else {
-              En az 4 karakterlik bir ad girin.
+              En az {{ limits.nameMin }} karakterlik bir ad girin.
             }
+          </span>
+        } @else {
+          <span class="field__hint">
+            {{ limits.nameMin }}–{{ limits.nameMax }} karakter.
+            {{ nameControl.value.length }}/{{ limits.nameMax }}
           </span>
         }
       </label>
@@ -73,13 +79,45 @@
     <div class="form__row">
       <label class="field">
         <span class="field__label">En düşük öncelik <span class="req">*</span></span>
-        <input formControlName="minPriority" type="number" min="1" max="5" [class.invalid]="invalid('minPriority')" />
-        <span class="field__hint">Bu değer ve daha öncelikli siparişler alınır.</span>
+        <input
+          formControlName="minPriority"
+          type="number"
+          [min]="limits.priorityMin"
+          [max]="limits.priorityMax"
+          [class.invalid]="invalid('minPriority')"
+          [attr.aria-invalid]="invalid('minPriority')"
+        />
+        @if (invalid('minPriority')) {
+          <span class="field__error" role="alert">
+            Öncelik {{ limits.priorityMin }}–{{ limits.priorityMax }} arasında bir tam sayı olmalıdır.
+          </span>
+        } @else {
+          <span class="field__hint">
+            {{ limits.priorityMin }}–{{ limits.priorityMax }} arası. Bu değer ve daha öncelikli siparişler alınır.
+          </span>
+        }
       </label>
 
       <label class="field">
         <span class="field__label">Maks. sipariş <span class="req">*</span></span>
-        <input formControlName="maxOrders" type="number" min="1" max="40" [class.invalid]="invalid('maxOrders')" />
+        <input
+          formControlName="maxOrders"
+          type="number"
+          [min]="limits.ordersMin"
+          [max]="limits.ordersMax"
+          [class.invalid]="invalid('maxOrders')"
+          [attr.aria-invalid]="invalid('maxOrders')"
+        />
+        @if (invalid('maxOrders')) {
+          <span class="field__error" role="alert">
+            Bir dalgaya en fazla {{ limits.ordersMax }} sipariş alınabilir
+            (en az {{ limits.ordersMin }}).
+          </span>
+        } @else {
+          <span class="field__hint">
+            {{ limits.ordersMin }}–{{ limits.ordersMax }} arası sipariş alınabilir.
+          </span>
+        }
       </label>
     </div>
 

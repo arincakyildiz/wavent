@@ -45,16 +45,22 @@
           formControlName="scopeLabel"
           type="text"
           placeholder="A/01/01 bölgesi veya SKU-1001"
-          maxlength="60"
+          [attr.maxlength]="limits.scopeMax"
           [class.invalid]="invalid('scopeLabel')"
+          [attr.aria-invalid]="invalid('scopeLabel')"
         />
         @if (invalid('scopeLabel')) {
           <span class="field__error" role="alert">
             @if (form.controls.scopeLabel.hasError('maxlength')) {
-              En fazla 60 karakter girebilirsiniz.
+              En fazla {{ limits.scopeMax }} karakter girebilirsiniz.
             } @else {
-              En az 3 karakterlik bir kapsam girin.
+              En az {{ limits.scopeMin }} karakterlik bir kapsam girin.
             }
+          </span>
+        } @else {
+          <span class="field__hint">
+            {{ limits.scopeMin }}–{{ limits.scopeMax }} karakter.
+            {{ form.controls.scopeLabel.value.length }}/{{ limits.scopeMax }}
           </span>
         }
       </label>
@@ -64,11 +70,19 @@
         <input
           formControlName="expectedQuantity"
           type="number"
-          min="1"
+          [min]="limits.quantityMin"
+          [max]="limits.quantityMax"
           [class.invalid]="invalid('expectedQuantity')"
+          [attr.aria-invalid]="invalid('expectedQuantity')"
         />
         @if (invalid('expectedQuantity')) {
-          <span class="field__error" role="alert">Pozitif bir tam sayı girin.</span>
+          <span class="field__error" role="alert">
+            {{ limits.quantityMin }}–{{ limits.quantityMax | number }} arasında bir tam sayı girin.
+          </span>
+        } @else {
+          <span class="field__hint">
+            En fazla {{ limits.quantityMax | number }} adet sayılabilir.
+          </span>
         }
       </label>
     </div>

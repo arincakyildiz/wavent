@@ -9,6 +9,15 @@ import {
 } from '../../../../shared/validators/wms-validators';
 import { WarehouseSummary, WarehousesService } from '../../data-access/warehouses.service';
 
+/** Bounds are declared here so the form enforces them and the UI can state them. */
+export const WAREHOUSE_LIMITS = {
+  codeMax: 7,
+  nameMin: 3,
+  nameMax: 60,
+  cityMax: 40,
+  countryMax: 40,
+} as const;
+
 const TIMEZONES = [
   'America/New_York',
   'America/Sao_Paulo',
@@ -32,6 +41,7 @@ export class WarehouseFormComponent {
   readonly timezones = TIMEZONES;
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
+  readonly limits = WAREHOUSE_LIMITS;
 
   readonly form = new FormGroup(
     {

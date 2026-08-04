@@ -10,6 +10,21 @@ import { WaveRow, WavesService } from '../../data-access/waves.service';
 /** A wave needs enough runway between now and cut-off to be picked and shipped. */
 const MIN_RUNWAY_MINUTES = 45;
 
+/**
+ * Field bounds live here rather than only as HTML attributes, so the rule is enforced
+ * by the form *and* can be shown to the operator before they hit it.
+ */
+export const WAVE_LIMITS = {
+  nameMin: 4,
+  nameMax: 60,
+  priorityMin: 1,
+  /** Orders carry priority 1–5, so a wave filter beyond 5 would select nothing new. */
+  priorityMax: 5,
+  ordersMin: 1,
+  /** A single picker cannot realistically work a wave larger than this in one shift. */
+  ordersMax: 40,
+} as const;
+
 @Component({
   selector: 'app-wave-form',
   imports: [ReactiveFormsModule, FormDialogComponent],
@@ -27,6 +42,7 @@ export class WaveFormComponent {
   readonly carriers = db.carriers;
   readonly zones = ['', 'A', 'B', 'C', 'F', 'HZ'];
   readonly minRunway = MIN_RUNWAY_MINUTES;
+  readonly limits = WAVE_LIMITS;
 
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
@@ -46,8 +62,24 @@ export class WaveFormComponent {
       zone: new FormControl('', { nonNullable: true }),
       carrier: new FormControl(db.carriers[0], { nonNullable: true, validators: [Validators.required] }),
       cutOffTime: new FormControl('16:00', { nonNullable: true, validators: [Validators.required] }),
-      minPriority: new FormControl(2, { nonNullable: true, validators: [Validators.required, positiveInteger] }),
-      maxOrders: new FormControl(8, { nonNullable: true, validators: [Validators.required, positiveInteger] }),
+      minPriority: new FormControl(2, {
+        nonNullable: true,
+        validators: [
+          Validators.required,
+          positiveInteger,
+          Validators.min(WAVE_LIMITS.priorityMin),
+          Validators.max(WAVE_LIMITS.priorityMax),
+        ],
+      }),
+      maxOrders: new FormControl(8, {
+        nonNullable: true,
+        validators: [
+          Validators.required,
+          positiveInteger,
+          Validators.min(WAVE_LIMITS.ordersMin),
+          Validators.max(WAVE_LIMITS.ordersMax),
+        ],
+      }),
     },
     { validators: [cutOffRunway('cutOffTime', MIN_RUNWAY_MINUTES)] },
   );

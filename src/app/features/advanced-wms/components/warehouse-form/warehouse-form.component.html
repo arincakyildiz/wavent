@@ -28,6 +28,10 @@
               Bu kod başka bir depoda kullanılıyor.
             }
           </span>
+        } @else {
+          <span class="field__hint">
+            Format: 2-4 büyük harf, tire, 2 rakam · en fazla {{ limits.codeMax }} karakter.
+          </span>
         }
       </label>
 
@@ -43,10 +47,15 @@
         @if (invalid('name')) {
           <span class="field__error" role="alert">
             @if (form.controls.name.hasError('maxlength')) {
-              En fazla 60 karakter girebilirsiniz.
+              En fazla {{ limits.nameMax }} karakter girebilirsiniz.
             } @else {
-              En az 3 karakterlik bir ad girin.
+              En az {{ limits.nameMin }} karakterlik bir ad girin.
             }
+          </span>
+        } @else {
+          <span class="field__hint">
+            {{ limits.nameMin }}–{{ limits.nameMax }} karakter.
+            {{ form.controls.name.value.length }}/{{ limits.nameMax }}
           </span>
         }
       </label>
@@ -59,11 +68,13 @@
         @if (invalid('city')) {
           <span class="field__error" role="alert">
             @if (form.controls.city.hasError('maxlength')) {
-              En fazla 40 karakter girebilirsiniz.
+              En fazla {{ limits.cityMax }} karakter girebilirsiniz.
             } @else {
               Şehir zorunludur.
             }
           </span>
+        } @else {
+          <span class="field__hint">En fazla {{ limits.cityMax }} karakter.</span>
         }
       </label>
 
@@ -73,11 +84,13 @@
         @if (invalid('country')) {
           <span class="field__error" role="alert">
             @if (form.controls.country.hasError('maxlength')) {
-              En fazla 40 karakter girebilirsiniz.
+              En fazla {{ limits.countryMax }} karakter girebilirsiniz.
             } @else {
               Ülke zorunludur.
             }
           </span>
+        } @else {
+          <span class="field__hint">En fazla {{ limits.countryMax }} karakter.</span>
         }
       </label>
     </div>
