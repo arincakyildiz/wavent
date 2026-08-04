@@ -97,7 +97,7 @@ export class CycleCountsComponent {
       targetId: count.code,
       newValue: `${count.scopeLabel} · beklenen ${count.expectedQuantity}`,
     });
-    this.notifications.success('Sayım planlandı', `${count.code} — ${count.scopeLabel}`);
+    this.notifications.success(this.i18n.t('cycleCounts.scheduled'), `${count.code} — ${count.scopeLabel}`);
     this.list.reload();
   }
 

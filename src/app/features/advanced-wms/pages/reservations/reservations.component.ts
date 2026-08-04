@@ -116,7 +116,7 @@ export class ReservationsComponent {
   fulfilmentLabel(value: ReservationRow['fulfilment']): string {
     const label: Record<ReservationRow['fulfilment'], string> = {
       full: 'Tam',
-      partial: 'Kısmi',
+      partial: this.i18n.t('reservations.partial'),
       backorder: 'Backorder',
     };
     return label[value];
@@ -141,7 +141,7 @@ export class ReservationsComponent {
       },
       error: () => {
         this.candidatesLoading.set(false);
-        this.notifications.error('Alternatif lotlar yüklenemedi');
+        this.notifications.error(this.i18n.t('reservations.altLoadFailed'));
       },
     });
   }
@@ -154,14 +154,20 @@ export class ReservationsComponent {
     const breaksFefo = !!candidate.fefoViolationLot;
     this.confirm
       .ask({
-        title: `${row.orderNumber} rezervasyonu taşınsın mı?`,
+        title: this.i18n.t('reservations.moveTitle', { order: row.orderNumber }),
         message: breaksFefo
-          ? `${candidate.lot ?? candidate.locationPath} seçilirse daha erken SKT'li ${candidate.fefoViolationLot} lotu atlanmış olur.`
-          : `${row.quantity} adet ${candidate.lot ?? candidate.locationPath} lotuna taşınacak.`,
-        confirmLabel: 'Lotu değiştir',
+          ? this.i18n.t('reservations.moveFefo', {
+            target: candidate.lot ?? candidate.locationPath,
+            lot: candidate.fefoViolationLot ?? '',
+          })
+          : this.i18n.t('reservations.movePlain', {
+            qty: row.quantity,
+            target: candidate.lot ?? candidate.locationPath,
+          }),
+        confirmLabel: this.i18n.t('reservations.moveConfirm'),
         tone: breaksFefo ? 'danger' : 'default',
         requireReason: true,
-        reasonLabel: 'Override gerekçesi',
+        reasonLabel: this.i18n.t('common.overrideReason'),
       })
       .subscribe((result) => {
         if (result.confirmed) this.commitOverride(row, candidate, result.reason ?? '');
@@ -188,8 +194,11 @@ export class ReservationsComponent {
           });
 
           this.notifications.success(
-            'Rezervasyon taşındı',
-            `${row.sku} için ${updated.lot ?? updated.locationPath} lotu rezerve edildi.`,
+            this.i18n.t('reservations.moved'),
+            this.i18n.t('reservations.movedBody', {
+          sku: row.sku,
+          target: updated.lot ?? updated.locationPath,
+        }),
           );
           this.list.reload();
         },
@@ -198,7 +207,7 @@ export class ReservationsComponent {
           const conflict = isApiError(err) && err.kind === 'conflict';
 
           this.notifications.error(
-            conflict ? 'Rezervasyon çakıştı' : 'Rezervasyon taşınamadı',
+            conflict ? this.i18n.t('reservations.conflict') : this.i18n.t('reservations.moveFailed'),
             describeError(err),
             () => this.list.reload(),
           );

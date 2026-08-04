@@ -1,18 +1,18 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Settings</h1>
+      <h1>{{ i18n.t('settings.title') }}</h1>
       <p class="muted">{{ i18n.t('settings.subtitle') }}</p>
     </div>
     @if (saved()) {
-      <span class="status-pill tone-success" role="status">Kaydedildi</span>
+      <span class="status-pill tone-success" role="status">{{ i18n.t('settings.saved') }}</span>
     }
   </div>
 
   <div class="grid-2">
     <section class="panel">
       <div class="panel__head">
-        <h2>Aktif Rol</h2>
+        <h2>{{ i18n.t('settings.activeRole') }}</h2>
         <span class="muted small">{{ i18n.t('settings.demoUser', { name: currentUser().name }) }}</span>
       </div>
       <p class="muted small">
@@ -31,10 +31,10 @@
             />
             <span class="option__body">
               <span class="option__label">
-                {{ r.label }}
-                <span class="status-pill tone-neutral">{{ permissionCount(r.value) }} izin</span>
+                {{ i18n.t('role.' + r.value) }}
+                <span class="status-pill tone-neutral">{{ i18n.t('settings.permissionCount', { count: permissionCount(r.value) }) }}</span>
               </span>
-              <span class="muted small">{{ r.description }}</span>
+              <span class="muted small">{{ i18n.t('role.' + r.value + '.desc') }}</span>
             </span>
           </label>
         }
@@ -53,7 +53,7 @@
             [class.segmented__btn--active]="theme() === 'dark'"
             (click)="setTheme('dark')"
           >
-            Koyu
+            {{ i18n.t('settings.dark') }}
           </button>
           <button
             type="button"
@@ -121,7 +121,7 @@
         </div>
 
         <div class="field">
-          <label for="latency">Ek gecikme: {{ faultProfile().extraLatencyMs }} ms</label>
+          <label for="latency">{{ i18n.t('settings.extraLatency', { ms: faultProfile().extraLatencyMs }) }}</label>
           <input
             id="latency"
             type="range"
@@ -156,15 +156,15 @@
       @for (rule of rules(); track rule.key) {
         <div class="rule">
           <div class="rule__body">
-            <div class="rule__label">{{ rule.label }}</div>
-            <div class="muted small">{{ rule.description }}</div>
+            <div class="rule__label">{{ i18n.t('rule.' + rule.key) }}</div>
+            <div class="muted small">{{ i18n.t('rule.' + rule.key + '.desc') }}</div>
           </div>
           <button
             type="button"
             class="switch"
             [class.switch--on]="rule.enabled"
             [attr.aria-pressed]="rule.enabled"
-            [attr.aria-label]="rule.label"
+            [attr.aria-label]="i18n.t('rule.' + rule.key)"
             (click)="toggleRule(rule.key)"
           >
             <span class="switch__knob"></span>

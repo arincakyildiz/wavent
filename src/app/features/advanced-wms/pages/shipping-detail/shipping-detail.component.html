@@ -3,7 +3,7 @@
     <div>
       <button class="btn" type="button" (click)="back()">
         <app-icon name="chevronLeft" [size]="14" />
-        Shipping
+        {{ i18n.t('shipping.title') }}
       </button>
       @if (shipment(); as s) {
         <h1 class="mt">{{ s.code }}</h1>
@@ -13,11 +13,11 @@
 
     <div class="page__actions">
       @if (shipment(); as s) {
-        <span class="status-pill" [class]="statusTone(s.status)">{{ s.status }}</span>
+        <span class="status-pill" [class]="statusTone(s.status)">{{ i18n.t('st.' + s.status) }}</span>
       }
       <button class="btn btn--primary" type="button" (click)="downloadPdf()">
         <app-icon name="fileText" [size]="14" />
-        PDF olarak indir
+        {{ i18n.t('common.downloadPdf') }}
       </button>
     </div>
   </div>
@@ -36,7 +36,7 @@
       @if (shipment(); as s) {
         <div class="kpi-row">
           <div class="kpi-card">
-            <div class="kpi-card__label">Paket</div>
+            <div class="kpi-card__label">{{ i18n.t('shippingDetail.package') }}</div>
             <div class="kpi-card__value">{{ s.packageCount | number }}</div>
           </div>
           <div class="kpi-card">
@@ -61,7 +61,7 @@
 
         <div class="panel">
           <div class="panel__head">
-            <h2>Sevkiyat Bilgileri</h2>
+            <h2>{{ i18n.t('shippingDetail.info') }}</h2>
           </div>
           <div class="grid-3 detail-facts">
             <div class="fact">
@@ -73,7 +73,7 @@
               <span>{{ s.door }}</span>
             </div>
             <div class="fact">
-              <span class="muted small">Depo</span>
+              <span class="muted small">{{ i18n.t('common.warehouse') }}</span>
               <span>{{ s.warehouseCode }}</span>
             </div>
             <div class="fact">
@@ -81,29 +81,29 @@
               <span>{{ s.closedAt ?? '—' }}</span>
             </div>
             <div class="fact">
-              <span class="muted small">Sevkiyat Kodu</span>
+              <span class="muted small">{{ i18n.t('shippingDetail.code') }}</span>
               <span>{{ s.code }}</span>
             </div>
             <div class="fact">
-              <span class="muted small">Durum</span>
-              <span class="status-pill" [class]="statusTone(s.status)">{{ s.status }}</span>
+              <span class="muted small">{{ i18n.t('common.status') }}</span>
+              <span class="status-pill" [class]="statusTone(s.status)">{{ i18n.t('st.' + s.status) }}</span>
             </div>
           </div>
         </div>
 
         <div class="panel">
-          <h2>Paketler</h2>
+          <h2>{{ i18n.t('shippingDetail.packages') }}</h2>
           @if (packages().length) {
             <div class="table-scroll">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Paket</th>
+                    <th>{{ i18n.t('shippingDetail.package') }}</th>
                     <th>{{ i18n.t('common.order') }}</th>
-                    <th>Kalem</th>
+                    <th>{{ i18n.t('shippingDetail.items') }}</th>
                     <th>{{ i18n.t('packing.weight') }}</th>
-                    <th>Beklenen</th>
-                    <th>Tolerans</th>
+                    <th>{{ i18n.t('shippingDetail.expected') }}</th>
+                    <th>{{ i18n.t('shippingDetail.tolerance') }}</th>
                     <th>{{ i18n.t('packing.content') }}</th>
                     <th>{{ i18n.t('common.status') }}</th>
                   </tr>
@@ -120,17 +120,17 @@
                         @if (p.weightKg - p.expectedWeightKg > p.toleranceKg || p.expectedWeightKg - p.weightKg > p.toleranceKg) {
                           <span class="status-pill tone-danger">{{ i18n.t('shippingDetail.outside') }}</span>
                         } @else {
-                          <span class="status-pill tone-success">Uygun</span>
+                          <span class="status-pill tone-success">{{ i18n.t('st.ok') }}</span>
                         }
                       </td>
                       <td>
                         @if (p.contentVerified) {
                           <span class="status-pill tone-success">{{ i18n.t('common.verified') }}</span>
                         } @else {
-                          <span class="status-pill tone-neutral">Bekliyor</span>
+                          <span class="status-pill tone-neutral">{{ i18n.t('common.pending') }}</span>
                         }
                       </td>
-                      <td><span class="status-pill" [class]="packageTone(p.status)">{{ p.status }}</span></td>
+                      <td><span class="status-pill" [class]="packageTone(p.status)">{{ i18n.t('st.' + p.status) }}</span></td>
                     </tr>
                   }
                 </tbody>

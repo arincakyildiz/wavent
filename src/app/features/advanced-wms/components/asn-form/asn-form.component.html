@@ -6,7 +6,7 @@
   <form [formGroup]="form" (ngSubmit)="submit()" class="form">
     <div class="form__row">
       <label class="field">
-        <span class="field__label">ASN No <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('asn.number') }} <span class="req">*</span></span>
         <input
           formControlName="number"
           type="text"
@@ -16,7 +16,7 @@
           [class.invalid]="invalid('number')"
         />
         @if (numberControl.pending) {
-          <span class="field__hint">Numara kontrol ediliyor...</span>
+          <span class="field__hint">{{ i18n.t('asn.checking') }}</span>
         } @else if (invalid('number')) {
           <span class="field__error" role="alert">
             @if (numberControl.hasError('notUnique')) {
@@ -26,7 +26,7 @@
             }
           </span>
         } @else {
-          <span class="field__hint">Format: ASN- ve 4 rakam · en fazla 8 karakter.</span>
+          <span class="field__hint">{{ i18n.t('asn.numberHint') }}</span>
         }
       </label>
 
@@ -42,7 +42,7 @@
 
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Depo <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('common.warehouse') }} <span class="req">*</span></span>
         <select formControlName="warehouseCode">
           @for (w of warehouses(); track w.code) {
             <option [value]="w.code">{{ w.code }} — {{ w.name }}</option>
@@ -51,7 +51,7 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Beklenen Tarih <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('asn.expectedDate') }} <span class="req">*</span></span>
         <input formControlName="expectedDate" type="date" [class.invalid]="invalid('expectedDate')" />
         @if (form.controls.expectedDate.hasError('pastDate')) {
           <span class="field__error" role="alert">{{ i18n.t('asn.pastDate') }}</span>

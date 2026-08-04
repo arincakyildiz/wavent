@@ -1,8 +1,9 @@
-import { Signal, computed, signal } from '@angular/core';
+import { Signal, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Observable, catchError, of, switchMap } from 'rxjs';
 import { describeError } from '../../core/api/api-error';
 import { ListQuery, ListResult } from './list-query';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 export interface ListResource<T> {
   rows: Signal<T[]>;
@@ -31,8 +32,11 @@ export function createListResource<T>(
 ): ListResource<T> {
   const error = signal<string | null>(null);
   const token = signal(0);
+  // Rows can carry server-derived text (rule violations, reasons), so a language
+  // switch has to re-issue the query rather than leave stale wording on screen.
+  const locale = inject(I18nService).locale;
 
-  const source = computed(() => ({ ...request(), token: token() }));
+  const source = computed(() => ({ ...request(), token: token(), locale: locale() }));
 
   const result = toSignal(
     toObservable(source).pipe(

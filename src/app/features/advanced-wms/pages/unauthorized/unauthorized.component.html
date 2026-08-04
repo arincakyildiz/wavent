@@ -4,7 +4,7 @@
       <app-icon name="alertTriangle" [size]="26" />
     </span>
 
-    <h1>403 — Yetkiniz yok</h1>
+    <h1>{{ i18n.t('unauthorized.title') }}</h1>
     <p class="muted">
       {{ i18n.t('unauthorized.body', { role: roleLabel() }) }}
       @if (from) {
@@ -14,7 +14,7 @@
 
     @if (needed.length) {
       <div class="denied__needs">
-        <span class="muted small">Gereken izin:</span>
+        <span class="muted small">{{ i18n.t('unauthorized.requiredPermission') }}</span>
         @for (n of needed; track n) {
           <span class="status-pill tone-warning">{{ n }}</span>
         }

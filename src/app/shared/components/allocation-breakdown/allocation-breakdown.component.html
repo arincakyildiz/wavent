@@ -30,7 +30,7 @@
       @if (line().overrideReason) {
         <div>
           <dt>{{ i18n.t('allocation.overrideReason') }}</dt>
-          <dd class="muted small">{{ line().overrideReason }}</dd>
+          <dd class="muted small">{{ i18n.t(line().overrideReason!) }}</dd>
         </div>
       }
     </dl>

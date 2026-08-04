@@ -1,14 +1,14 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Receiving</h1>
+      <h1>{{ i18n.t('receiving.title') }}</h1>
       <p class="muted">{{ i18n.t('receiving.subtitle') }}</p>
     </div>
 
     <div class="page__actions">
       <button class="btn btn--primary" type="button" (click)="formOpen.set(true)" *appHasPermission="'receiving.create'">
         <app-icon name="plus" [size]="15" />
-        New ASN
+        {{ i18n.t('receiving.new') }}
       </button>
     </div>
   </div>
@@ -32,14 +32,14 @@
       />
       <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
         <option value="all">{{ i18n.t('common.allStatuses') }}</option>
-        <option value="expected">Expected</option>
-        <option value="arrived">Arrived</option>
-        <option value="receiving">Receiving</option>
-        <option value="closed">Closed</option>
-        <option value="cancelled">Cancelled</option>
+        <option value="expected">{{ i18n.t('st.expected') }}</option>
+        <option value="arrived">{{ i18n.t('st.arrived') }}</option>
+        <option value="receiving">{{ i18n.t('st.receiving') }}</option>
+        <option value="closed">{{ i18n.t('st.closed') }}</option>
+        <option value="cancelled">{{ i18n.t('st.cancelled') }}</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} ASN</span>
+      <span class="muted small">{{ i18n.t('pagination.recordCount', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -47,12 +47,12 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="number" [sort]="sort()" (sortChange)="onSort($event)">ASN No</th>
+              <th appSortable="number" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('receiving.number') }}</th>
               <th appSortable="supplierName" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('receiving.supplier') }}</th>
               <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
-              <th appSortable="expectedDate" [sort]="sort()" (sortChange)="onSort($event)">Beklenen Tarih</th>
+              <th appSortable="expectedDate" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('receiving.expectedDate') }}</th>
               <th appSortable="lineCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('receiving.lines') }}</th>
-              <th appSortable="discrepancyCount" [sort]="sort()" (sortChange)="onSort($event)">Fark</th>
+              <th appSortable="discrepancyCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('receiving.variance') }}</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th class="col-detail">{{ i18n.t('common.detail') }}</th>
             </tr>
@@ -72,7 +72,7 @@
                     <span class="muted small">—</span>
                   }
                 </td>
-                <td><span class="status-pill" [class]="statusTone(a.status)">{{ a.status }}</span></td>
+                <td><span class="status-pill" [class]="statusTone(a.status)">{{ i18n.t('st.' + a.status) }}</span></td>
                 <td class="col-detail">
                   <span class="row-detail">
                     <span class="row-detail__text">{{ i18n.t('common.detail') }}</span>

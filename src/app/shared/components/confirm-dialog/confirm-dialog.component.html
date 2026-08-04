@@ -27,11 +27,11 @@
             @if (reasonInvalid) {
               <span class="dialog__error" role="alert">
                 @if (form.controls.reason.hasError('required')) {
-                  {{ i18n.t('common.reason') }} zorunludur.
+                  {{ i18n.t('confirm.reasonRequiredShort', { label: d.reasonLabel ?? i18n.t('common.reason') }) }}
                 } @else if (form.controls.reason.hasError('minlength')) {
                   {{ i18n.t('confirm.reasonMin', { label: d.reasonLabel ?? i18n.t('common.reason'), min: 6 }) }}
                 } @else {
-                  {{ i18n.t('common.reason') }} en fazla 300 karakter olabilir.
+                  {{ i18n.t('confirm.reasonMaxLength', { label: d.reasonLabel ?? i18n.t('common.reason'), max: 300 }) }}
                 }
               </span>
             }

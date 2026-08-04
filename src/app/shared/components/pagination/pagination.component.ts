@@ -54,7 +54,7 @@ export class PaginationComponent {
 
   readonly rangeLabel = computed(() => {
     const total = this.total();
-    if (!total) return '0 kayıt';
+    if (!total) return this.i18n.t('pagination.zero');
     const start = (this.page() - 1) * this.pageSize() + 1;
     const end = Math.min(total, this.page() * this.pageSize());
     return `${start}–${end} / ${total}`;

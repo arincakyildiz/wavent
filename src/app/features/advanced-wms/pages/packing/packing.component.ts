@@ -118,11 +118,14 @@ export class PackingComponent {
         });
 
         if (updated.weightOk) {
-          this.notifications.success('Ağırlık kaydedildi', `${updated.code} · ${updated.weightKg} kg`);
+          this.notifications.success(this.i18n.t('packing.weightSaved'), `${updated.code} · ${updated.weightKg} kg`);
         } else {
           this.notifications.warning(
-            'Tolerans dışı ağırlık',
-            `${updated.code} ${updated.deviationKg > 0 ? '+' : ''}${updated.deviationKg} kg sapma gösteriyor; supervisor onayı gerekiyor.`,
+            this.i18n.t('packing.outOfToleranceTitle'),
+            this.i18n.t('packing.outOfToleranceBody', {
+          code: updated.code,
+          deviation: `${updated.deviationKg > 0 ? '+' : ''}${updated.deviationKg}`,
+        }),
           );
         }
 
@@ -132,7 +135,7 @@ export class PackingComponent {
         this.pendingId.set(null);
         const conflict = isApiError(err) && err.kind === 'conflict';
         this.notifications.error(
-          conflict ? 'Paket değişmiş' : 'Ağırlık kaydedilemedi',
+          conflict ? this.i18n.t('packing.packageChanged') : this.i18n.t('packing.weightSaveFailed'),
           describeError(err),
           () => this.list.reload(),
         );
@@ -148,13 +151,19 @@ export class PackingComponent {
   approveWeight(row: PackageRow): void {
     this.confirm
       .ask({
-        title: 'Supervisor onayı',
-        message: `${row.code} paketi ${row.weightKg} kg — beklenen ${row.expectedWeightKg} kg (±${row.toleranceKg}). Sapma ${row.deviationKg} kg. Onaylanırsa paket mühürlenir.`,
-        confirmLabel: 'Onayla ve mühürle',
+        title: this.i18n.t('packing.approvalTitle'),
+        message: this.i18n.t('packing.approvalMessage', {
+        code: row.code,
+        weight: row.weightKg,
+        expected: row.expectedWeightKg,
+        tolerance: row.toleranceKg,
+        deviation: row.deviationKg,
+      }),
+        confirmLabel: this.i18n.t('packing.approvalConfirm'),
         tone: 'danger',
         requireReason: true,
-        reasonLabel: 'Onay gerekçesi',
-        reasonPlaceholder: 'Örn. tartı kalibrasyonu doğrulandı, içerik sayıldı',
+        reasonLabel: this.i18n.t('packing.approvalReason'),
+        reasonPlaceholder: this.i18n.t('packing.approvalPlaceholder'),
       })
       .subscribe((result) => {
         if (result.confirmed) this.commitApproval(row, result.reason ?? '');
@@ -172,17 +181,20 @@ export class PackingComponent {
           targetType: 'Package',
           targetId: updated.code,
           oldValue: `${row.expectedWeightKg} kg ±${row.toleranceKg}`,
-          newValue: `${updated.weightKg} kg onaylandı`,
+          newValue: this.i18n.t('packing.approvedAudit', { weight: updated.weightKg }),
           reason,
         });
-        this.notifications.success('Paket onaylandı', `${updated.code} mühürlendi.`);
+        this.notifications.success(
+        this.i18n.t('packing.approvedToast'),
+        this.i18n.t('packing.sealed', { code: updated.code }),
+      );
         this.list.reload();
       },
       error: (err) => {
         this.pendingId.set(null);
         const conflict = isApiError(err) && err.kind === 'conflict';
         this.notifications.error(
-          conflict ? 'Paket değişmiş' : 'Onay uygulanamadı',
+          conflict ? this.i18n.t('packing.packageChanged') : this.i18n.t('packing.approvalFailed'),
           describeError(err),
           conflict ? () => this.list.reload() : () => this.commitApproval(row, reason),
         );

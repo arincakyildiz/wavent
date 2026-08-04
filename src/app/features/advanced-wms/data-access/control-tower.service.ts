@@ -4,6 +4,7 @@ import { MockApiService } from '../../../core/api/mock-api.service';
 import { Tone } from './dashboard.service';
 import { db } from './mock-data';
 import { networkTotals, requiresSecondCount, withinWeightTolerance } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface StockBucket {
   label: string;
@@ -29,20 +30,31 @@ export interface TowerSnapshot {
 export interface TowerEvent {
   id: string;
   at: Date;
+  /** Stable identity — the label is a translation of this, so never switch on the label. */
+  kind: EventKind;
   label: string;
   detail: string;
   tone: Tone;
   icon: string;
 }
 
-const EVENT_TEMPLATES: Omit<TowerEvent, 'id' | 'at'>[] = [
-  { label: 'Toplama tamamlandı', detail: '', tone: 'success', icon: 'target' },
-  { label: 'Paket kapatıldı', detail: '', tone: 'info', icon: 'package' },
-  { label: 'Kabul satırı işlendi', detail: '', tone: 'info', icon: 'inbox' },
-  { label: 'İstisna açıldı', detail: '', tone: 'danger', icon: 'alertTriangle' },
-  { label: 'Putaway önerisi kabul edildi', detail: '', tone: 'success', icon: 'putaway' },
-  { label: 'Sevkiyat yüklemesi başladı', detail: '', tone: 'warning', icon: 'truck' },
-  { label: 'Rezervasyon oluşturuldu', detail: '', tone: 'violet', icon: 'bookmark' },
+export type EventKind =
+  | 'pickCompleted'
+  | 'packageClosed'
+  | 'receiptLine'
+  | 'exceptionOpened'
+  | 'putawayAccepted'
+  | 'loadingStarted'
+  | 'reservationCreated';
+
+const EVENT_TEMPLATES: { kind: EventKind; tone: Tone; icon: string }[] = [
+  { kind: 'pickCompleted', tone: 'success', icon: 'target' },
+  { kind: 'packageClosed', tone: 'info', icon: 'package' },
+  { kind: 'receiptLine', tone: 'info', icon: 'inbox' },
+  { kind: 'exceptionOpened', tone: 'danger', icon: 'alertTriangle' },
+  { kind: 'putawayAccepted', tone: 'success', icon: 'putaway' },
+  { kind: 'loadingStarted', tone: 'warning', icon: 'truck' },
+  { kind: 'reservationCreated', tone: 'violet', icon: 'bookmark' },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -64,8 +76,12 @@ export class ControlTowerService {
     ).slice(0, 2)) {
       alerts.push({
         id: `al-${c.id}`,
-        title: 'Stok farkı eşiği aşıldı',
-        detail: `${c.code} · ${c.scopeLabel} · ${c.countedQuantity - c.expectedQuantity} adet`,
+        title: translate('tower.alert.variance'),
+        detail: translate('tower.alert.varianceDetail', {
+          code: c.code,
+          scope: c.scopeLabel,
+          delta: c.countedQuantity - c.expectedQuantity,
+        }),
         tone: 'danger',
         icon: 'clipboardCheck',
         link: '/wms/cycle-counts',
@@ -77,8 +93,12 @@ export class ControlTowerService {
     ).slice(0, 2)) {
       alerts.push({
         id: `al-${t.id}`,
-        title: 'Toplama görevinde istisna',
-        detail: `${t.code} · ${t.assignedTo ?? 'atanmamış'} · ${t.exceptionReason}`,
+        title: translate('tower.alert.pickException'),
+        detail: translate('tower.alert.pickExceptionDetail', {
+          code: t.code,
+          owner: t.assignedTo ?? translate('tower.unassigned'),
+          reason: translate(t.exceptionReason ?? ''),
+        }),
         tone: 'warning',
         icon: 'target',
         link: '/wms/picking/tasks',
@@ -90,8 +110,12 @@ export class ControlTowerService {
     ).slice(0, 2)) {
       alerts.push({
         id: `al-${w.id}`,
-        title: 'Riskli dalga',
-        detail: `${w.name} · kapasite %${w.capacityUsedPct} · cut-off ${w.cutOffTime}`,
+        title: translate('tower.alert.riskyWave'),
+        detail: translate('tower.alert.riskyWaveDetail', {
+          name: w.name,
+          pct: w.capacityUsedPct,
+          cutOff: w.cutOffTime,
+        }),
         tone: 'warning',
         icon: 'waves',
         link: '/wms/waves',
@@ -103,8 +127,13 @@ export class ControlTowerService {
     ).slice(0, 2)) {
       alerts.push({
         id: `al-${p.id}`,
-        title: 'Ağırlık toleransı dışında paket',
-        detail: `${p.code} · ${p.weightKg} kg (beklenen ${p.expectedWeightKg} ±${p.toleranceKg})`,
+        title: translate('tower.alert.weight'),
+        detail: translate('tower.alert.weightDetail', {
+          code: p.code,
+          weight: p.weightKg,
+          expected: p.expectedWeightKg,
+          tolerance: p.toleranceKg,
+        }),
         tone: 'danger',
         icon: 'package',
         link: '/wms/packing',
@@ -116,8 +145,11 @@ export class ControlTowerService {
     ).slice(0, 2)) {
       alerts.push({
         id: `al-${l.id}`,
-        title: 'Lokasyon kapasitesi doldu',
-        detail: `${l.path} · %${Math.round((l.usedWeightKg / l.maxWeightKg) * 100)} ağırlık kullanımı`,
+        title: translate('tower.alert.locationFull'),
+        detail: translate('tower.alert.locationFullDetail', {
+          path: l.path,
+          pct: Math.round((l.usedWeightKg / l.maxWeightKg) * 100),
+        }),
         tone: 'violet',
         icon: 'warehouse',
         link: '/wms/locations',
@@ -150,36 +182,63 @@ export class ControlTowerService {
     const shipments = db.shipments.filter((s) => inScope(s.warehouseCode));
     const putaway = db.putaway.filter((p) => inScope(p.warehouseCode));
 
-    const detailFor = (label: string, tick: number): string => {
+    const detailFor = (kind: EventKind, tick: number): string => {
       const at = <T>(list: T[]): T | undefined => (list.length ? list[tick % list.length] : undefined);
-      switch (label) {
-        case 'Toplama tamamlandı': {
+      switch (kind) {
+        case 'pickCompleted': {
           const t = at(tasks);
-          return t ? `${t.code} · ${t.assignedTo ?? 'System'} · ${t.lineCount} satır` : '—';
+          return t
+            ? translate('tower.detail.pick', {
+                code: t.code,
+                owner: t.assignedTo ?? 'System',
+                lines: t.lineCount,
+              })
+            : '—';
         }
-        case 'Paket kapatıldı': {
+        case 'packageClosed': {
           const p = at(packages);
-          return p ? `${p.code} · ${p.weightKg} kg` : '—';
+          return p ? translate('tower.detail.package', { code: p.code, weight: p.weightKg }) : '—';
         }
-        case 'Kabul satırı işlendi': {
+        case 'receiptLine': {
           const l = at(lines);
-          return l ? `${l.asnNumber} · ${l.skuCode} · ${l.receivedQuantity} adet` : '—';
+          return l
+            ? translate('tower.detail.receipt', {
+                asn: l.asnNumber,
+                sku: l.skuCode,
+                qty: l.receivedQuantity,
+              })
+            : '—';
         }
-        case 'İstisna açıldı': {
+        case 'exceptionOpened': {
           const t = at(tasks.filter((x) => x.status === 'exception'));
-          return t ? `${t.exceptionReason} · ${t.code}` : 'Yanlış barkod';
+          return t
+            ? translate('tower.detail.exception', {
+                reason: translate(t.exceptionReason ?? ''),
+                code: t.code,
+              })
+            : translate('seed.exception.wrongBarcode');
         }
-        case 'Putaway önerisi kabul edildi': {
+        case 'putawayAccepted': {
           const p = at(putaway);
-          return p ? `${p.suggestedLocationPath} · skor ${p.score}` : '—';
+          return p
+            ? translate('tower.detail.putaway', { path: p.suggestedLocationPath, score: p.score })
+            : '—';
         }
-        case 'Sevkiyat yüklemesi başladı': {
+        case 'loadingStarted': {
           const s = at(shipments);
-          return s ? `${s.code} · ${s.carrier} · kapı ${s.door}` : '—';
+          return s
+            ? translate('tower.detail.loading', { code: s.code, carrier: s.carrier, door: s.door })
+            : '—';
         }
         default: {
           const a = at(allocations);
-          return a ? `${a.orderNumber} · ${a.strategy} · ${a.quantity} adet` : '—';
+          return a
+            ? translate('tower.detail.reservation', {
+                order: a.orderNumber,
+                strategy: a.strategy,
+                qty: a.quantity,
+              })
+            : '—';
         }
       }
     };
@@ -190,7 +249,8 @@ export class ControlTowerService {
           const template = EVENT_TEMPLATES[(tick * 3 + streamIndex * 2) % EVENT_TEMPLATES.length];
           return {
             ...template,
-            detail: detailFor(template.label, tick + streamIndex),
+            label: translate(`tower.event.${template.kind}`),
+            detail: detailFor(template.kind, tick + streamIndex),
             id: `ev-${streamIndex}-${tick}-${Date.now()}`,
             at: new Date(),
           } satisfies TowerEvent;

@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuditService } from '../../../../core/observability/audit.service';
 import { NotificationService } from '../../../../core/observability/notification.service';
@@ -23,7 +22,6 @@ const DEFAULT_PAGE_SIZE = 20;
 @Component({
   selector: 'app-waves',
   imports: [
-    DecimalPipe,
     IconComponent,
     SortableDirective, PaginationComponent,
     ActivatableDirective,
@@ -124,9 +122,12 @@ export class WavesComponent {
       actionType: 'Wave Created',
       targetType: 'Wave',
       targetId: wave.name,
-      newValue: `${wave.orderCount} sipariş · ${wave.warehouseCode}`,
+      newValue: this.i18n.t('waves.auditValue', { count: wave.orderCount, warehouse: wave.warehouseCode }),
     });
-    this.notifications.success('Dalga oluşturuldu', `${wave.name} — ${wave.orderCount} sipariş`);
+    this.notifications.success(
+      this.i18n.t('waves.created'),
+      this.i18n.t('waves.createdBody', { name: wave.name, count: wave.orderCount }),
+    );
     this.list.reload();
   }
 

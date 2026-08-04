@@ -5,6 +5,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { PutawayRec, db } from './mock-data';
 import { capacityVerdict } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface PutawaySuggestionRow extends PutawayRec {
   skuName: string;
@@ -67,7 +68,7 @@ export class PutawayService {
     return this.api.simulate(id, { delayMs: 460, kind: 'write' }).pipe(
       map(() => {
         const record = db.putaway.find((p) => p.id === id);
-        if (!record) throw new ApiError('not-found', 'Putaway önerisi bulunamadı.');
+        if (!record) throw new ApiError('not-found', translate('svc.putawayNotFound'));
 
         this.api.assertVersion(expectedVersion, record.version);
 
@@ -75,7 +76,10 @@ export class PutawayService {
         if (!row.capacityOk) {
           throw new ApiError(
             'validation',
-            `${record.suggestedLocationPath} uygun değil: ${row.capacityViolations.join('; ')}.`,
+            translate('svc.locationUnfit', {
+        path: record.suggestedLocationPath,
+        violations: row.capacityViolations.join('; '),
+      }),
           );
         }
 

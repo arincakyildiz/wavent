@@ -40,7 +40,7 @@
       <p class="muted small">
         {{ i18n.t('workbench.alreadyResolved') }}
         @if (exception().resolutionNote) {
-          {{ i18n.t('workbench.resolutionIs', { reason: exception().resolutionNote! }) }}
+          {{ i18n.t('workbench.resolutionIs', { reason: i18n.t(exception().resolutionNote!) }) }}
         }
       </p>
     } @else {

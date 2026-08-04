@@ -1,4 +1,5 @@
 import { LocationClass, StockStatus } from '../models/entities';
+import { translate } from '../../../core/i18n/i18n.service';
 
 /**
  * Pure rules with no dependency on the seeded `db`, so both the allocation engine
@@ -38,11 +39,12 @@ export const CLASS_TEMPERATURE_C: Record<LocationClass, { min: number; max: numb
   hazmat: null,
 };
 
+/** Catalog keys, resolved when a violation message is built. */
 const CLASS_LABEL: Record<LocationClass, string> = {
-  ambient: 'Ambient',
-  chilled: 'Soğuk',
-  frozen: 'Donuk',
-  hazmat: 'Tehlikeli madde',
+  ambient: 'class.ambient',
+  chilled: 'class.chilled',
+  frozen: 'class.frozen',
+  hazmat: 'class.hazmat',
 };
 
 /** The capacity-bearing side: a bin and what it is already holding. */
@@ -78,17 +80,20 @@ export function checkCapacity(slot: CapacitySlot, demand: CapacityDemand): Capac
 
   if (slot.usedWeightKg + demand.weightKg > slot.maxWeightKg) {
     const free = Math.max(0, slot.maxWeightKg - slot.usedWeightKg);
-    violations.push(`Ağırlık kapasitesi yetersiz (boşta ${round(free)} kg, gereken ${round(demand.weightKg)} kg)`);
+    violations.push(translate('rule.weightCapacity', { free: round(free), needed: round(demand.weightKg) }));
   }
 
   if (slot.usedVolumeM3 + demand.volumeM3 > slot.maxVolumeM3) {
     const free = Math.max(0, slot.maxVolumeM3 - slot.usedVolumeM3);
-    violations.push(`Hacim kapasitesi yetersiz (boşta ${round(free)} m³, gereken ${round(demand.volumeM3)} m³)`);
+    violations.push(translate('rule.volumeCapacity', { free: round(free), needed: round(demand.volumeM3) }));
   }
 
   if (slot.locationClass !== demand.storageClass) {
     violations.push(
-      `Ürün sınıfı uyumsuz (${CLASS_LABEL[demand.storageClass]} ürün, ${CLASS_LABEL[slot.locationClass]} lokasyon)`,
+      translate('rule.classMismatch', {
+        product: translate(CLASS_LABEL[demand.storageClass]),
+        location: translate(CLASS_LABEL[slot.locationClass]),
+      }),
     );
   }
 
@@ -96,10 +101,15 @@ export function checkCapacity(slot: CapacitySlot, demand: CapacityDemand): Capac
   if (required) {
     const actual = slot.temperatureRangeC;
     if (!actual) {
-      violations.push(`Lokasyon sıcaklık kontrollü değil (gereken ${required.min}°C…${required.max}°C)`);
+      violations.push(translate('rule.notTempControlled', { min: required.min, max: required.max }));
     } else if (actual.min < required.min || actual.max > required.max) {
       violations.push(
-        `Sıcaklık aralığı uygun değil (lokasyon ${actual.min}°C…${actual.max}°C, gereken ${required.min}°C…${required.max}°C)`,
+        translate('rule.tempOutOfRange', {
+        actualMin: actual.min,
+        actualMax: actual.max,
+        min: required.min,
+        max: required.max,
+      }),
       );
     }
   }
@@ -143,7 +153,7 @@ export function serialIssues(units: SerialUnit[], isSerialTracked: (skuCode: str
       issues.push({
         kind: 'missing',
         skuCode: unit.skuCode,
-        detail: `${unit.skuCode} seri takipli ama seri numarası yok`,
+        detail: translate('rule.serialMissing', { code: unit.skuCode }),
       });
       continue;
     }
@@ -153,7 +163,7 @@ export function serialIssues(units: SerialUnit[], isSerialTracked: (skuCode: str
         kind: 'quantity',
         skuCode: unit.skuCode,
         serial: unit.serial,
-        detail: `${unit.serial} ${unit.quantity} adet taşıyor; seri başına 1 birim olmalı`,
+        detail: translate('rule.serialQuantity', { serial: unit.serial, quantity: unit.quantity }),
       });
     }
 
@@ -168,7 +178,7 @@ export function serialIssues(units: SerialUnit[], isSerialTracked: (skuCode: str
         kind: 'duplicate',
         skuCode: unit.skuCode,
         serial: unit.serial,
-        detail: `${unit.serial} ${unit.skuCode} için birden fazla kayıtta kullanılmış`,
+        detail: translate('rule.serialDuplicate', { serial: unit.serial, code: unit.skuCode }),
       });
     }
   }

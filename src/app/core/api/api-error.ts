@@ -1,3 +1,5 @@
+import { translate } from '../i18n/i18n.service';
+
 /** Failure shapes the mock transport can produce, mirroring real HTTP semantics. */
 export type ApiErrorKind = 'network' | 'unauthorized' | 'forbidden' | 'conflict' | 'not-found' | 'validation';
 
@@ -10,13 +12,14 @@ const STATUS: Record<ApiErrorKind, number> = {
   validation: 422,
 };
 
-const MESSAGE: Record<ApiErrorKind, string> = {
-  network: 'Servise ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.',
-  unauthorized: 'Oturumunuz doğrulanamadı. Yeniden giriş yapmanız gerekiyor.',
-  forbidden: 'Bu işlem için yetkiniz bulunmuyor.',
-  conflict: 'Kayıt siz görüntülerken değişti. Sayfayı yenileyip tekrar deneyin.',
-  'not-found': 'Kayıt bulunamadı.',
-  validation: 'Gönderilen veri doğrulanamadı.',
+/** Catalog keys, resolved at throw time so the message follows the active language. */
+const MESSAGE_KEY: Record<ApiErrorKind, string> = {
+  network: 'error.network',
+  unauthorized: 'error.unauthorized',
+  forbidden: 'error.forbidden',
+  conflict: 'error.conflict',
+  'not-found': 'error.notFound',
+  validation: 'error.validation',
 };
 
 export class ApiError extends Error {
@@ -28,7 +31,7 @@ export class ApiError extends Error {
     /** Server-side version that won the race, for conflict handling. */
     readonly currentVersion?: number,
   ) {
-    super(message ?? MESSAGE[kind]);
+    super(message ?? translate(MESSAGE_KEY[kind]));
     this.name = 'ApiError';
     this.status = STATUS[kind];
   }
@@ -44,5 +47,5 @@ export function isApiError(value: unknown): value is ApiError {
 }
 
 export function describeError(value: unknown): string {
-  return isApiError(value) ? value.message : 'Beklenmeyen bir hata oluştu.';
+  return isApiError(value) ? value.message : translate('error.unexpected');
 }

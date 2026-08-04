@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { ActivatableDirective } from '../../../../shared/directives/activatable.directive';
@@ -15,7 +14,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-shipping',
-  imports: [DecimalPipe, SortableDirective, PaginationComponent, ActivatableDirective],
+  imports: [SortableDirective, PaginationComponent, ActivatableDirective],
   templateUrl: './shipping.component.html',
   styleUrl: './shipping.component.scss',
 })

@@ -16,7 +16,7 @@
   } @else {
     <div class="kpi-row">
       <div class="kpi-card">
-        <div class="kpi-card__label">Toplam Hareket</div>
+        <div class="kpi-card__label">{{ i18n.t('movements.total') }}</div>
         <div class="kpi-card__value">{{ totals().count | number }}</div>
       </div>
       <div class="kpi-card">
@@ -44,12 +44,12 @@
       />
       <select [value]="typeFilter()" (change)="typeFilter.set($any($event.target).value)" aria-label="Tip filtresi">
         <option value="all">{{ i18n.t('movements.allTypes') }}</option>
-        <option value="receipt">Receipt</option>
-        <option value="putaway">Putaway</option>
-        <option value="pick">Pick</option>
-        <option value="adjustment">Adjustment</option>
-        <option value="cycle-count">Cycle Count</option>
-        <option value="shipment">Shipment</option>
+        <option value="receipt">{{ i18n.t('st.receipt') }}</option>
+        <option value="putaway">{{ i18n.t('st.putaway') }}</option>
+        <option value="pick">{{ i18n.t('st.pick') }}</option>
+        <option value="adjustment">{{ i18n.t('st.adjustment') }}</option>
+        <option value="cycle-count">{{ i18n.t('st.cycle-count') }}</option>
+        <option value="shipment">{{ i18n.t('st.shipment') }}</option>
       </select>
       <span class="spacer"></span>
       <span class="muted small">{{ i18n.t('movements.count', { count: list.total() }) }}</span>
@@ -59,14 +59,14 @@
       <!-- Header stays outside the viewport so it does not scroll away. -->
       <div class="vtable" role="table" [attr.aria-rowcount]="list.total()">
         <div class="vtable__head" role="row">
-          <span role="columnheader" appSortable="at" [sort]="sort()" (sortChange)="onSort($event)">Tarih</span>
+          <span role="columnheader" appSortable="at" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.date') }}</span>
           <span role="columnheader" appSortable="skuCode" [sort]="sort()" (sortChange)="onSort($event)">SKU</span>
-          <span role="columnheader" appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">Lot</span>
-          <span role="columnheader" appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">Miktar</span>
-          <span role="columnheader">Kaynak</span>
-          <span role="columnheader">Hedef</span>
-          <span role="columnheader" appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">Tip</span>
-          <span role="columnheader" appSortable="reasonCode" [sort]="sort()" (sortChange)="onSort($event)">Referans</span>
+          <span role="columnheader" appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.lot') }}</span>
+          <span role="columnheader" appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.quantity') }}</span>
+          <span role="columnheader">{{ i18n.t('movements.source') }}</span>
+          <span role="columnheader">{{ i18n.t('movements.target') }}</span>
+          <span role="columnheader" appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('movements.type') }}</span>
+          <span role="columnheader" appSortable="reasonCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('movements.reference') }}</span>
           <span role="columnheader" appSortable="performedBy" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('audit.user') }}</span>
         </div>
 
@@ -80,7 +80,7 @@
             </span>
             <span role="cell">{{ r.fromLocation ?? '—' }}</span>
             <span role="cell">{{ r.toLocation ?? '—' }}</span>
-            <span role="cell"><span class="status-pill" [class]="typeTone(r.type)">{{ r.type }}</span></span>
+            <span role="cell"><span class="status-pill" [class]="typeTone(r.type)">{{ i18n.t('st.' + r.type) }}</span></span>
             <span role="cell">{{ r.reasonCode }}</span>
             <span role="cell">{{ r.performedBy }}</span>
           </div>

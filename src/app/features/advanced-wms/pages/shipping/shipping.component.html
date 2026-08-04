@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Shipping</h1>
+      <h1>{{ i18n.t('shipping.title') }}</h1>
       <p class="muted">{{ i18n.t('shipping.subtitle') }}</p>
     </div>
   </div>
@@ -25,14 +25,14 @@
       />
       <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
         <option value="all">{{ i18n.t('common.allStatuses') }}</option>
-        <option value="staged">Staged</option>
-        <option value="loading">Loading</option>
-        <option value="in-transit">In Transit</option>
-        <option value="delivered">Delivered</option>
-        <option value="exception">Exception</option>
+        <option value="staged">{{ i18n.t('st.staged') }}</option>
+        <option value="loading">{{ i18n.t('st.loading') }}</option>
+        <option value="in-transit">{{ i18n.t('st.in-transit') }}</option>
+        <option value="delivered">{{ i18n.t('st.delivered') }}</option>
+        <option value="exception">{{ i18n.t('st.exception') }}</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} sevkiyat</span>
+      <span class="muted small">{{ i18n.t('shipping.count', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -40,11 +40,11 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Sevkiyat</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('shipping.shipment') }}</th>
               <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
               <th appSortable="carrier" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.carrier') }}</th>
               <th appSortable="door" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('shipping.door') }}</th>
-              <th appSortable="packageCount" [sort]="sort()" (sortChange)="onSort($event)">Paket</th>
+              <th appSortable="packageCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('shipping.package') }}</th>
               <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.progress') }}</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th>{{ i18n.t('shipping.closing') }}</th>
@@ -65,7 +65,7 @@
                   </div>
                   <span class="muted small">{{ s.progressPct }}%</span>
                 </td>
-                <td><span class="status-pill" [class]="statusTone(s.status)">{{ s.status }}</span></td>
+                <td><span class="status-pill" [class]="statusTone(s.status)">{{ i18n.t('st.' + s.status) }}</span></td>
                 <td class="muted small">{{ s.closedAt ?? '—' }}</td>
                 <td class="col-detail">
                   <span class="row-detail">

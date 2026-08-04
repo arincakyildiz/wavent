@@ -85,15 +85,15 @@ export class WaveDetailComponent {
     const shortages = this.shortageCount();
     this.confirm
       .ask({
-        title: `${wave.name} yayınlansın mı?`,
+        title: this.i18n.t('waveDetail.releaseTitle', { name: wave.name }),
         message: shortages
-          ? `${wave.orderCount} siparişten ${shortages} tanesi stok yetersizliği nedeniyle dalgada kalacak. Kalanlar toplamaya açılır.`
-          : `${wave.orderCount} sipariş toplamaya açılacak. Yayınlanan dalga doğrudan değiştirilemez.`,
-        confirmLabel: 'Dalgayı yayınla',
+          ? this.i18n.t('waveDetail.releasePartialMessage', { total: wave.orderCount, short: shortages })
+          : this.i18n.t('waveDetail.releaseMessage', { total: wave.orderCount }),
+        confirmLabel: this.i18n.t('waveDetail.releaseConfirm'),
         tone: shortages ? 'danger' : 'default',
         // A publish that knowingly leaves orders behind needs a recorded justification.
         requireReason: shortages > 0,
-        reasonLabel: 'Kısmi yayın gerekçesi',
+        reasonLabel: this.i18n.t('waveDetail.partialReason'),
       })
       .subscribe((result) => {
         if (result.confirmed) this.commitRelease(wave, result.reason);
@@ -122,11 +122,17 @@ export class WaveDetailComponent {
 
         if (result.failed.length) {
           this.notifications.warning(
-            'Dalga kısmi yayınlandı',
-            `${result.released.length} sipariş açıldı, ${result.failed.length} sipariş stok nedeniyle kaldı.`,
+            this.i18n.t('waveDetail.partialToast'),
+            this.i18n.t('waveDetail.partialBody', {
+          released: result.released.length,
+          failed: result.failed.length,
+        }),
           );
         } else {
-          this.notifications.success('Dalga yayınlandı', `${result.released.length} sipariş toplamaya açıldı.`);
+          this.notifications.success(
+        this.i18n.t('waveDetail.releasedToast'),
+        this.i18n.t('waveDetail.releasedBody', { count: result.released.length }),
+      );
         }
 
         this.wavesService.getOrders(this.id).subscribe((orders) => this.orders.set(orders));
@@ -135,7 +141,7 @@ export class WaveDetailComponent {
         this.releasing.set(false);
         const conflict = isApiError(err) && err.kind === 'conflict';
         this.notifications.error(
-          conflict ? 'Dalga değişmiş' : 'Dalga yayınlanamadı',
+          conflict ? this.i18n.t('waveDetail.waveChanged') : this.i18n.t('waveDetail.releaseFailed'),
           describeError(err),
           () => this.load(),
         );

@@ -16,7 +16,7 @@
           [class.invalid]="invalid('code')"
         />
         @if (codeControl.pending) {
-          <span class="field__hint">Kod kontrol ediliyor...</span>
+          <span class="field__hint">{{ i18n.t('cycleCount.checking') }}</span>
         } @else if (invalid('code')) {
           <span class="field__error" role="alert">
             @if (codeControl.hasError('notUnique')) {
@@ -29,7 +29,7 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Depo <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('common.warehouse') }} <span class="req">*</span></span>
         <select formControlName="warehouseCode">
           @for (w of warehouses(); track w.code) {
             <option [value]="w.code">{{ w.code }} — {{ w.name }}</option>
@@ -40,7 +40,7 @@
 
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Kapsam <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('cycleCount.scope') }} <span class="req">*</span></span>
         <input
           formControlName="scopeLabel"
           type="text"
@@ -52,21 +52,21 @@
         @if (invalid('scopeLabel')) {
           <span class="field__error" role="alert">
             @if (form.controls.scopeLabel.hasError('maxlength')) {
-              En fazla {{ limits.scopeMax }} karakter girebilirsiniz.
+              {{ i18n.t('form.maxChars', { max: limits.scopeMax }) }}
             } @else {
-              En az {{ limits.scopeMin }} karakterlik bir kapsam girin.
+              {{ i18n.t('form.minCharsScope', { min: limits.scopeMin }) }}
             }
           </span>
         } @else {
           <span class="field__hint">
-            {{ limits.scopeMin }}–{{ limits.scopeMax }} karakter.
+            {{ i18n.t('form.charRange', { min: limits.scopeMin, max: limits.scopeMax }) }}
             {{ form.controls.scopeLabel.value.length }}/{{ limits.scopeMax }}
           </span>
         }
       </label>
 
       <label class="field">
-        <span class="field__label">Beklenen Miktar <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('cycleCount.expectedQuantity') }} <span class="req">*</span></span>
         <input
           formControlName="expectedQuantity"
           type="number"

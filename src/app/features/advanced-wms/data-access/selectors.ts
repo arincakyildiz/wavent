@@ -8,6 +8,7 @@ import {
   isReservable,
   serialIssues,
 } from './stock-rules';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export { checkCapacity, fefoViolation, isReservable, serialIssues };
 export type { CapacityVerdict, SerialIssue };
@@ -220,7 +221,7 @@ export function waveOrderStatuses(waveId: string): WaveOrderStatus[] {
     if (shortage) {
       const missing = allocs.find((a) => a.isBackorder) ?? allocs.find((a) => a.isPartial);
       status = 'stock-shortage';
-      reason = `${missing?.skuCode ?? 'SKU'} için yeterli stok yok`;
+      reason = translate('sel.insufficientStock', { code: missing?.skuCode ?? 'SKU' });
     } else if (wave.capacityUsedPct >= 85) {
       status = 'capacity-risk';
       reason = `Vardiya kapasitesi %${wave.capacityUsedPct} dolulukta`;
@@ -336,7 +337,7 @@ export function traceLot(lot: string): TraceEvent[] {
   push({
     at: receiptMovement?.at ?? '—',
     stage: 'Receipt',
-    description: `${line.asnNumber} üzerinden ${line.receivedQuantity} adet kabul edildi`,
+    description: translate('sel.received', { asn: line.asnNumber, qty: line.receivedQuantity }),
     referenceId: line.asnNumber,
     actor: receiptMovement?.performedBy ?? 'System',
   });
@@ -347,7 +348,7 @@ export function traceLot(lot: string): TraceEvent[] {
     push({
       at: mv?.at ?? '—',
       stage: 'Putaway',
-      description: `${pw.suggestedLocationPath} lokasyonuna yerleştirildi (skor ${pw.score})`,
+      description: translate('sel.putaway', { path: pw.suggestedLocationPath, score: pw.score }),
       referenceId: pw.id.toUpperCase(),
       actor: 'System',
     });
@@ -357,7 +358,7 @@ export function traceLot(lot: string): TraceEvent[] {
     push({
       at: '—',
       stage: 'Reservation',
-      description: `${alloc.orderNumber} için ${alloc.quantity} adet ${alloc.strategy} ile rezerve edildi`,
+      description: translate('sel.reserved', { order: alloc.orderNumber, qty: alloc.quantity, strategy: alloc.strategy }),
       referenceId: alloc.orderNumber,
       actor: 'System',
     });
@@ -369,7 +370,7 @@ export function traceLot(lot: string): TraceEvent[] {
       push({
         at: mv?.at ?? '—',
         stage: 'Pick',
-        description: `${task.code} görevinde toplandı`,
+        description: translate('sel.picked', { task: task.code }),
         referenceId: task.code,
         actor: task.assignedTo ?? 'System',
       });
@@ -380,7 +381,10 @@ export function traceLot(lot: string): TraceEvent[] {
       push({
         at: '—',
         stage: 'Pack',
-        description: `Paket içerik doğrulaması ${pkg.contentVerified ? 'tamamlandı' : 'bekliyor'} (${pkg.weightKg} kg)`,
+        description: translate('sel.packed', {
+        state: translate(pkg.contentVerified ? 'sel.packedDone' : 'sel.packedPending'),
+        weight: pkg.weightKg,
+      }),
         referenceId: pkg.code,
         actor: 'System',
       });
@@ -390,7 +394,7 @@ export function traceLot(lot: string): TraceEvent[] {
         push({
           at: shipment.closedAt ?? '—',
           stage: 'Shipment',
-          description: `${shipment.code} ile ${shipment.carrier} üzerinden sevk edildi`,
+          description: translate('sel.shipped', { code: shipment.code, carrier: shipment.carrier }),
           referenceId: shipment.code,
           actor: 'System',
         });

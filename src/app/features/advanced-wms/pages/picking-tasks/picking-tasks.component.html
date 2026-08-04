@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Picking Tasks</h1>
+      <h1>{{ i18n.t('picking.title') }}</h1>
       <p class="muted">{{ i18n.t('picking.subtitle') }}</p>
     </div>
   </div>
@@ -20,7 +20,7 @@
         <div class="kpi-card__value">{{ totals().total | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Devam Eden</div>
+        <div class="kpi-card__label">{{ i18n.t('picking.inProgress') }}</div>
         <div class="kpi-card__value">{{ totals().inProgress | number }}</div>
       </div>
       <div class="kpi-card">
@@ -40,10 +40,10 @@
       />
       <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
         <option value="all">{{ i18n.t('common.allStatuses') }}</option>
-        <option value="pending">Pending</option>
-        <option value="in-progress">In Progress</option>
-        <option value="exception">Exception</option>
-        <option value="completed">Completed</option>
+        <option value="pending">{{ i18n.t('st.pending') }}</option>
+        <option value="in-progress">{{ i18n.t('st.in-progress') }}</option>
+        <option value="exception">{{ i18n.t('st.exception') }}</option>
+        <option value="completed">{{ i18n.t('st.completed') }}</option>
       </select>
       <span class="spacer"></span>
       <span class="muted small">{{ i18n.t('picking.count', { count: list.total() }) }}</span>
@@ -55,14 +55,14 @@
           <thead>
             <tr>
               <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.task') }}</th>
-              <th appSortable="waveName" [sort]="sort()" (sortChange)="onSort($event)">Dalga</th>
-              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">Tip</th>
-              <th appSortable="assignedTo" [sort]="sort()" (sortChange)="onSort($event)">Atanan</th>
+              <th appSortable="waveName" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.wave') }}</th>
+              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.type') }}</th>
+              <th appSortable="assignedTo" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.assignee') }}</th>
               <th appSortable="locationCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.location') }}</th>
               <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.progress') }}</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th>{{ i18n.t('picking.exception') }}</th>
-              <th>Rota</th>
+              <th>{{ i18n.t('picking.route') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -70,7 +70,7 @@
               <tr>
                 <td>{{ t.code }}</td>
                 <td>{{ t.waveName }}</td>
-                <td>{{ t.type }}</td>
+                <td>{{ i18n.t('st.' + t.type) }}</td>
                 <td>{{ t.assignedTo ?? '—' }}</td>
                 <td>{{ t.locationCount }}</td>
                 <td>
@@ -79,8 +79,8 @@
                   </div>
                   <span class="muted small">{{ t.pickedLines }}/{{ t.lineCount }}</span>
                 </td>
-                <td><span class="status-pill" [class]="statusTone(t.status)">{{ t.status }}</span></td>
-                <td class="muted small">{{ t.exceptionReason ?? '—' }}</td>
+                <td><span class="status-pill" [class]="statusTone(t.status)">{{ i18n.t('st.' + t.status) }}</span></td>
+                <td class="muted small">{{ t.exceptionReason ? i18n.t(t.exceptionReason) : '—' }}</td>
                 <td>
                   <button
                     type="button"

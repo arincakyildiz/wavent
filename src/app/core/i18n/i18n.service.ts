@@ -25,6 +25,25 @@ const CATALOGS: Record<Locale, Record<string, string>> = { tr: TR, en: EN };
  * `t()` reads the locale signal, so calling it from a template registers a dependency
  * and every visible string re-renders when the language changes. No pipe required.
  */
+/**
+ * Module-level handle onto the singleton, so *pure* functions — the business rules in
+ * `selectors.ts` / `stock-rules.ts` and the service error messages — can translate
+ * without being turned into injectables. `I18nService` registers itself on construction.
+ */
+let active: I18nService | null = null;
+
+/** Translates from non-injectable code. Falls back to the Turkish catalog before boot. */
+export function translate(key: string, params?: Record<string, string | number>): string {
+  if (active) return active.t(key, params);
+
+  const text = TR[key] ?? key;
+  if (!params) return text;
+  return Object.entries(params).reduce(
+    (acc, [name, value]) => acc.split(`{${name}}`).join(String(value)),
+    text,
+  );
+}
+
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   private readonly storage = inject(LocalStorageService);
@@ -34,6 +53,10 @@ export class I18nService {
   readonly locales = LOCALES;
 
   private readonly messages = computed(() => CATALOGS[this.current()]);
+
+  constructor() {
+    active = this;
+  }
 
   /**
    * Looks up `key`, substituting `{name}` placeholders.

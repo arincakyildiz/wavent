@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Exceptions</h1>
+      <h1>{{ i18n.t('exceptions.title') }}</h1>
       <p class="muted">{{ i18n.t('exceptions.subtitle') }}</p>
     </div>
   </div>
@@ -44,12 +44,12 @@
       />
       <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
         <option value="all">{{ i18n.t('common.allStatuses') }}</option>
-        <option value="open">Open</option>
-        <option value="investigating">Investigating</option>
-        <option value="resolved">Resolved</option>
+        <option value="open">{{ i18n.t('st.open') }}</option>
+        <option value="investigating">{{ i18n.t('st.investigating') }}</option>
+        <option value="resolved">{{ i18n.t('st.resolved') }}</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} istisna</span>
+      <span class="muted small">{{ i18n.t('exceptions.count', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -59,7 +59,7 @@
             <tr>
               <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('exceptions.type') }}</th>
               <th appSortable="severity" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('exceptions.severity') }}</th>
-              <th appSortable="referenceId" [sort]="sort()" (sortChange)="onSort($event)">Referans</th>
+              <th appSortable="referenceId" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('exceptions.reference') }}</th>
               <th appSortable="owner" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.owner') }}</th>
               <th appSortable="createdAt" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('exceptions.createdAt') }}</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
@@ -77,10 +77,10 @@
                 <td>{{ e.referenceType }} · {{ e.referenceId }}</td>
                 <td>{{ e.owner ?? '—' }}</td>
                 <td class="muted small">{{ e.createdAt }}</td>
-                <td><span class="status-pill" [class]="statusTone(e.status)">{{ e.status }}</span></td>
+                <td><span class="status-pill" [class]="statusTone(e.status)">{{ i18n.t('st.' + e.status) }}</span></td>
                 <td>
                   @if (e.status === 'resolved') {
-                    <span class="muted small">{{ e.resolutionNote }}</span>
+                    <span class="muted small">{{ i18n.t(e.resolutionNote!) }}</span>
                   } @else {
                     <button
                       class="btn"

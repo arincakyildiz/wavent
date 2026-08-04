@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Putaway</h1>
+      <h1>{{ i18n.t('putaway.title') }}</h1>
       <p class="muted">{{ i18n.t('putaway.subtitle') }}</p>
     </div>
   </div>
@@ -38,7 +38,7 @@
               <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.lot') }}</th>
               <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.quantity') }}</th>
               <th appSortable="suggestedLocationPath" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('putaway.suggestedLocation') }}</th>
-              <th appSortable="score" [sort]="sort()" (sortChange)="onSort($event)">Skor</th>
+              <th appSortable="score" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('putaway.score') }}</th>
               <th>{{ i18n.t('putaway.reasons') }}</th>
               <th appSortable="accepted" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th></th>
@@ -60,12 +60,12 @@
                   }
                 </td>
                 <td><span class="status-pill" [class]="scoreTone(s.score)">{{ s.score }}</span></td>
-                <td class="muted small">{{ s.reasons.join(' · ') }}</td>
+                <td class="muted small">{{ translateAll(s.reasons) }}</td>
                 <td>
                   @if (s.accepted) {
-                    <span class="status-pill tone-success">Kabul edildi</span>
+                    <span class="status-pill tone-success">{{ i18n.t('st.accepted') }}</span>
                   } @else {
-                    <span class="status-pill tone-neutral">Bekliyor</span>
+                    <span class="status-pill tone-neutral">{{ i18n.t('common.pending') }}</span>
                   }
                 </td>
                 <td>

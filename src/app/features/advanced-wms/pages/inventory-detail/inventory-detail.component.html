@@ -3,7 +3,7 @@
     <div>
       <button class="btn" type="button" (click)="back()">
         <app-icon name="chevronLeft" [size]="14" />
-        Inventory
+        {{ i18n.t('inventory.title.short') }}
       </button>
       <h1 class="mt">{{ sku() }}</h1>
       @if (item(); as it) {
@@ -14,7 +14,7 @@
     <div class="page__actions">
       <button class="btn btn--primary" type="button" (click)="downloadPdf()">
         <app-icon name="fileText" [size]="14" />
-        PDF olarak indir
+        {{ i18n.t('common.downloadPdf') }}
       </button>
     </div>
   </div>
@@ -39,23 +39,23 @@
 
         <div class="kpi-row">
           <div class="kpi-card">
-            <div class="kpi-card__label">On-hand</div>
+            <div class="kpi-card__label">{{ i18n.t('inventory.onHand') }}</div>
             <div class="kpi-card__value">{{ it.onHand | number }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-card__label">Available</div>
+            <div class="kpi-card__label">{{ i18n.t('inventory.available') }}</div>
             <div class="kpi-card__value">{{ it.available | number }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-card__label">Reserved</div>
+            <div class="kpi-card__label">{{ i18n.t('inventory.reserved') }}</div>
             <div class="kpi-card__value">{{ it.reserved | number }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-card__label">Quarantine</div>
+            <div class="kpi-card__label">{{ i18n.t('inventory.quarantine') }}</div>
             <div class="kpi-card__value">{{ it.quarantine | number }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-card__label">Damaged</div>
+            <div class="kpi-card__label">{{ i18n.t('inventory.damaged') }}</div>
             <div class="kpi-card__value">{{ it.damaged | number }}</div>
           </div>
         </div>
@@ -69,7 +69,7 @@
                   <thead>
                     <tr>
                       <th>{{ i18n.t('common.lot') }}</th>
-                      <th>Seri</th>
+                      <th>{{ i18n.t('common.serial') }}</th>
                       <th>{{ i18n.t('common.location') }}</th>
                       <th>{{ i18n.t('common.quantity') }}</th>
                       <th>{{ i18n.t('common.status') }}</th>
@@ -96,7 +96,7 @@
           </div>
 
           <div class="panel">
-            <h2>Stok Hareketleri (Ledger)</h2>
+            <h2>{{ i18n.t('inventory.ledger') }}</h2>
             <app-inventory-ledger [entries]="ledger()" />
           </div>
         </div>

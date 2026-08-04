@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { WaveStatus } from '../models/entities';
 import { WaveRec, db } from './mock-data';
 import { WaveOrderStatus, waveOrderStatuses } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export type { WaveOrderStatus };
 
@@ -80,7 +81,7 @@ export class WavesService {
     const found = db.waves.find((w) => w.id === id);
     return this.api.simulate(found, { delayMs: 280 }).pipe(
       map((w) => {
-        if (!w) throw new ApiError('not-found', 'Dalga bulunamadı.');
+        if (!w) throw new ApiError('not-found', translate('svc.waveNotFound'));
         return toRow(w);
       }),
     );
@@ -99,7 +100,7 @@ export class WavesService {
     return this.api.simulate(draft, { delayMs: 520, kind: 'write' }).pipe(
       map((d) => {
         if (db.waves.some((w) => w.name.toLowerCase() === d.name.toLowerCase())) {
-          throw new ApiError('conflict', `${d.name} adlı bir dalga zaten var.`);
+          throw new ApiError('conflict', translate('svc.waveNameTaken', { name: d.name }));
         }
 
         // Only unwaved, allocated orders of the right warehouse/priority are eligible.
@@ -115,7 +116,7 @@ export class WavesService {
           .slice(0, d.maxOrders);
 
         if (!candidates.length) {
-          throw new ApiError('validation', 'Bu kurala uyan, dalgaya alınmamış sipariş bulunamadı.');
+          throw new ApiError('validation', translate('svc.noMatchingOrders'));
         }
 
         const record: WaveRec = {
@@ -145,9 +146,9 @@ export class WavesService {
     return this.api.simulate(id, { delayMs: 620, kind: 'write' }).pipe(
       map(() => {
         const record = db.waves.find((w) => w.id === id);
-        if (!record) throw new ApiError('not-found', 'Dalga bulunamadı.');
+        if (!record) throw new ApiError('not-found', translate('svc.waveNotFound'));
         if (record.status !== 'planned' && record.status !== 'draft') {
-          throw new ApiError('validation', 'Yalnızca draft veya planned dalgalar yayınlanabilir.');
+          throw new ApiError('validation', translate('svc.onlyDraftRelease'));
         }
 
         this.api.assertVersion(expectedVersion, record.version);
@@ -159,7 +160,7 @@ export class WavesService {
         const released = statuses.filter((s) => s.status !== 'stock-shortage').map((s) => s.orderNumber);
 
         if (!released.length) {
-          throw new ApiError('validation', 'Hiçbir sipariş yayınlanamadı: tümünde stok yetersiz.');
+          throw new ApiError('validation', translate('svc.noOrderReleased'));
         }
 
         record.status = 'released';

@@ -4,6 +4,7 @@ import { MockApiService } from '../../../core/api/mock-api.service';
 import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { ExceptionRec, db } from './mock-data';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface ExceptionRow extends ExceptionRec {}
 
@@ -61,15 +62,15 @@ export class ExceptionsService {
     return this.api.simulate(id, { delayMs: 460, kind: 'write' }).pipe(
       map(() => {
         const record = db.exceptions.find((e) => e.id === id);
-        if (!record) throw new ApiError('not-found', 'İstisna bulunamadı.');
+        if (!record) throw new ApiError('not-found', translate('svc.exceptionNotFound'));
 
         this.api.assertVersion(expectedVersion, record.version);
 
         if (record.status === 'resolved') {
-          throw new ApiError('validation', 'Bu istisna zaten çözülmüş.');
+          throw new ApiError('validation', translate('svc.exceptionResolved'));
         }
         if (note.trim().length < 6) {
-          throw new ApiError('validation', 'Çözüm gerekçesi en az 6 karakter olmalıdır.');
+          throw new ApiError('validation', translate('svc.resolutionTooShort'));
         }
 
         record.status = 'resolved';
@@ -89,32 +90,49 @@ export class ExceptionsService {
     if (!record) return this.api.simulate<ExceptionEvidence[]>([], { delayMs: 200 });
 
     const out: ExceptionEvidence[] = [
-      { label: 'Referans', value: `${record.referenceType} · ${record.referenceId}` },
-      { label: 'Açılış', value: record.createdAt },
-      { label: 'Depo', value: record.warehouseCode },
+      { label: translate('evidence.reference'), value: `${record.referenceType} · ${record.referenceId}` },
+      { label: translate('evidence.openedAt'), value: record.createdAt },
+      { label: translate('common.warehouse'), value: record.warehouseCode },
     ];
 
     const task = db.pickTasks.find((t) => t.code === record.referenceId);
     if (task) {
       out.push(
-        { label: 'Görev ilerlemesi', value: `${task.pickedLines}/${task.lineCount} satır` },
-        { label: 'Rota', value: task.route.join(' → '), hint: `${task.route.length} durak` },
-        { label: 'Atanan operatör', value: task.assignedTo ?? 'Atanmadı' },
+        {
+          label: translate('evidence.taskProgress'),
+          value: translate('evidence.lines', { picked: task.pickedLines, total: task.lineCount }),
+        },
+        {
+          label: translate('evidence.route'),
+          value: task.route.join(' → '),
+          hint: translate('evidence.stops', { count: task.route.length }),
+        },
+        {
+          label: translate('evidence.assignedOperator'),
+          value: task.assignedTo ?? translate('evidence.unassigned'),
+        },
       );
     }
 
     const pkg = db.packages.find((p) => p.code === record.referenceId);
     if (pkg) {
       out.push(
-        { label: 'Paket ağırlığı', value: `${pkg.weightKg} kg`, hint: `beklenen ${pkg.expectedWeightKg} kg` },
-        { label: 'İçerik doğrulama', value: pkg.contentVerified ? 'Tamamlandı' : 'Bekliyor' },
+        {
+          label: translate('evidence.packageWeight'),
+          value: `${pkg.weightKg} kg`,
+          hint: translate('evidence.expectedWeight', { weight: pkg.expectedWeightKg }),
+        },
+        {
+          label: translate('evidence.contentCheck'),
+          value: translate(pkg.contentVerified ? 'evidence.done' : 'common.pending'),
+        },
       );
     }
 
     const movement = db.movements.find((m) => m.reasonCode === record.referenceId);
     if (movement) {
       out.push({
-        label: 'Son stok hareketi',
+        label: translate('evidence.lastMovement'),
         value: `${movement.type} · ${movement.quantity}`,
         hint: movement.at,
       });
@@ -128,15 +146,15 @@ export class ExceptionsService {
     return this.api.simulate(id, { delayMs: 420, kind: 'write' }).pipe(
       map(() => {
         const record = db.exceptions.find((e) => e.id === id);
-        if (!record) throw new ApiError('not-found', 'İstisna bulunamadı.');
+        if (!record) throw new ApiError('not-found', translate('svc.exceptionNotFound'));
 
         this.api.assertVersion(expectedVersion, record.version);
 
         if (record.status === 'resolved') {
-          throw new ApiError('validation', 'Çözülmüş bir istisna yeniden atanamaz.');
+          throw new ApiError('validation', translate('svc.resolvedCannotReassign'));
         }
         if (!EXCEPTION_OWNERS.includes(owner)) {
-          throw new ApiError('validation', 'Geçersiz operatör seçildi.');
+          throw new ApiError('validation', translate('svc.invalidOperator'));
         }
 
         record.owner = owner;

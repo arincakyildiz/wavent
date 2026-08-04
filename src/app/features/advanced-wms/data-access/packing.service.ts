@@ -5,6 +5,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { PackageRec, db } from './mock-data';
 import { withinWeightTolerance } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface PackageRow extends PackageRec {
   weightOk: boolean;
@@ -53,15 +54,15 @@ export class PackingService {
     return this.api.simulate(id, { delayMs: 420, kind: 'write' }).pipe(
       map(() => {
         const record = db.packages.find((p) => p.id === id);
-        if (!record) throw new ApiError('not-found', 'Paket bulunamadı.');
+        if (!record) throw new ApiError('not-found', translate('svc.packageNotFound'));
 
         this.api.assertVersion(expectedVersion, record.version);
 
         if (record.status === 'shipped') {
-          throw new ApiError('validation', 'Sevk edilmiş paket yeniden tartılamaz.');
+          throw new ApiError('validation', translate('svc.shippedCannotReweigh'));
         }
         if (!Number.isFinite(weightKg) || weightKg <= 0) {
-          throw new ApiError('validation', 'Geçersiz tartı okuması.');
+          throw new ApiError('validation', translate('svc.invalidScaleReading'));
         }
 
         record.weightKg = Math.round(weightKg * 10) / 10;
@@ -82,15 +83,15 @@ export class PackingService {
     return this.api.simulate(id, { delayMs: 480, kind: 'write' }).pipe(
       map(() => {
         const record = db.packages.find((p) => p.id === id);
-        if (!record) throw new ApiError('not-found', 'Paket bulunamadı.');
+        if (!record) throw new ApiError('not-found', translate('svc.packageNotFound'));
 
         this.api.assertVersion(expectedVersion, record.version);
 
         if (withinWeightTolerance(record)) {
-          throw new ApiError('validation', 'Paket tolerans içinde; supervisor onayı gerekmiyor.');
+          throw new ApiError('validation', translate('svc.withinTolerance'));
         }
         if (!reason.trim()) {
-          throw new ApiError('validation', 'Supervisor onayı için gerekçe zorunludur.');
+          throw new ApiError('validation', translate('svc.approvalReasonRequired'));
         }
 
         // Accepting the deviation means the recorded expectation moves to the actual.

@@ -611,7 +611,7 @@ function buildAllocations(
           strategy,
           isPartial: false,
           isBackorder: false,
-          overrideReason: violatedLot ? 'Müşteri talebiyle daha yeni lot kullanıldı' : undefined,
+          overrideReason: violatedLot ? 'seed.override.newerLot' : undefined,
           version: 1,
         });
       }
@@ -732,10 +732,10 @@ function buildPickTasks(waves: WaveRec[], orders: OrderRec[], locations: Locatio
               : 'in-progress',
         exceptionReason: isException
           ? pick([
-              'Yanlış barkod okundu',
-              'Kısa toplama: rezervasyon aşıldı',
-              'Ürün hasarlı bulundu',
-              'Lokasyon boş çıktı',
+              'seed.exception.wrongBarcode',
+              'seed.exception.shortPick',
+              'seed.exception.damaged',
+              'seed.exception.emptyLocation',
             ])
           : undefined,
       });
@@ -896,9 +896,9 @@ function buildAsns(skus: SkuRec[]): { asns: AsnRec[]; lines: ReceiptLineRec[]; p
           suggestedLocationPath: `${sku.storageClass === 'hazmat' ? 'HZ' : sku.storageClass === 'frozen' ? 'F' : sku.storageClass === 'chilled' ? 'C' : 'A'}/${String(int(1, 3)).padStart(2, '0')}/${String(int(1, 4)).padStart(2, '0')}`,
           score,
           reasons: [
-            `${sku.storageClass} sınıfı uygun`,
-            score > 85 ? 'Boş kapasite yeterli' : `Kapasite %${int(70, 92)} dolulukta`,
-            sku.shelfLifeDays ? 'FEFO sırası uygun' : 'Yüksek erişilebilirlik',
+            'seed.putaway.classOk',
+            score > 85 ? 'seed.putaway.capacityOk' : 'seed.putaway.capacityTight',
+            sku.shelfLifeDays ? 'seed.putaway.fefoOk' : 'seed.putaway.accessibility',
           ],
           accepted: status === 'closed' && chance(0.7),
           version: 1,
@@ -927,7 +927,7 @@ function buildCycleCounts(locations: LocationRec[], skus: SkuRec[]): CycleCountR
       id: `cc-${i + 1}`,
       code: `CC-${110 + i}`,
       warehouseCode: wh.code,
-      scopeLabel: byLocation && bins.length ? `${pick(bins).path} bölgesi` : pick(skus).code,
+      scopeLabel: byLocation && bins.length ? pick(bins).path : pick(skus).code,
       expectedQuantity: expected,
       countedQuantity: status === 'scheduled' ? expected : counted,
       status,
@@ -966,7 +966,7 @@ function buildExceptions(
       owner: chance(0.75) ? pick(OPERATORS) : undefined,
       status: resolved ? 'resolved' : chance(0.5) ? 'investigating' : 'open',
       createdAt: stamp(new Date(BASE_DATE.getTime() - minutesAgo * 60_000)),
-      resolutionNote: resolved ? 'Kontrol edildi, kayıt düzeltildi' : undefined,
+      resolutionNote: resolved ? 'seed.resolution.corrected' : undefined,
       version: 1,
     });
   };

@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Control Tower</h1>
+      <h1>{{ i18n.t('tower.title') }}</h1>
       <p class="muted">{{ i18n.t('tower.subtitle') }}</p>
     </div>
 
@@ -15,7 +15,7 @@
       </button>
       <button class="btn" type="button" (click)="load()">
         <app-icon name="refresh" [size]="14" />
-        Yenile
+        {{ i18n.t('common.refresh') }}
       </button>
     </div>
   </div>
@@ -68,7 +68,7 @@
                       <div class="muted small">{{ a.detail }}</div>
                     </div>
                     <button class="link-action" type="button" (click)="goTo(a.link)">
-                      Git
+                      {{ i18n.t('tower.go') }}
                       <app-icon name="arrowRight" [size]="13" />
                     </button>
                   </li>
@@ -92,7 +92,7 @@
                     <option [value]="t">{{ toneLabel(t) }}</option>
                   }
                 </select>
-                <span class="muted small">son {{ eventCount() }} olay</span>
+                <span class="muted small">{{ i18n.t('tower.lastEvents', { count: eventCount() }) }}</span>
               </div>
             </div>
             @if (visibleEvents().length) {

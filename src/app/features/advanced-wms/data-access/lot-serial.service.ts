@@ -13,6 +13,7 @@ import {
   serialIntegrityIssues,
   serialIsAvailable,
 } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export type { LotHealth, LotRow, SerialIssue };
 
@@ -73,21 +74,21 @@ export class LotSerialService {
         const serial = draft.serial.trim();
         const sku = db.skus.find((s) => s.code === draft.skuCode);
 
-        if (!sku) throw new ApiError('validation', 'Ürün bulunamadı.');
+        if (!sku) throw new ApiError('validation', translate('svc.skuNotFound'));
         if (!sku.serialTracked) {
-          throw new ApiError('validation', `${sku.code} seri takipli bir ürün değil.`);
+          throw new ApiError('validation', translate('svc.notSerialTracked', { code: sku.code }));
         }
-        if (!serial) throw new ApiError('validation', 'Seri numarası zorunludur.');
+        if (!serial) throw new ApiError('validation', translate('svc.serialRequired'));
 
         // Re-check against live data: the form validated an earlier snapshot.
         if (!serialIsAvailable(draft.skuCode, serial)) {
-          throw new ApiError('conflict', `${serial} bu ürün için zaten kayıtlı.`);
+          throw new ApiError('conflict', translate('svc.serialTaken', { serial }));
         }
 
         const location = db.locations.find(
           (l) => l.warehouseCode === draft.warehouseCode && l.path === draft.locationPath,
         );
-        if (!location) throw new ApiError('validation', 'Lokasyon bulunamadı.');
+        if (!location) throw new ApiError('validation', translate('svc.locationNotFound'));
 
         const record: BalanceRec = {
           id: `bal-serial-${db.balances.length + 1}`,
@@ -103,7 +104,7 @@ export class LotSerialService {
         db.balances.push(record);
 
         const row = lotRows([draft.warehouseCode]).find((r) => r.id === record.id);
-        if (!row) throw new ApiError('validation', 'Kayıt oluşturuldu ancak okunamadı.');
+        if (!row) throw new ApiError('validation', translate('svc.createdNotReadable'));
         return row;
       }),
     );

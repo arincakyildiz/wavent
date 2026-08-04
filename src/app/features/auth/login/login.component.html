@@ -16,9 +16,9 @@
             <app-icon [name]="roleIcon(r.value)" [size]="20" />
           </span>
           <span class="role-card__body">
-            <span class="role-card__label">{{ r.label }}</span>
-            <span class="role-card__desc">{{ r.description }}</span>
-            <span class="status-pill tone-neutral">{{ permissionCount(r.value) }} izin</span>
+            <span class="role-card__label">{{ i18n.t('role.' + r.value) }}</span>
+            <span class="role-card__desc">{{ i18n.t('role.' + r.value + '.desc') }}</span>
+            <span class="status-pill tone-neutral">{{ i18n.t('login.permissionCount', { count: permissionCount(r.value) }) }}</span>
           </span>
         </button>
       }

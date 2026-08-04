@@ -20,7 +20,7 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Seri No <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('serial.number') }} <span class="req">*</span></span>
         <input
           formControlName="serial"
           type="text"
@@ -39,14 +39,14 @@
             } @else if (serialControl.hasError('serialPattern')) {
               {{ i18n.t('serial.format') }}
             } @else if (serialControl.hasError('maxlength')) {
-              En fazla 40 karakter olabilir.
+              {{ i18n.t('serial.maxLength') }}
             } @else if (serialControl.hasError('notUnique')) {
               {{ i18n.t('serial.taken') }}
             }
           </span>
         } @else {
           <span class="field__hint">
-            4–40 karakter; harf, rakam ve tire.
+            {{ i18n.t('serial.hint') }}
             {{ serialControl.value.length }}/40
           </span>
         }
@@ -55,7 +55,7 @@
 
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Depo <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('common.warehouse') }} <span class="req">*</span></span>
         <select
           formControlName="warehouseCode"
           (change)="onWarehouse($any($event.target).value)"
@@ -68,7 +68,7 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Lokasyon <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('common.location') }} <span class="req">*</span></span>
         <select formControlName="locationPath" [class.invalid]="invalid('locationPath')">
           @if (!locationPaths().length) {
             <option value="">{{ i18n.t('serial.locationLoading') }}</option>
@@ -85,7 +85,7 @@
 
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Lot (opsiyonel)</span>
+        <span class="field__label">{{ i18n.t('serial.lotOptional') }}</span>
         <input
           formControlName="lot"
           type="text"

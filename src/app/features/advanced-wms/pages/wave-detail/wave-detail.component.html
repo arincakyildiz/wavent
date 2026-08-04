@@ -3,7 +3,7 @@
     <div>
       <button class="btn" type="button" (click)="back()">
         <app-icon name="chevronLeft" [size]="14" />
-        Waves
+        {{ i18n.t('waves.title') }}
       </button>
       @if (wave(); as w) {
         <h1 class="mt">{{ w.name }}</h1>
@@ -15,10 +15,10 @@
 
     @if (wave(); as w) {
       <div class="header-actions">
-        <span class="status-pill" [class]="statusTone(w.status)">{{ w.status }}</span>
+        <span class="status-pill" [class]="statusTone(w.status)">{{ i18n.t('st.' + w.status) }}</span>
         <button class="btn btn--primary" type="button" (click)="downloadPdf()">
           <app-icon name="fileText" [size]="14" />
-          PDF olarak indir
+          {{ i18n.t('common.downloadPdf') }}
         </button>
         @if (canRelease()) {
           <button
@@ -61,7 +61,7 @@
             <div class="kpi-card__value">{{ riskyCount() }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-card__label">Stok Yetersiz</div>
+            <div class="kpi-card__label">{{ i18n.t('st.short') }}</div>
             <div class="kpi-card__value">{{ shortageCount() }}</div>
           </div>
         </div>
@@ -97,10 +97,10 @@
                   <tr>
                     <th>{{ i18n.t('common.order') }}</th>
                     <th>{{ i18n.t('waveDetail.priority') }}</th>
-                    <th>Rota</th>
+                    <th>{{ i18n.t('waveDetail.route') }}</th>
                     <th>{{ i18n.t('waveDetail.lines') }}</th>
                     <th>{{ i18n.t('common.status') }}</th>
-                    <th>Neden</th>
+                    <th>{{ i18n.t('waveDetail.reason') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -110,7 +110,7 @@
                       <td>{{ o.priority }}</td>
                       <td>{{ o.route }}</td>
                       <td>{{ o.lineCount }}</td>
-                      <td><span class="status-pill" [class]="orderTone(o.status)">{{ o.status }}</span></td>
+                      <td><span class="status-pill" [class]="orderTone(o.status)">{{ i18n.t('st.' + o.status) }}</span></td>
                       <td class="muted small">{{ o.reason ?? '—' }}</td>
                     </tr>
                   }

@@ -5,6 +5,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { ASNStatus, ReceiptLineStatus } from '../models/entities';
 import { AsnRec, ReceiptLineRec, db } from './mock-data';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface AsnRow {
   id: string;
@@ -68,7 +69,7 @@ export class ReceivingService {
     const found = db.asns.find((a) => a.id === id || a.number === id);
     return this.api.simulate(found, { delayMs: 280 }).pipe(
       map((a) => {
-        if (!a) throw new ApiError('not-found', 'ASN bulunamadı.');
+        if (!a) throw new ApiError('not-found', translate('svc.asnNotFound'));
         return toRow(a);
       }),
     );
@@ -95,7 +96,7 @@ export class ReceivingService {
     return this.api.simulate(draft, { delayMs: 500, kind: 'write' }).pipe(
       map((d) => {
         if (db.asns.some((a) => a.number.toLowerCase() === d.number.toLowerCase())) {
-          throw new ApiError('conflict', `${d.number} numarası zaten kayıtlı.`);
+          throw new ApiError('conflict', translate('svc.asnNumberTaken', { number: d.number }));
         }
         const record: AsnRec = {
           id: `asn-${db.asns.length + 1}`,

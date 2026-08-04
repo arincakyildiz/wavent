@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { I18nService } from './i18n.service';
 import { EN } from './locales/en';
 import { TR } from './locales/tr';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 /**
  * The catalogs are the only thing standing between "translated" and "half
@@ -76,5 +77,33 @@ describe('I18nService', () => {
   it('records the locale on the document so screen readers follow it', () => {
     service.set('en');
     expect(document.documentElement.getAttribute('lang')).toBe('en');
+  });
+});
+
+/**
+ * The switch has to repaint live text, not just change what `t()` returns — signal reads
+ * inside a template are what make that true, so this asserts it against a real render.
+ */
+describe('locale switching in a template', () => {
+  it('repaints rendered strings when the language changes', async () => {
+    await TestBed.configureTestingModule({ imports: [PaginationComponent] }).compileComponents();
+
+    const fixture = TestBed.createComponent(PaginationComponent);
+    const i18n = TestBed.inject(I18nService);
+    i18n.set('tr');
+    fixture.componentRef.setInput('page', 1);
+    fixture.componentRef.setInput('totalPages', 3);
+    fixture.componentRef.setInput('total', 42);
+    fixture.componentRef.setInput('pageSize', 20);
+    fixture.detectChanges();
+
+    const text = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text()).toContain('Sayfa başına');
+
+    i18n.set('en');
+    fixture.detectChanges();
+
+    expect(text()).toContain('Per page');
+    expect(text()).not.toContain('Sayfa başına');
   });
 });

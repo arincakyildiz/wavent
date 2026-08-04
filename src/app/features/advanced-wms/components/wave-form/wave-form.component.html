@@ -17,27 +17,27 @@
           [attr.aria-invalid]="invalid('name')"
         />
         @if (nameControl.pending) {
-          <span class="field__hint">Ad kontrol ediliyor...</span>
+          <span class="field__hint">{{ i18n.t('waveForm.checking') }}</span>
         } @else if (invalid('name')) {
           <span class="field__error" role="alert">
             @if (nameControl.hasError('notUnique')) {
-              Bu adda bir dalga zaten var.
+              {{ i18n.t('waveForm.nameTaken') }}
             } @else if (nameControl.hasError('maxlength')) {
-              En fazla {{ limits.nameMax }} karakter girebilirsiniz.
+              {{ i18n.t('form.maxChars', { max: limits.nameMax }) }}
             } @else {
-              En az {{ limits.nameMin }} karakterlik bir ad girin.
+              {{ i18n.t('form.minCharsName', { min: limits.nameMin }) }}
             }
           </span>
         } @else {
           <span class="field__hint">
-            {{ limits.nameMin }}–{{ limits.nameMax }} karakter.
+            {{ i18n.t('form.charRange', { min: limits.nameMin, max: limits.nameMax }) }}
             {{ nameControl.value.length }}/{{ limits.nameMax }}
           </span>
         }
       </label>
 
       <label class="field">
-        <span class="field__label">Depo <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('common.warehouse') }} <span class="req">*</span></span>
         <select formControlName="warehouseCode">
           @for (w of warehouses(); track w.code) {
             <option [value]="w.code">{{ w.code }} — {{ w.name }}</option>
@@ -66,7 +66,7 @@
       </label>
 
       <label class="field">
-        <span class="field__label">Cut-off <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('waveForm.cutOff') }} <span class="req">*</span></span>
         <input formControlName="cutOffTime" type="time" [class.invalid]="invalid('cutOffTime')" />
         @if (form.controls.cutOffTime.hasError('cutOffRunway')) {
           <span class="field__error" role="alert">
@@ -111,7 +111,7 @@
         @if (invalid('maxOrders')) {
           <span class="field__error" role="alert">
             {{ i18n.t('waveForm.ordersMaxError', { max: limits.ordersMax }) }}
-            (en az {{ limits.ordersMin }}).
+            {{ i18n.t('form.atLeast', { min: limits.ordersMin }) }}
           </span>
         } @else {
           <span class="field__hint">

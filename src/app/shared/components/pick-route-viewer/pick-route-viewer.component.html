@@ -11,7 +11,7 @@
   </div>
 
   @if (task().exceptionReason) {
-    <div class="route__exception" role="alert">{{ task().exceptionReason }}</div>
+    <div class="route__exception" role="alert">{{ i18n.t(task().exceptionReason!) }}</div>
   }
 
   @if (stops().length) {

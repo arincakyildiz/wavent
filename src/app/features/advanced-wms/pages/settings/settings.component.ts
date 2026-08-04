@@ -12,9 +12,8 @@ import { VARIANCE_THRESHOLD_PCT } from '../../data-access/selectors';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 
 interface RuleToggle {
+  /** Catalog key stem — label and description come from `rule.<key>` / `rule.<key>.desc`. */
   key: string;
-  label: string;
-  description: string;
   enabled: boolean;
 }
 
@@ -41,12 +40,12 @@ export class SettingsComponent {
   readonly roles = ROLE_CATALOG;
 
   readonly rules = signal<RuleToggle[]>([
-    { key: 'fefo', label: 'FEFO zorunluluğu', description: 'Daha erken SKT’li uygun lot varken sonraki lot seçilemez; override gerekçesi ister.', enabled: true },
-    { key: 'capacity', label: 'Kapasite kontrolü', description: 'Lokasyon kapasitesini aşan putaway işlemi onay ister.', enabled: true },
-    { key: 'weight', label: 'Ağırlık toleransı onayı', description: 'Tolerans dışı paket supervisor onayı olmadan devam edemez.', enabled: true },
-    { key: 'secondCount', label: 'İkinci sayım zorunluluğu', description: 'Sayım farkı eşiği aşıldığında ikinci sayım açılır.', enabled: true },
-    { key: 'audit', label: 'Audit event üretimi', description: 'Her override, yayınlama, onay ve oluşturma audit event üretir.', enabled: true },
-    { key: 'optimistic', label: 'Optimistic update', description: 'Putaway kabulü anında yansıtılır; hata halinde geri alınır ve bildirilir.', enabled: true },
+    { key: 'fefo', enabled: true },
+    { key: 'capacity', enabled: true },
+    { key: 'weight', enabled: true },
+    { key: 'secondCount', enabled: true },
+    { key: 'audit', enabled: true },
+    { key: 'optimistic', enabled: true },
   ]);
 
   readonly varianceThreshold = signal(VARIANCE_THRESHOLD_PCT);
@@ -109,14 +108,14 @@ export class SettingsComponent {
   armFailure(kind: ApiErrorKind): void {
     this.faults.armNextFailure(kind);
     this.notifications.info(
-      'Sonraki istek başarısız olacak',
-      `Bir sonraki servis çağrısı "${kind}" hatasıyla dönecek.`,
+      this.i18n.t('settings.armedTitle'),
+      this.i18n.t('settings.armedBody', { kind }),
     );
   }
 
   resetFaults(): void {
     this.faults.reset();
-    this.notifications.success('Hata simülasyonu sıfırlandı');
+    this.notifications.success(this.i18n.t('settings.faultsReset'));
   }
 
   private flagSaved(): void {

@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Reservations</h1>
+      <h1>{{ i18n.t('reservations.title') }}</h1>
       <p class="muted">{{ i18n.t('reservations.subtitle') }}</p>
     </div>
   </div>
@@ -16,7 +16,7 @@
   } @else {
     <div class="kpi-row">
       <div class="kpi-card">
-        <div class="kpi-card__label">Toplam Rezervasyon</div>
+        <div class="kpi-card__label">{{ i18n.t('reservations.total') }}</div>
         <div class="kpi-card__value">{{ totals().total | number }}</div>
       </div>
       <div class="kpi-card">
@@ -24,11 +24,11 @@
         <div class="kpi-card__value">{{ totals().partial | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Backorder</div>
+        <div class="kpi-card__label">{{ i18n.t('reservations.backorder') }}</div>
         <div class="kpi-card__value">{{ totals().backorder | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Manuel Override</div>
+        <div class="kpi-card__label">{{ i18n.t('reservations.manualOverride') }}</div>
         <div class="kpi-card__value">{{ totals().overrides | number }}</div>
       </div>
     </div>
@@ -44,9 +44,9 @@
       />
       <select [value]="filter()" (change)="onFilter($any($event.target).value)" [attr.aria-label]="i18n.t('reservations.fulfilmentFilter')">
         <option value="all">{{ i18n.t('common.all') }}</option>
-        <option value="full">Tam</option>
-        <option value="partial">{{ i18n.t('reservations.partial') }}</option>
-        <option value="backorder">Backorder</option>
+        <option value="full">{{ i18n.t('st.fulfil.full') }}</option>
+        <option value="partial">{{ i18n.t('st.fulfil.partial') }}</option>
+        <option value="backorder">{{ i18n.t('st.fulfil.backorder') }}</option>
       </select>
       <span class="spacer"></span>
       <span class="muted small">{{ i18n.t('reservations.count', { count: list.total() }) }}</span>
@@ -61,9 +61,9 @@
               <th appSortable="sku" [sort]="sort()" (sortChange)="onSort($event)">SKU</th>
               <th appSortable="lot" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.lot') }}</th>
               <th>{{ i18n.t('common.location') }}</th>
-              <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">Rezerve</th>
-              <th appSortable="requested" [sort]="sort()" (sortChange)="onSort($event)">Talep</th>
-              <th appSortable="strategy" [sort]="sort()" (sortChange)="onSort($event)">Strateji</th>
+              <th appSortable="quantity" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('reservations.reserved') }}</th>
+              <th appSortable="requested" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('reservations.requested') }}</th>
+              <th appSortable="strategy" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('reservations.strategy') }}</th>
               <th appSortable="fulfilment" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th>{{ i18n.t('reservations.reason') }}</th>
               <th *appHasPermission="'reservation.override'">{{ i18n.t('reservations.action') }}</th>
@@ -78,13 +78,13 @@
                 <td>{{ r.warehouseCode }} · {{ r.locationPath }}</td>
                 <td>{{ r.quantity | number }}</td>
                 <td>{{ r.requested | number }}</td>
-                <td><span class="status-pill tone-info">{{ r.strategy }}</span></td>
+                <td><span class="status-pill tone-info">{{ i18n.t('st.' + r.strategy) }}</span></td>
                 <td>
                   <span class="status-pill" [class]="fulfilmentTone(r.fulfilment)">
                     {{ fulfilmentLabel(r.fulfilment) }}
                   </span>
                 </td>
-                <td class="muted small">{{ r.overrideReason ?? '—' }}</td>
+                <td class="muted small">{{ r.overrideReason ? i18n.t(r.overrideReason) : '—' }}</td>
                 <td *appHasPermission="'reservation.override'">
                   <button
                     type="button"

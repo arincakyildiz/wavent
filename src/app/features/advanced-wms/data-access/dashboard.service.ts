@@ -6,6 +6,7 @@ import { BarDatum } from '../../../shared/components/bar-chart/bar-chart.compone
 import { MapMarker } from '../../../shared/components/world-map/world-map.component';
 import { db } from './mock-data';
 import { inventoryByWarehouse, networkTotals } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export type Tone = 'info' | 'success' | 'warning' | 'danger' | 'violet' | 'neutral';
 
@@ -13,9 +14,9 @@ export type Tone = 'info' | 'success' | 'warning' | 'danger' | 'violet' | 'neutr
 export type Period = 'today' | '7d' | '30d';
 
 export const PERIOD_LABELS: Record<Period, string> = {
-  today: 'Bugün',
-  '7d': 'Son 7 gün',
-  '30d': 'Son 30 gün',
+  today: translate('period.today'),
+  '7d': translate('period.7d'),
+  '30d': translate('period.30d'),
 };
 
 export interface KpiCard {
@@ -195,7 +196,7 @@ export class DashboardService {
         {
           label: 'Total Inventory',
           value: fmt(totals.onHand),
-          hint: `${period === 'today' ? '+2.45% vs yesterday' : `+${(4 + points * 0.3).toFixed(2)}% vs önceki dönem`}`,
+          hint: `${period === 'today' ? '+2.45% vs yesterday' : translate('dashboard.vsPrevious', { pct: (4 + points * 0.3).toFixed(2) })}`,
           trend: 'up',
           icon: 'boxes',
           tone: 'info',
@@ -365,7 +366,7 @@ export class DashboardService {
     if (wave) {
       items.push({
         title: `${wave.name} published`,
-        timestamp: `${wave.orderNumbers.length} sipariş · ${wave.carrier}`,
+        timestamp: translate('dashboard.orderCount', { count: wave.orderNumbers.length, carrier: wave.carrier }),
         icon: 'checkCircle',
         tone: 'success',
       });
@@ -375,7 +376,7 @@ export class DashboardService {
     if (task) {
       items.push({
         title: `Picking task ${task.code} completed`,
-        timestamp: `${task.lineCount} satır · ${task.assignedTo ?? 'System'}`,
+        timestamp: translate('dashboard.lineCount', { count: task.lineCount, owner: task.assignedTo ?? 'System' }),
         icon: 'target',
         tone: 'info',
       });

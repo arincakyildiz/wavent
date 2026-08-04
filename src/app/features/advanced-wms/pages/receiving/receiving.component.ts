@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuditService } from '../../../../core/observability/audit.service';
 import { NotificationService } from '../../../../core/observability/notification.service';
@@ -21,7 +20,6 @@ const DEFAULT_PAGE_SIZE = 20;
 @Component({
   selector: 'app-receiving',
   imports: [
-    DecimalPipe,
     IconComponent,
     SortableDirective, PaginationComponent,
     ActivatableDirective,
@@ -101,7 +99,7 @@ export class ReceivingComponent {
       targetId: asn.number,
       newValue: `${asn.supplierName} · ${asn.expectedDate}`,
     });
-    this.notifications.success('ASN oluşturuldu', `${asn.number} — ${asn.supplierName}`);
+    this.notifications.success(this.i18n.t('receiving.created'), `${asn.number} — ${asn.supplierName}`);
     this.list.reload();
   }
 

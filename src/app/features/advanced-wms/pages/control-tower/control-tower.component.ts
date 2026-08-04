@@ -7,7 +7,7 @@ import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { bindQueryParams } from '../../../../shared/utils/query-params';
-import { ControlTowerService, TowerEvent, TowerSnapshot } from '../../data-access/control-tower.service';
+import { ControlTowerService, TowerEvent, TowerSnapshot , EventKind} from '../../data-access/control-tower.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type LoadState = 'loading' | 'success' | 'error';
@@ -47,14 +47,7 @@ export class ControlTowerComponent {
   readonly eventCount = computed(() => this.visibleEvents().length);
 
   toneLabel(tone: ToneFilter): string {
-    const label: Record<ToneFilter, string> = {
-      all: 'Tüm olaylar',
-      success: 'Tamamlanan',
-      info: 'Bilgi',
-      warning: 'Uyarı',
-      danger: 'Kritik',
-    };
-    return label[tone];
+    return this.i18n.t(`tower.tone.${tone}`);
   }
 
   private streamSub: Subscription | null = null;
@@ -144,15 +137,15 @@ export class ControlTowerComponent {
     const current = this.snapshot();
     if (!current) return;
 
-    const deltas: Record<string, Partial<Record<string, number>>> = {
-      'Toplama tamamlandı': { Reserved: -6, 'On Hand': -6 },
-      'Kabul satırı işlendi': { 'On Hand': 12, Available: 12 },
-      'Rezervasyon oluşturuldu': { Available: -4, Reserved: 4 },
-      'Sevkiyat yüklemesi başladı': { 'In Transit': 8 },
-      'İstisna açıldı': { Damaged: 1 },
+    const deltas: Partial<Record<EventKind, Partial<Record<string, number>>>> = {
+      pickCompleted: { Reserved: -6, 'On Hand': -6 },
+      receiptLine: { 'On Hand': 12, Available: 12 },
+      reservationCreated: { Available: -4, Reserved: 4 },
+      loadingStarted: { 'In Transit': 8 },
+      exceptionOpened: { Damaged: 1 },
     };
 
-    const delta = deltas[event.label];
+    const delta = deltas[event.kind];
     if (!delta) return;
 
     this.snapshot.set({

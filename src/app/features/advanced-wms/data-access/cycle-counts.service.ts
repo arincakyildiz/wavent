@@ -5,6 +5,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { CycleCountRec, db } from './mock-data';
 import { VARIANCE_THRESHOLD_PCT, requiresSecondCount, variancePct } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface CycleCountRow extends CycleCountRec {
   variance: number;
@@ -63,7 +64,7 @@ export class CycleCountsService {
     return this.api.simulate(draft, { delayMs: 480, kind: 'write' }).pipe(
       map((d) => {
         if (db.cycleCounts.some((c) => c.code.toLowerCase() === d.code.toLowerCase())) {
-          throw new ApiError('conflict', `${d.code} kodu zaten kullanılıyor.`);
+          throw new ApiError('conflict', translate('svc.codeTaken', { code: d.code }));
         }
         const record: CycleCountRec = {
           id: `cc-${db.cycleCounts.length + 1}`,

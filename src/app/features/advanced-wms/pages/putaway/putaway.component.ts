@@ -24,6 +24,11 @@ const DEFAULT_PAGE_SIZE = 20;
   styleUrl: './putaway.component.scss',
 })
 export class PutawayComponent {
+  /** Seeded reasons are catalog keys; joined for the table cell. */
+  translateAll(keys: string[]): string {
+    return keys.map((k) => this.i18n.t(k)).join(' · ');
+  }
+
   readonly i18n = inject(I18nService);
   private readonly putawayService = inject(PutawayService);
   private readonly scope = inject(WarehouseScopeService);
@@ -95,8 +100,8 @@ export class PutawayComponent {
 
     if (!match) {
       this.notifications.error(
-        'Barkod eşleşmedi',
-        `"${code}" bekleyen bir putaway önerisiyle eşleşmiyor.`,
+        this.i18n.t('putaway.barcodeMismatch'),
+        this.i18n.t('putaway.barcodeMismatchBody', { code }),
       );
       this.audit.record({
         actionType: 'Putaway Barcode Mismatch',
@@ -115,12 +120,12 @@ export class PutawayComponent {
     if (!row.capacityOk) {
       this.confirm
         .ask({
-          title: 'Kapasite aşımı',
-          message: `${row.suggestedLocationPath} bu miktar için yetersiz görünüyor. Yine de kabul etmek istiyor musunuz?`,
-          confirmLabel: 'Gerekçeyle kabul et',
+          title: this.i18n.t('putaway.capacityTitle'),
+          message: this.i18n.t('putaway.capacityMessage', { path: row.suggestedLocationPath }),
+          confirmLabel: this.i18n.t('putaway.capacityConfirm'),
           tone: 'danger',
           requireReason: true,
-          reasonLabel: 'Override gerekçesi',
+          reasonLabel: this.i18n.t('common.overrideReason'),
         })
         .subscribe((result) => {
           if (result.confirmed) this.commit(row, result.reason);
@@ -171,7 +176,7 @@ export class PutawayComponent {
 
         const conflict = isApiError(err) && err.kind === 'conflict';
         this.notifications.error(
-          conflict ? 'Kayıt değişmiş' : 'Putaway kabul edilemedi',
+          conflict ? this.i18n.t('common.recordChanged') : this.i18n.t('putaway.acceptFailed'),
           describeError(err),
           conflict ? () => this.list.reload() : () => this.commit(row, reason),
         );

@@ -5,6 +5,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { WarehouseRec, db } from './mock-data';
 import { inventoryByWarehouse, locationCount, warehouseCapacityPct } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface WarehouseSummary {
   id: string;
@@ -95,7 +96,7 @@ export class WarehousesService {
         map((d) => {
           // Server-side re-check: the async validator can go stale between blur and submit.
           if (db.warehouses.some((w) => w.code.toLowerCase() === d.code.toLowerCase())) {
-            throw new ApiError('conflict', `${d.code} kodu başka bir depo tarafından kullanılıyor.`);
+            throw new ApiError('conflict', translate('svc.warehouseCodeTaken', { code: d.code }));
           }
 
           const record: WarehouseRec = {

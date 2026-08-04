@@ -1,14 +1,14 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Waves</h1>
+      <h1>{{ i18n.t('waves.title') }}</h1>
       <p class="muted">{{ i18n.t('waves.subtitle') }}</p>
     </div>
 
     <div class="page__actions">
       <button class="btn btn--primary" type="button" (click)="formOpen.set(true)" *appHasPermission="'wave.create'">
         <app-icon name="plus" [size]="15" />
-        Create Wave
+        {{ i18n.t('waves.create') }}
       </button>
     </div>
   </div>
@@ -32,11 +32,11 @@
       />
       <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
         <option value="all">{{ i18n.t('common.allStatuses') }}</option>
-        <option value="draft">Draft</option>
-        <option value="planned">Planned</option>
-        <option value="released">Released</option>
-        <option value="completed">Completed</option>
-        <option value="cancelled">Cancelled</option>
+        <option value="draft">{{ i18n.t('st.draft') }}</option>
+        <option value="planned">{{ i18n.t('st.planned') }}</option>
+        <option value="released">{{ i18n.t('st.released') }}</option>
+        <option value="completed">{{ i18n.t('st.completed') }}</option>
+        <option value="cancelled">{{ i18n.t('st.cancelled') }}</option>
       </select>
       <span class="spacer"></span>
       <div class="view-toggle" role="group" [attr.aria-label]="i18n.t('locations.view')">
@@ -47,7 +47,7 @@
           [attr.aria-pressed]="view() === 'table'"
           (click)="setView('table')"
         >
-          Tablo
+          {{ i18n.t('waves.viewTable') }}
         </button>
         <button
           type="button"
@@ -56,10 +56,10 @@
           [attr.aria-pressed]="view() === 'board'"
           (click)="setView('board')"
         >
-          Kapasite Panosu
+          {{ i18n.t('waves.viewBoard') }}
         </button>
       </div>
-      <span class="muted small">{{ list.total() | number }} dalga</span>
+      <span class="muted small">{{ i18n.t('waves.count', { count: list.total() }) }}</span>
     </div>
 
     @if (view() === 'board') {
@@ -74,14 +74,14 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">Dalga</th>
+              <th appSortable="name" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('waves.wave') }}</th>
               <th appSortable="warehouseCode" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.warehouse') }}</th>
               <th appSortable="zone" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('waves.zone') }}</th>
               <th appSortable="carrier" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.carrier') }}</th>
-              <th appSortable="cutOffTime" [sort]="sort()" (sortChange)="onSort($event)">Cut-off</th>
+              <th appSortable="cutOffTime" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('waves.cutOff') }}</th>
               <th appSortable="orderCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.order') }}</th>
-              <th appSortable="riskCount" [sort]="sort()" (sortChange)="onSort($event)">Risk</th>
-              <th appSortable="capacityUsedPct" [sort]="sort()" (sortChange)="onSort($event)">Kapasite</th>
+              <th appSortable="riskCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('waves.risk') }}</th>
+              <th appSortable="capacityUsedPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('waves.capacity') }}</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th class="col-detail">{{ i18n.t('common.detail') }}</th>
             </tr>
@@ -108,7 +108,7 @@
                   </div>
                   <span class="muted small">{{ w.capacityUsedPct }}%</span>
                 </td>
-                <td><span class="status-pill" [class]="statusTone(w.status)">{{ w.status }}</span></td>
+                <td><span class="status-pill" [class]="statusTone(w.status)">{{ i18n.t('st.' + w.status) }}</span></td>
                 <td class="col-detail">
                   <span class="row-detail">
                     <span class="row-detail__text">{{ i18n.t('common.detail') }}</span>

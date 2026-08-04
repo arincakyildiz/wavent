@@ -25,10 +25,10 @@
       />
       <select [value]="classFilter()" (change)="onClass($any($event.target).value)" [attr.aria-label]="i18n.t('locations.classFilter')">
         <option value="all">{{ i18n.t('locations.allClasses') }}</option>
-        <option value="ambient">Ambient</option>
-        <option value="chilled">Chilled</option>
-        <option value="frozen">Frozen</option>
-        <option value="hazmat">Hazmat</option>
+        <option value="ambient">{{ i18n.t('st.ambient') }}</option>
+        <option value="chilled">{{ i18n.t('st.chilled') }}</option>
+        <option value="frozen">{{ i18n.t('st.frozen') }}</option>
+        <option value="hazmat">{{ i18n.t('st.hazmat') }}</option>
       </select>
       <span class="spacer"></span>
       <div class="view-toggle" role="group" [attr.aria-label]="i18n.t('locations.view')">

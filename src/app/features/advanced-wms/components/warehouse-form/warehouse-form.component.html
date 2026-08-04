@@ -6,7 +6,7 @@
   <form [formGroup]="form" (ngSubmit)="submit()" class="form">
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Depo Kodu <span class="req">*</span></span>
+        <span class="field__label">{{ i18n.t('warehouseForm.code') }} <span class="req">*</span></span>
         <input
           formControlName="code"
           type="text"
@@ -17,7 +17,7 @@
           [attr.aria-invalid]="invalid('code')"
         />
         @if (codeControl.pending) {
-          <span class="field__hint">Kod kontrol ediliyor...</span>
+          <span class="field__hint">{{ i18n.t('warehouseForm.checking') }}</span>
         } @else if (invalid('code')) {
           <span class="field__error" role="alert">
             @if (codeControl.hasError('required')) {
@@ -47,14 +47,14 @@
         @if (invalid('name')) {
           <span class="field__error" role="alert">
             @if (form.controls.name.hasError('maxlength')) {
-              En fazla {{ limits.nameMax }} karakter girebilirsiniz.
+              {{ i18n.t('form.maxChars', { max: limits.nameMax }) }}
             } @else {
-              En az {{ limits.nameMin }} karakterlik bir ad girin.
+              {{ i18n.t('form.minCharsName', { min: limits.nameMin }) }}
             }
           </span>
         } @else {
           <span class="field__hint">
-            {{ limits.nameMin }}–{{ limits.nameMax }} karakter.
+            {{ i18n.t('form.charRange', { min: limits.nameMin, max: limits.nameMax }) }}
             {{ form.controls.name.value.length }}/{{ limits.nameMax }}
           </span>
         }
@@ -68,13 +68,13 @@
         @if (invalid('city')) {
           <span class="field__error" role="alert">
             @if (form.controls.city.hasError('maxlength')) {
-              En fazla {{ limits.cityMax }} karakter girebilirsiniz.
+              {{ i18n.t('form.maxChars', { max: limits.cityMax }) }}
             } @else {
               {{ i18n.t('warehouseForm.cityRequired') }}
             }
           </span>
         } @else {
-          <span class="field__hint">En fazla {{ limits.cityMax }} karakter.</span>
+          <span class="field__hint">{{ i18n.t('form.maxCharsHint', { max: limits.cityMax }) }}</span>
         }
       </label>
 
@@ -84,20 +84,20 @@
         @if (invalid('country')) {
           <span class="field__error" role="alert">
             @if (form.controls.country.hasError('maxlength')) {
-              En fazla {{ limits.countryMax }} karakter girebilirsiniz.
+              {{ i18n.t('form.maxChars', { max: limits.countryMax }) }}
             } @else {
               {{ i18n.t('warehouseForm.countryRequired') }}
             }
           </span>
         } @else {
-          <span class="field__hint">En fazla {{ limits.countryMax }} karakter.</span>
+          <span class="field__hint">{{ i18n.t('form.maxCharsHint', { max: limits.countryMax }) }}</span>
         }
       </label>
     </div>
 
     <div class="form__row">
       <label class="field">
-        <span class="field__label">Saat Dilimi</span>
+        <span class="field__label">{{ i18n.t('warehouseForm.timezone') }}</span>
         <select formControlName="timezone">
           @for (tz of timezones; track tz) {
             <option [value]="tz">{{ tz }}</option>

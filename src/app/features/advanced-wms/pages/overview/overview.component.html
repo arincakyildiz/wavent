@@ -1,8 +1,8 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Overview</h1>
-      <p class="muted">Real-time warehouse control tower · {{ scopeLabel() }}</p>
+      <h1>{{ i18n.t('overview.title') }}</h1>
+      <p class="muted">{{ i18n.t('overview.subtitle') }} {{ scopeLabel() }}</p>
     </div>
 
     <div class="page__actions">
@@ -13,7 +13,7 @@
           [disabled]="!canChooseScope()"
           [attr.aria-label]="i18n.t('overview.scopeAria')"
         >
-          <option value="all">All Warehouses</option>
+          <option value="all">{{ i18n.t('nav.allWarehouses') }}</option>
           @for (w of warehouses(); track w.code) {
             <option [value]="w.code">{{ w.name }}</option>
           }
@@ -32,7 +32,7 @@
 
       <button class="btn btn--primary" type="button" (click)="go('/wms/waves')">
         <app-icon name="plus" [size]="15" />
-        New Wave
+        {{ i18n.t('overview.newWave') }}
       </button>
 
       <button class="btn" type="button" (click)="reload()" aria-label="Yenile">
@@ -91,22 +91,22 @@
     <div class="row row--main">
       <section class="panel">
         <div class="panel__head">
-          <h2>Inventory by Warehouse</h2>
+          <h2>{{ i18n.t('overview.inventoryByWarehouse') }}</h2>
           <button class="link-action" type="button" (click)="go('/wms/warehouses')">
-            View all
+            {{ i18n.t('overview.viewAll') }}
             <app-icon name="arrowRight" [size]="13" />
           </button>
         </div>
         @if (data.mapPoints.length) {
           <app-world-map [points]="data.mapPoints" />
         } @else {
-          <div class="state state--empty">Bu kapsamda envanter yok.</div>
+          <div class="state state--empty">{{ i18n.t('overview.noInventory') }}</div>
         }
       </section>
 
       <section class="panel panel--wave">
         <div class="panel__head">
-          <h2>Wave Overview</h2>
+          <h2>{{ i18n.t('overview.waveOverview') }}</h2>
         </div>
         <div class="wave">
           <app-donut-chart [segments]="data.waveSegments" [size]="132" centerLabel="Total Waves" />
@@ -121,16 +121,16 @@
           </ul>
         </div>
         <button class="link-action wave__link" type="button" (click)="go('/wms/waves')">
-          View all waves
+          {{ i18n.t('overview.viewAllWaves') }}
           <app-icon name="arrowRight" [size]="13" />
         </button>
       </section>
 
       <section class="panel">
         <div class="panel__head">
-          <h2>Exceptions</h2>
+          <h2>{{ i18n.t('overview.exceptions') }}</h2>
           <button class="link-action" type="button" (click)="go('/wms/exceptions')">
-            View all
+            {{ i18n.t('overview.viewAll') }}
             <app-icon name="arrowRight" [size]="13" />
           </button>
         </div>
@@ -159,7 +159,7 @@
     <div class="row row--secondary">
       <section class="panel">
         <div class="panel__head">
-          <h2>Operations Timeline</h2>
+          <h2>{{ i18n.t('overview.timeline') }}</h2>
         </div>
         @if (data.timeline.length) {
           <ul class="feed feed--timeline">
@@ -176,15 +176,15 @@
             }
           </ul>
         } @else {
-          <div class="state state--empty">Bu kapsamda olay yok.</div>
+          <div class="state state--empty">{{ i18n.t('overview.noEvents') }}</div>
         }
       </section>
 
       <section class="panel">
         <div class="panel__head">
-          <h2>Task Performance</h2>
+          <h2>{{ i18n.t('overview.taskPerformance') }}</h2>
           <button class="link-action" type="button" (click)="go('/wms/picking/tasks')">
-            View report
+            {{ i18n.t('overview.viewReport') }}
             <app-icon name="arrowRight" [size]="13" />
           </button>
         </div>
@@ -211,9 +211,9 @@
 
       <section class="panel">
         <div class="panel__head">
-          <h2>Shipments</h2>
+          <h2>{{ i18n.t('overview.shipments') }}</h2>
           <button class="link-action" type="button" (click)="go('/wms/shipping')">
-            View all
+            {{ i18n.t('overview.viewAll') }}
             <app-icon name="arrowRight" [size]="13" />
           </button>
         </div>
@@ -222,10 +222,10 @@
             <table class="data-table table-flush">
               <thead>
                 <tr>
-                  <th>Shipment</th>
-                  <th>Carrier</th>
-                  <th>Status</th>
-                  <th>Progress</th>
+                  <th>{{ i18n.t('overview.shipment') }}</th>
+                  <th>{{ i18n.t('common.carrier') }}</th>
+                  <th>{{ i18n.t('common.status') }}</th>
+                  <th>{{ i18n.t('common.progress') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,7 +248,7 @@
             </table>
           </div>
         } @else {
-          <div class="state state--empty">Bu kapsamda sevkiyat yok.</div>
+          <div class="state state--empty">{{ i18n.t('overview.noShipments') }}</div>
         }
       </section>
     </div>
@@ -276,9 +276,9 @@
     <div class="live-bar">
       <span class="live-bar__pill">
         <span class="live-bar__dot"></span>
-        Live
+        {{ i18n.t('overview.live') }}
       </span>
-      <span class="muted small">Last updated: {{ clock() }}</span>
+      <span class="muted small">{{ i18n.t('overview.lastUpdated') }} {{ clock() }}</span>
       <button class="icon-action" type="button" (click)="reload()" aria-label="Yenile">
         <app-icon name="refresh" [size]="14" />
       </button>

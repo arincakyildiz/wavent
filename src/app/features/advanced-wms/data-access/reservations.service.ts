@@ -5,6 +5,7 @@ import { MockApiService } from '../../../core/api/mock-api.service';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { AllocationRec, BalanceRec, db } from './mock-data';
 import { fefoViolation, isReservable } from './stock-rules';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface ReservationRow {
   id: string;
@@ -157,7 +158,7 @@ export class ReservationsService {
     return this.api.simulate(id, { delayMs: 520, kind: 'write' }).pipe(
       map(() => {
         const alloc = db.allocations.find((a) => a.id === id);
-        if (!alloc) throw new ApiError('not-found', 'Rezervasyon bulunamadı.');
+        if (!alloc) throw new ApiError('not-found', translate('svc.reservationNotFound'));
 
         this.api.assertVersion(expectedVersion, alloc.version);
 
@@ -165,7 +166,7 @@ export class ReservationsService {
           (b) => b.lot === target.lot && b.locationPath === target.locationPath,
         );
         if (!balance) {
-          throw new ApiError('validation', 'Seçilen lot bu depoda rezerve edilebilir durumda değil.');
+          throw new ApiError('validation', translate('svc.lotNotReservable'));
         }
 
         // The quantity half of §11: someone else may have taken this lot since the
@@ -174,7 +175,11 @@ export class ReservationsService {
         if (free < alloc.quantity) {
           throw new ApiError(
             'conflict',
-            `${target.lot ?? target.locationPath} için yalnızca ${free} adet boşta; ${alloc.quantity} adet gerekiyor.`,
+            translate('svc.notEnoughFree', {
+        target: target.lot ?? target.locationPath,
+        free,
+        needed: alloc.quantity,
+      }),
             alloc.version,
           );
         }

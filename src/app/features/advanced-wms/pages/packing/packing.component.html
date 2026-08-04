@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page__header">
     <div>
-      <h1>Packing</h1>
+      <h1>{{ i18n.t('packing.title') }}</h1>
       <p class="muted">{{ i18n.t('packing.subtitle') }}</p>
     </div>
   </div>
@@ -25,13 +25,13 @@
       />
       <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
         <option value="all">{{ i18n.t('common.allStatuses') }}</option>
-        <option value="open">Open</option>
-        <option value="sealed">Sealed</option>
-        <option value="weight-hold">Weight Hold</option>
-        <option value="shipped">Shipped</option>
+        <option value="open">{{ i18n.t('st.open') }}</option>
+        <option value="sealed">{{ i18n.t('st.sealed') }}</option>
+        <option value="weight-hold">{{ i18n.t('st.weight-hold') }}</option>
+        <option value="shipped">{{ i18n.t('st.shipped') }}</option>
       </select>
       <span class="spacer"></span>
-      <span class="muted small">{{ list.total() | number }} paket</span>
+      <span class="muted small">{{ i18n.t('packing.count', { count: list.total() }) }}</span>
     </div>
 
     @if (list.rows().length) {
@@ -39,11 +39,11 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">Paket</th>
+              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('packing.package') }}</th>
               <th appSortable="orderNumber" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.order') }}</th>
               <th appSortable="itemCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.product') }}</th>
               <th appSortable="weightKg" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('packing.weight') }}</th>
-              <th appSortable="deviationKg" [sort]="sort()" (sortChange)="onSort($event)">Sapma</th>
+              <th appSortable="deviationKg" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('packing.deviation') }}</th>
               <th appSortable="contentVerified" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('packing.content') }}</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
               <th></th>
@@ -69,10 +69,10 @@
                   @if (p.contentVerified) {
                     <span class="status-pill tone-success">{{ i18n.t('common.verified') }}</span>
                   } @else {
-                    <span class="status-pill tone-warning">Bekliyor</span>
+                    <span class="status-pill tone-warning">{{ i18n.t('common.pending') }}</span>
                   }
                 </td>
-                <td><span class="status-pill" [class]="statusTone(p.status)">{{ p.status }}</span></td>
+                <td><span class="status-pill" [class]="statusTone(p.status)">{{ i18n.t('st.' + p.status) }}</span></td>
                 <td class="packing__actions">
                   @if (p.status !== 'shipped') {
                     <button

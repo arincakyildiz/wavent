@@ -126,7 +126,7 @@ export class ExceptionsComponent {
       },
       error: () => {
         this.evidenceLoading.set(false);
-        this.notifications.error('Kanıt kayıtları yüklenemedi');
+        this.notifications.error(this.i18n.t('exceptions.evidenceLoadFailed'));
       },
     });
   }
@@ -148,14 +148,14 @@ export class ExceptionsComponent {
           newValue: owner,
         });
 
-        this.notifications.success('İstisna yeniden atandı', `${updated.referenceId} → ${owner}`);
+        this.notifications.success(this.i18n.t('exceptions.reassigned'), `${updated.referenceId} → ${owner}`);
         this.list.reload();
       },
       error: (err) => {
         this.pendingId.set(null);
         const conflict = isApiError(err) && err.kind === 'conflict';
         this.notifications.error(
-          conflict ? 'Kayıt değişmiş' : 'İstisna atanamadı',
+          conflict ? this.i18n.t('common.recordChanged') : this.i18n.t('exceptions.assignFailed'),
           describeError(err),
           () => this.list.reload(),
         );
@@ -171,11 +171,15 @@ export class ExceptionsComponent {
   resolve(row: ExceptionRow): void {
     this.confirm
       .ask({
-        title: 'İstisnayı çöz',
-        message: `${row.type} · ${row.referenceType} ${row.referenceId}. Çözüm gerekçesi audit kaydına işlenir.`,
-        confirmLabel: 'Çözüldü olarak işaretle',
+        title: this.i18n.t('exceptions.resolveTitle'),
+        message: this.i18n.t('exceptions.resolveMessage', {
+        type: row.type,
+        refType: row.referenceType,
+        refId: row.referenceId,
+      }),
+        confirmLabel: this.i18n.t('exceptions.resolveConfirm'),
         requireReason: true,
-        reasonLabel: 'Çözüm gerekçesi',
+        reasonLabel: this.i18n.t('exceptions.resolveReason'),
       })
       .subscribe((result) => {
         if (result.confirmed) this.commitResolve(row, result.reason ?? '');
@@ -196,14 +200,14 @@ export class ExceptionsComponent {
           newValue: 'resolved',
           reason: note,
         });
-        this.notifications.success('İstisna çözüldü', `${updated.type} · ${updated.referenceId}`);
+        this.notifications.success(this.i18n.t('exceptions.resolvedToast'), `${updated.type} · ${updated.referenceId}`);
         this.list.reload();
       },
       error: (err) => {
         this.pendingId.set(null);
         const conflict = isApiError(err) && err.kind === 'conflict';
         this.notifications.error(
-          conflict ? 'Kayıt değişmiş' : 'İstisna çözülemedi',
+          conflict ? this.i18n.t('common.recordChanged') : this.i18n.t('exceptions.resolveFailed'),
           describeError(err),
           conflict ? () => this.list.reload() : () => this.commitResolve(row, note),
         );

@@ -4,6 +4,7 @@ import { MockApiService } from '../../../core/api/mock-api.service';
 import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { PackageRec, ShipmentRec, db } from './mock-data';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface ShipmentRow extends ShipmentRec {
   packageCount: number;
@@ -43,7 +44,7 @@ export class ShippingService {
     const found = db.shipments.find((s) => s.id === id || s.code === id);
     return this.api.simulate(found, { delayMs: 280 }).pipe(
       map((s) => {
-        if (!s) throw new ApiError('not-found', 'Sevkiyat bulunamadı.');
+        if (!s) throw new ApiError('not-found', translate('svc.shipmentNotFound'));
         return toRow(s);
       }),
     );

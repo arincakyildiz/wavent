@@ -99,6 +99,18 @@ satırları Enter/Space ile açılır, diyaloglar odağı içeri alır, bildirim
 **Paylaşılabilir görünüm** — liste ekranlarındaki arama/filtre/sayfa durumu URL query
 parametrelerinde tutulur.
 
+**Çift dil (TR / EN)** — sol menünün altındaki TR/EN düğmesi dili sayfa yenilemeden değiştirir ve
+seçim `localStorage`'da saklanır. Angular'ın yerleşik i18n'i derleme zamanlıdır (her dil için ayrı
+bundle) ve yeniden yüklemeden geçiş yapamaz; bu yüzden çeviri sinyal tabanlı bir servistir
+(`core/i18n`). `i18n.t()` şablondan çağrıldığında locale sinyalini okur, dolayısıyla dil
+değiştiğinde ekrandaki her metin kendiliğinden yeniden çizilir — pipe gerekmez.
+
+Ekrana çıkan metinlerin tamamı (başlıklar, sütunlar, durum etiketleri, form doğrulama mesajları,
+servis hataları, iş kuralı ihlalleri, bildirimler ve onay diyalogları) katalogdan gelir. İki
+katalog `i18n.spec.ts` ile kilitlidir: bir dile eklenip diğerine eklenmeyen anahtar, boş çeviri,
+uyuşmayan `{placeholder}` veya İngilizce katalogda kalmış Türkçe karakter testi düşürür. Ayrı bir
+test, dili değiştirdiğinde gerçekten render edilmiş metnin değiştiğini doğrular.
+
 ## Ekranlar
 
 `/wms` altında, tamamı lazy-loaded ve izin guard'lı:
@@ -161,6 +173,7 @@ ekranda kullanılır; bunlara ek olarak tartı simülasyonu için `ScaleInput` (
   `BarcodeInput` (yinelenen okumaları yutar, eşleşmeyen barkod istisna üretir), tartı Packing'de
   `ScaleInput` (load cell oturma süresi, kalibrasyon sapması; kararsız okuma kaydedilemez),
   gerçek zamanlı görev olayları Control Tower'da RxJS akışı.
+- Demo kullanıcı adları ve şehir/depo adları veri olarak sabittir; dil değişiminde çevrilmez.
 - Offline desteği **okuma yönlüdür**: IndexedDB'deki anlık görüntü, servis hata verdiğinde
   Overview'de "çevrimdışı veri" etiketiyle gösterilir. Çevrimdışıyken yapılan yazmaların
   kuyruklanıp bağlantı gelince gönderilmesi (background sync) uygulanmadı.

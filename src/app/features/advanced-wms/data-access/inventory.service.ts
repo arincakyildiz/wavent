@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { StockStatus } from '../models/entities';
 import { db } from './mock-data';
 import { SkuStock, balancesInScope, skuStock, skuStockFor } from './selectors';
+import { translate } from '../../../core/i18n/i18n.service';
 
 export interface InventoryRow extends SkuStock {}
 
@@ -52,7 +53,7 @@ export class InventoryService {
   getBySku(skuCode: string, scope: string[]): Observable<InventoryRow> {
     return this.api.simulate(skuStockFor(skuCode, scope), { delayMs: 300 }).pipe(
       map((row) => {
-        if (!row) throw new ApiError('not-found', `${skuCode} için stok kaydı bulunamadı.`);
+        if (!row) throw new ApiError('not-found', translate('svc.stockNotFound', { code: skuCode }));
         return row;
       }),
     );
