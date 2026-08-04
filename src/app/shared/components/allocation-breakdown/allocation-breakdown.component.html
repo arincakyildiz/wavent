@@ -17,7 +17,7 @@
       <div>
         <dt>{{ i18n.t('allocation.covered') }}</dt>
         <dd>
-          {{ line().quantity | number }} / {{ line().requested | number }}
+          {{ i18n.n(line().quantity) }} / {{ i18n.n(line().requested) }}
           <span class="muted small">(%{{ coveragePct() }})</span>
         </dd>
       </div>

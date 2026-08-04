@@ -16,9 +16,9 @@
             <td>{{ e.date }}</td>
             <td>{{ e.type }}</td>
             <td [class]="e.quantity < 0 ? 'negative' : 'positive'">
-              {{ e.quantity > 0 ? '+' : '' }}{{ e.quantity | number }}
+              {{ e.quantity > 0 ? '+' : '' }}{{ i18n.n(e.quantity) }}
             </td>
-            <td class="ledger__balance">{{ e.runningBalance | number }}</td>
+            <td class="ledger__balance">{{ i18n.n(e.runningBalance) }}</td>
             <td class="muted small">{{ e.reasonCode }}</td>
           </tr>
         }

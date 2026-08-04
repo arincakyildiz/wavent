@@ -111,6 +111,11 @@ katalog `i18n.spec.ts` ile kilitlidir: bir dile eklenip diğerine eklenmeyen ana
 uyuşmayan `{placeholder}` veya İngilizce katalogda kalmış Türkçe karakter testi düşürür. Ayrı bir
 test, dili değiştirdiğinde gerçekten render edilmiş metnin değiştiğini doğrular.
 
+Sayı ve tarih biçimi de dile bağlıdır: Angular'ın `DecimalPipe`/`DatePipe`'ı bootstrap'ta sabitlenen
+`LOCALE_ID`'yi okur ve çalışma anında değişemez, bu yüzden `i18n.n()` / `i18n.d()` kullanılır —
+`Intl` üzerinden biçimlendirir ve locale sinyalini okuduğu için hücre dil değişince yeniden çizilir
+(TR `1.234.567`, EN `1,234,567`).
+
 ## Ekranlar
 
 `/wms` altında, tamamı lazy-loaded ve izin guard'lı:

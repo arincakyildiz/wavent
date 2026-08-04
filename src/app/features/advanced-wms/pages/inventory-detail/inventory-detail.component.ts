@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
@@ -19,7 +18,7 @@ type LoadState = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-inventory-detail',
-  imports: [DecimalPipe, IconComponent, InventoryLedgerComponent],
+  imports: [IconComponent, InventoryLedgerComponent],
   templateUrl: './inventory-detail.component.html',
   styleUrl: './inventory-detail.component.scss',
 })

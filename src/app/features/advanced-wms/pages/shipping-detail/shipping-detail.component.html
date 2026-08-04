@@ -37,11 +37,11 @@
         <div class="kpi-row">
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('shippingDetail.package') }}</div>
-            <div class="kpi-card__value">{{ s.packageCount | number }}</div>
+            <div class="kpi-card__value">{{ i18n.n(s.packageCount) }}</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('shippingDetail.totalWeight') }}</div>
-            <div class="kpi-card__value">{{ totalWeight() | number: '1.1-1' }} kg</div>
+            <div class="kpi-card__value">{{ i18n.n(totalWeight(), 1) }} kg</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('shippingDetail.contentVerified') }}</div>
@@ -114,8 +114,8 @@
                       <td>{{ p.code }}</td>
                       <td>{{ p.orderNumber }}</td>
                       <td>{{ p.skuSummary }}</td>
-                      <td>{{ p.weightKg | number: '1.1-1' }} kg</td>
-                      <td>{{ p.expectedWeightKg | number: '1.1-1' }} kg</td>
+                      <td>{{ i18n.n(p.weightKg, 1) }} kg</td>
+                      <td>{{ i18n.n(p.expectedWeightKg, 1) }} kg</td>
                       <td>
                         @if (p.weightKg - p.expectedWeightKg > p.toleranceKg || p.expectedWeightKg - p.weightKg > p.toleranceKg) {
                           <span class="status-pill tone-danger">{{ i18n.t('shippingDetail.outside') }}</span>

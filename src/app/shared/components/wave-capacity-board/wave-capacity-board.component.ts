@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, input, inject } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
@@ -35,7 +34,7 @@ const OVER_CAPACITY_PCT = 90;
 
 @Component({
   selector: 'app-wave-capacity-board',
-  imports: [DecimalPipe],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './wave-capacity-board.component.html',
   styleUrl: './wave-capacity-board.component.scss',

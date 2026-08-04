@@ -36,21 +36,21 @@
       <div class="kpi-row">
         <div class="kpi-card">
           <div class="kpi-card__label">{{ i18n.t('receivingDetail.expected') }}</div>
-          <div class="kpi-card__value">{{ expectedTotal() | number }}</div>
+          <div class="kpi-card__value">{{ i18n.n(expectedTotal()) }}</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card__label">{{ i18n.t('receivingDetail.received') }}</div>
-          <div class="kpi-card__value">{{ receivedTotal() | number }}</div>
+          <div class="kpi-card__value">{{ i18n.n(receivedTotal()) }}</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card__label">{{ i18n.t('receivingDetail.variance') }}</div>
           <div class="kpi-card__value" [class]="receivedTotal() - expectedTotal() < 0 ? 'negative' : ''">
-            {{ receivedTotal() - expectedTotal() | number }}
+            {{ i18n.n(receivedTotal() - expectedTotal()) }}
           </div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card__label">{{ i18n.t('receivingDetail.damaged') }}</div>
-          <div class="kpi-card__value">{{ damagedTotal() | number }}</div>
+          <div class="kpi-card__value">{{ i18n.n(damagedTotal()) }}</div>
         </div>
       </div>
 
@@ -76,9 +76,9 @@
                     <td>{{ l.skuCode }}</td>
                     <td>{{ l.skuName }}</td>
                     <td>{{ l.lot ?? '—' }}</td>
-                    <td>{{ l.expectedQuantity | number }}</td>
-                    <td>{{ l.receivedQuantity | number }}</td>
-                    <td>{{ l.damagedQuantity | number }}</td>
+                    <td>{{ i18n.n(l.expectedQuantity) }}</td>
+                    <td>{{ i18n.n(l.receivedQuantity) }}</td>
+                    <td>{{ i18n.n(l.damagedQuantity) }}</td>
                     <td><span class="status-pill" [class]="lineTone(l.status)">{{ i18n.t('st.' + l.status) }}</span></td>
                   </tr>
                 }

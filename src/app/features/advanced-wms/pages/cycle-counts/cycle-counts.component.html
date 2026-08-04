@@ -63,10 +63,10 @@
                 <td>{{ r.code }}</td>
                 <td>{{ r.warehouseCode }}</td>
                 <td>{{ r.scopeLabel }}</td>
-                <td>{{ r.expectedQuantity | number }}</td>
-                <td>{{ r.countedQuantity | number }}</td>
+                <td>{{ i18n.n(r.expectedQuantity) }}</td>
+                <td>{{ i18n.n(r.countedQuantity) }}</td>
                 <td [class]="r.variance < 0 ? 'negative' : r.variance > 0 ? 'positive' : ''">
-                  {{ r.variance > 0 ? '+' : '' }}{{ r.variance | number }}
+                  {{ r.variance > 0 ? '+' : '' }}{{ i18n.n(r.variance) }}
                 </td>
                 <td>{{ r.variancePct }}%</td>
                 <td>

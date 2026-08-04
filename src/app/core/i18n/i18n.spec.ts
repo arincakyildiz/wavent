@@ -85,6 +85,8 @@ describe('I18nService', () => {
  * inside a template are what make that true, so this asserts it against a real render.
  */
 describe('locale switching in a template', () => {
+  afterEach(() => TestBed.inject(I18nService).set('tr'));
+
   it('repaints rendered strings when the language changes', async () => {
     await TestBed.configureTestingModule({ imports: [PaginationComponent] }).compileComponents();
 
@@ -105,5 +107,45 @@ describe('locale switching in a template', () => {
 
     expect(text()).toContain('Per page');
     expect(text()).not.toContain('Sayfa başına');
+  });
+});
+
+/**
+ * `DecimalPipe` reads a bootstrap-fixed `LOCALE_ID`, so it would group Turkish numbers
+ * the American way with no way to fix it at runtime. `n()` is the reason it is not used.
+ */
+describe('locale-aware formatting', () => {
+  afterEach(() => TestBed.inject(I18nService).set('tr'));
+
+  it('groups numbers per the active language', () => {
+    const i18n = TestBed.inject(I18nService);
+
+    i18n.set('tr');
+    expect(i18n.n(1234567)).toBe('1.234.567');
+    expect(i18n.n(12.34, 1)).toBe('12,3');
+
+    i18n.set('en');
+    expect(i18n.n(1234567)).toBe('1,234,567');
+    expect(i18n.n(12.34, 1)).toBe('12.3');
+  });
+
+  it('renders an em dash rather than "null" for missing values', () => {
+    const i18n = TestBed.inject(I18nService);
+    expect(i18n.n(null)).toBe('—');
+    expect(i18n.d(null)).toBe('—');
+  });
+
+  it('formats dates per the active language', () => {
+    const i18n = TestBed.inject(I18nService);
+    const at = '2026-03-09 14:05';
+
+    i18n.set('tr');
+    const tr = i18n.d(at);
+    i18n.set('en');
+    const en = i18n.d(at);
+
+    expect(tr).not.toBe(en);
+    expect(tr).toContain('2026');
+    expect(en).toContain('3/9');
   });
 });

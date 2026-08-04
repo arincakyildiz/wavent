@@ -49,24 +49,24 @@
               <tr appActivatable (activated)="openDetail(r.skuCode)" [attr.aria-label]="i18n.t('inventory.openDetail', { code: r.skuCode })">
                 <td>{{ r.skuCode }}</td>
                 <td>{{ r.name }}</td>
-                <td>{{ r.onHand | number }}</td>
+                <td>{{ i18n.n(r.onHand) }}</td>
                 <td>
-                  {{ r.available | number }}
+                  {{ i18n.n(r.available) }}
                   <div class="progress-bar">
                     <span [style.width.%]="availabilityPct(r)" class="tone-success"></span>
                   </div>
                 </td>
-                <td>{{ r.reserved | number }}</td>
+                <td>{{ i18n.n(r.reserved) }}</td>
                 <td>
                   @if (r.quarantine > 0) {
-                    <span class="status-pill tone-warning">{{ r.quarantine | number }}</span>
+                    <span class="status-pill tone-warning">{{ i18n.n(r.quarantine) }}</span>
                   } @else {
                     <span class="muted small">0</span>
                   }
                 </td>
                 <td>
                   @if (r.damaged > 0) {
-                    <span class="status-pill tone-danger">{{ r.damaged | number }}</span>
+                    <span class="status-pill tone-danger">{{ i18n.n(r.damaged) }}</span>
                   } @else {
                     <span class="muted small">0</span>
                   }

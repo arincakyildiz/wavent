@@ -1,6 +1,5 @@
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription, switchMap } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
@@ -19,7 +18,7 @@ const MAX_FEED = 10;
 
 @Component({
   selector: 'app-control-tower',
-  imports: [IconComponent, DecimalPipe],
+  imports: [IconComponent],
   templateUrl: './control-tower.component.html',
   styleUrl: './control-tower.component.scss',
 })

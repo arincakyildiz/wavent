@@ -57,7 +57,7 @@
           <span class="muted small">
             {{ errorMessage() }}
             @if (staleSince(); as at) {
-              {{ i18n.t('overview.snapshotAt', { at: (at | date: 'dd.MM.yyyy HH:mm') ?? '' }) }}
+              {{ i18n.t('overview.snapshotAt', { at: i18n.d(at) }) }}
             }
           </span>
         </div>

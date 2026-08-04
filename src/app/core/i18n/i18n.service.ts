@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, OnDestroy, computed, inject, signal } from '@angular/core';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { EN } from './locales/en';
 import { TR } from './locales/tr';
@@ -45,7 +45,7 @@ export function translate(key: string, params?: Record<string, string | number>)
 }
 
 @Injectable({ providedIn: 'root' })
-export class I18nService {
+export class I18nService implements OnDestroy {
   private readonly storage = inject(LocalStorageService);
   private readonly current = signal<Locale>(this.readInitial());
 
@@ -56,6 +56,15 @@ export class I18nService {
 
   constructor() {
     active = this;
+  }
+
+  /**
+   * Releases the module-level handle when the injector goes away. Without this a
+   * torn-down service keeps answering `translate()` calls — invisible in the app,
+   * which has one injector, but it leaks a locale between tests.
+   */
+  ngOnDestroy(): void {
+    if (active === this) active = null;
   }
 
   /**
@@ -72,6 +81,30 @@ export class I18nService {
       (acc, [name, value]) => acc.split(`{${name}}`).join(String(value)),
       text,
     );
+  }
+
+  /**
+   * Locale-aware number grouping.
+   *
+   * Angular's `DecimalPipe` reads `LOCALE_ID`, which is fixed at bootstrap and cannot
+   * change without a reload — so it would render `1,234` to a Turkish reader forever.
+   * This reads the locale signal instead, which both formats correctly and re-renders
+   * the cell when the language changes, exactly like `t()`.
+   */
+  n(value: number | null | undefined, maximumFractionDigits = 0): string {
+    if (value === null || value === undefined) return '—';
+    return new Intl.NumberFormat(this.current(), { maximumFractionDigits }).format(value);
+  }
+
+  /** Locale-aware date/time, for the same reason `n()` exists. */
+  d(value: string | Date | null | undefined): string {
+    if (!value) return '—';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat(this.current(), {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(date);
   }
 
   set(locale: Locale): void {

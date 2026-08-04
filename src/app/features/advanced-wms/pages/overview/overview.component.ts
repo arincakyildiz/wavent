@@ -1,5 +1,4 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { catchError, interval, map, of, switchMap, tap } from 'rxjs';
@@ -40,7 +39,6 @@ const TONE_HEX: Record<string, string> = {
 @Component({
   selector: 'app-overview',
   imports: [
-    DatePipe,
     IconComponent,
     SparklineComponent,
     DonutChartComponent,

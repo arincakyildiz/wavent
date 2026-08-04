@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { describeError, isApiError } from '../../../../core/api/api-error';
@@ -23,7 +22,6 @@ const EMPTY_TOTALS = { total: 0, partial: 0, backorder: 0, overrides: 0 };
 @Component({
   selector: 'app-reservations',
   imports: [
-    DecimalPipe,
     SortableDirective,
     PaginationComponent,
     HasPermissionDirective,

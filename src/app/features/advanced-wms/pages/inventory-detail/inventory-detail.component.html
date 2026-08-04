@@ -40,23 +40,23 @@
         <div class="kpi-row">
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('inventory.onHand') }}</div>
-            <div class="kpi-card__value">{{ it.onHand | number }}</div>
+            <div class="kpi-card__value">{{ i18n.n(it.onHand) }}</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('inventory.available') }}</div>
-            <div class="kpi-card__value">{{ it.available | number }}</div>
+            <div class="kpi-card__value">{{ i18n.n(it.available) }}</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('inventory.reserved') }}</div>
-            <div class="kpi-card__value">{{ it.reserved | number }}</div>
+            <div class="kpi-card__value">{{ i18n.n(it.reserved) }}</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('inventory.quarantine') }}</div>
-            <div class="kpi-card__value">{{ it.quarantine | number }}</div>
+            <div class="kpi-card__value">{{ i18n.n(it.quarantine) }}</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('inventory.damaged') }}</div>
-            <div class="kpi-card__value">{{ it.damaged | number }}</div>
+            <div class="kpi-card__value">{{ i18n.n(it.damaged) }}</div>
           </div>
         </div>
 
@@ -82,7 +82,7 @@
                         <td>{{ l.lot }}</td>
                         <td>{{ l.serial ?? '—' }}</td>
                         <td>{{ l.warehouseCode }} · {{ l.locationPath }}</td>
-                        <td>{{ l.quantity | number }}</td>
+                        <td>{{ i18n.n(l.quantity) }}</td>
                         <td><span class="status-pill" [class]="statusTone(l.status)">{{ l.status }}</span></td>
                         <td>{{ l.expiryDate ?? '—' }}</td>
                       </tr>

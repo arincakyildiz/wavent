@@ -17,19 +17,19 @@
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('movements.total') }}</div>
-        <div class="kpi-card__value">{{ totals().count | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().count) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('movements.inbound') }}</div>
-        <div class="kpi-card__value positive">+{{ totals().inbound | number }}</div>
+        <div class="kpi-card__value positive">+{{ i18n.n(totals().inbound) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('movements.outbound') }}</div>
-        <div class="kpi-card__value negative">{{ totals().outbound | number }}</div>
+        <div class="kpi-card__value negative">{{ i18n.n(totals().outbound) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('movements.net') }}</div>
-        <div class="kpi-card__value">{{ totals().inbound + totals().outbound | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().inbound + totals().outbound) }}</div>
       </div>
     </div>
 
@@ -76,7 +76,7 @@
             <span role="cell">{{ r.skuCode }}</span>
             <span role="cell">{{ r.lot ?? '—' }}</span>
             <span role="cell" [class]="r.quantity < 0 ? 'negative' : 'positive'">
-              {{ r.quantity > 0 ? '+' : '' }}{{ r.quantity | number }}
+              {{ r.quantity > 0 ? '+' : '' }}{{ i18n.n(r.quantity) }}
             </span>
             <span role="cell">{{ r.fromLocation ?? '—' }}</span>
             <span role="cell">{{ r.toLocation ?? '—' }}</span>

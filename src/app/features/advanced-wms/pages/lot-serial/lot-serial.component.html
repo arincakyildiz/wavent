@@ -95,7 +95,7 @@
                 <td>{{ r.skuName }}</td>
                 <td>{{ r.warehouseCode }}</td>
                 <td>{{ r.locationPath }}</td>
-                <td>{{ r.quantity | number }}</td>
+                <td>{{ i18n.n(r.quantity) }}</td>
                 <td>{{ r.expiryDate ?? '—' }}</td>
                 <td>
                   @if (r.daysToExpiry === undefined) {

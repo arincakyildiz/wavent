@@ -17,19 +17,19 @@
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('reservations.total') }}</div>
-        <div class="kpi-card__value">{{ totals().total | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().total) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('reservations.partial') }}</div>
-        <div class="kpi-card__value">{{ totals().partial | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().partial) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('reservations.backorder') }}</div>
-        <div class="kpi-card__value">{{ totals().backorder | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().backorder) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('reservations.manualOverride') }}</div>
-        <div class="kpi-card__value">{{ totals().overrides | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().overrides) }}</div>
       </div>
     </div>
 
@@ -76,8 +76,8 @@
                 <td>{{ r.sku }}</td>
                 <td>{{ r.lot ?? '—' }}</td>
                 <td>{{ r.warehouseCode }} · {{ r.locationPath }}</td>
-                <td>{{ r.quantity | number }}</td>
-                <td>{{ r.requested | number }}</td>
+                <td>{{ i18n.n(r.quantity) }}</td>
+                <td>{{ i18n.n(r.requested) }}</td>
                 <td><span class="status-pill tone-info">{{ i18n.t('st.' + r.strategy) }}</span></td>
                 <td>
                   <span class="status-pill" [class]="fulfilmentTone(r.fulfilment)">

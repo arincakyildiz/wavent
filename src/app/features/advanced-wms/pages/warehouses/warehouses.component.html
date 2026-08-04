@@ -80,8 +80,8 @@
                 <td>{{ w.name }}</td>
                 <td>{{ w.city }}, {{ w.country }}</td>
                 <td>{{ w.operatingHours.open }} – {{ w.operatingHours.close }}</td>
-                <td>{{ w.locationCount | number }}</td>
-                <td>{{ w.inventoryUnits | number }}</td>
+                <td>{{ i18n.n(w.locationCount) }}</td>
+                <td>{{ i18n.n(w.inventoryUnits) }}</td>
                 <td>
                   <div class="progress-bar">
                     <span [style.width.%]="w.capacityUsedPct" [class]="capacityTone(w.capacityUsedPct)"></span>

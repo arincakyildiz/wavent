@@ -17,15 +17,15 @@
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('picking.totalTasks') }}</div>
-        <div class="kpi-card__value">{{ totals().total | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().total) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('picking.inProgress') }}</div>
-        <div class="kpi-card__value">{{ totals().inProgress | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().inProgress) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('picking.exception') }}</div>
-        <div class="kpi-card__value">{{ totals().exceptions | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().exceptions) }}</div>
       </div>
     </div>
 

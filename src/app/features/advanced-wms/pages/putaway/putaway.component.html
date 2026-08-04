@@ -49,7 +49,7 @@
               <tr>
                 <td>{{ s.skuCode }}</td>
                 <td>{{ s.lot ?? '—' }}</td>
-                <td>{{ s.quantity | number }}</td>
+                <td>{{ i18n.n(s.quantity) }}</td>
                 <td>
                   {{ s.suggestedLocationPath }}
                   @if (!s.capacityOk) {

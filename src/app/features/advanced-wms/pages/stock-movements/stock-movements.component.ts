@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
@@ -21,7 +20,7 @@ export const ROW_HEIGHT = 44;
 
 @Component({
   selector: 'app-stock-movements',
-  imports: [DecimalPipe, ScrollingModule, SortableDirective],
+  imports: [ScrollingModule, SortableDirective],
   templateUrl: './stock-movements.component.html',
   styleUrl: './stock-movements.component.scss',
 })

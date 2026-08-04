@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { AuditService } from '../../../../core/observability/audit.service';
@@ -21,7 +20,6 @@ const DEFAULT_PAGE_SIZE = 10;
 @Component({
   selector: 'app-warehouses',
   imports: [
-    DecimalPipe,
     IconComponent,
     SortableDirective,
     HasPermissionDirective,

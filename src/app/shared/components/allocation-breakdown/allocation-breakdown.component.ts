@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, inject } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
@@ -33,7 +32,7 @@ export interface AllocationCandidate {
 
 @Component({
   selector: 'app-allocation-breakdown',
-  imports: [DecimalPipe],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './allocation-breakdown.component.html',
   styleUrl: './allocation-breakdown.component.scss',

@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { describeError } from '../../../../core/api/api-error';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
@@ -10,7 +9,7 @@ type LoadState = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-shipping-detail',
-  imports: [DecimalPipe, IconComponent],
+  imports: [IconComponent],
   templateUrl: './shipping-detail.component.html',
   styleUrl: './shipping-detail.component.scss',
 })

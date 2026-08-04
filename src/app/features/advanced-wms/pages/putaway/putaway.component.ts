@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { describeError, isApiError } from '../../../../core/api/api-error';
 import { AuditService } from '../../../../core/observability/audit.service';
 import { NotificationService } from '../../../../core/observability/notification.service';
@@ -19,7 +18,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-putaway',
-  imports: [DecimalPipe, SortableDirective, PaginationComponent, HasPermissionDirective, BarcodeInputComponent],
+  imports: [SortableDirective, PaginationComponent, HasPermissionDirective, BarcodeInputComponent],
   templateUrl: './putaway.component.html',
   styleUrl: './putaway.component.scss',
 })

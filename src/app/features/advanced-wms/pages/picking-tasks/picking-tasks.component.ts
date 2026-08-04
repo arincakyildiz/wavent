@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
@@ -17,7 +16,7 @@ const EMPTY_TOTALS = { total: 0, exceptions: 0, inProgress: 0 };
 
 @Component({
   selector: 'app-picking-tasks',
-  imports: [DecimalPipe, SortableDirective, PaginationComponent, PickRouteViewerComponent],
+  imports: [SortableDirective, PaginationComponent, PickRouteViewerComponent],
   templateUrl: './picking-tasks.component.html',
   styleUrl: './picking-tasks.component.scss',
 })

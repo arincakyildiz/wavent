@@ -54,7 +54,7 @@
               <tr>
                 <td>{{ p.code }}</td>
                 <td>{{ p.orderNumber }}</td>
-                <td>{{ p.itemCount | number }}</td>
+                <td>{{ i18n.n(p.itemCount) }}</td>
                 <td>
                   {{ p.weightKg }} kg
                   <span class="muted small">/ {{ p.expectedWeightKg }} ±{{ p.toleranceKg }}</span>

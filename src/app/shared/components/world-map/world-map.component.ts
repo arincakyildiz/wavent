@@ -1,5 +1,5 @@
-import { Component, computed, input } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { Component, computed, input, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 export interface MapMarker {
   city: string;
@@ -124,7 +124,7 @@ const DOTS = buildDots();
 @Component({
   selector: 'app-world-map',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [],
   template: `
     <svg [attr.viewBox]="'0 0 ' + viewW + ' ' + viewH" class="map" role="img" aria-label="Inventory distribution by warehouse">
       <g fill="var(--map-dot)">
@@ -139,7 +139,7 @@ const DOTS = buildDots();
           <circle [attr.cx]="m.x" [attr.cy]="m.y" r="4" fill="var(--warning)" stroke="var(--surface-1)" stroke-width="1.5" />
           <text [attr.x]="m.textX" [attr.y]="m.cityY" [attr.text-anchor]="m.textAnchor" class="map__city">{{ m.city }}</text>
           <text [attr.x]="m.textX" [attr.y]="m.valueY" [attr.text-anchor]="m.textAnchor" class="map__value">
-            {{ m.value | number }}
+            {{ i18n.n(m.value) }}
           </text>
         </g>
       }
@@ -192,6 +192,7 @@ const DOTS = buildDots();
   `,
 })
 export class WorldMapComponent {
+  readonly i18n = inject(I18nService);
   readonly points = input.required<MapMarker[]>();
 
   readonly viewW = VIEW_W;

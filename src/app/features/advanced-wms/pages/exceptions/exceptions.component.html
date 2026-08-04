@@ -17,19 +17,19 @@
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('exceptions.open') }}</div>
-        <div class="kpi-card__value">{{ totals().open | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().open) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('exceptions.inReview') }}</div>
-        <div class="kpi-card__value">{{ totals().investigating | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().investigating) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('exceptions.criticalOpen') }}</div>
-        <div class="kpi-card__value">{{ totals().critical | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().critical) }}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__label">{{ i18n.t('exceptions.resolved') }}</div>
-        <div class="kpi-card__value">{{ totals().resolved | number }}</div>
+        <div class="kpi-card__value">{{ i18n.n(totals().resolved) }}</div>
       </div>
     </div>
 

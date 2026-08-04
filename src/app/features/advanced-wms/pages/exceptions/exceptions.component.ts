@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { describeError, isApiError } from '../../../../core/api/api-error';
@@ -28,7 +27,6 @@ const EMPTY_TOTALS = { open: 0, investigating: 0, resolved: 0, critical: 0 };
 @Component({
   selector: 'app-exceptions',
   imports: [
-    DecimalPipe,
     SortableDirective,
     PaginationComponent,
     HasPermissionDirective,

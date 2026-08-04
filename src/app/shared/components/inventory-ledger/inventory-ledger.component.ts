@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, input, inject } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
@@ -19,7 +18,7 @@ export interface LedgerEntry {
 
 @Component({
   selector: 'app-inventory-ledger',
-  imports: [DecimalPipe],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inventory-ledger.component.html',
   styleUrl: './inventory-ledger.component.scss',
