@@ -1,5 +1,6 @@
-import { Component, ElementRef, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, output, signal, viewChild, inject } from '@angular/core';
 import { IconComponent } from '../icon/icon.component';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** A scan gun fires very fast repeats of the same code; treat those as one scan. */
 const DUPLICATE_WINDOW_MS = 800;
@@ -20,7 +21,7 @@ const DUPLICATE_WINDOW_MS = 800;
       <input
         #input
         type="text"
-        [attr.placeholder]="placeholder()"
+        [attr.placeholder]="placeholder() || i18n.t('barcode.placeholder')"
         maxlength="40"
         autocomplete="off"
         (keydown.enter)="submit($any($event.target).value)"
@@ -62,7 +63,8 @@ const DUPLICATE_WINDOW_MS = 800;
   `,
 })
 export class BarcodeInputComponent {
-  readonly placeholder = signal('Lokasyon barkodunu okutun veya yazıp Enter\'a basın...');
+  readonly i18n = inject(I18nService);
+  readonly placeholder = signal('');
 
   /** Emits the trimmed code for every genuinely new scan (duplicates are swallowed). */
   readonly scanned = output<string>();

@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * §9 InventoryLedger — stock movements with their running balance, so a quantity
@@ -24,6 +25,7 @@ export interface LedgerEntry {
   styleUrl: './inventory-ledger.component.scss',
 })
 export class InventoryLedgerComponent {
+  readonly i18n = inject(I18nService);
   readonly entries = input.required<LedgerEntry[]>();
-  readonly emptyMessage = input('Hareket kaydı bulunamadı.');
+  readonly emptyMessage = input('');
 }

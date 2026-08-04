@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * §9 AllocationBreakdown — explains how a sales-order line was reserved: which
@@ -38,6 +39,7 @@ export interface AllocationCandidate {
   styleUrl: './allocation-breakdown.component.scss',
 })
 export class AllocationBreakdownComponent {
+  readonly i18n = inject(I18nService);
   readonly line = input.required<AllocationLine>();
   readonly candidates = input<AllocationCandidate[]>([]);
   readonly loading = input(false);

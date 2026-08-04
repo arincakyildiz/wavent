@@ -3,11 +3,11 @@
     <div>
       <span class="route__code">{{ task().code }}</span>
       <span class="muted small">
-        {{ task().type }} · {{ task().assignedTo ?? 'Atanmadı' }} ·
-        {{ stops().length }} durak / {{ zoneCount() }} bölge
+        {{ task().type }} · {{ task().assignedTo ?? i18n.t('route.unassigned') }} ·
+        {{ i18n.t('route.summary', { stops: stops().length, zones: zoneCount() }) }}
       </span>
     </div>
-    <span class="route__progress">{{ task().pickedLines }}/{{ task().lineCount }} satır (%{{ progressPct() }})</span>
+    <span class="route__progress">{{ i18n.t('route.lines', { picked: task().pickedLines, total: task().lineCount, pct: progressPct() }) }}</span>
   </div>
 
   @if (task().exceptionReason) {
@@ -25,6 +25,6 @@
       }
     </ol>
   } @else {
-    <div class="state state--empty">Bu görev için rota tanımlı değil.</div>
+    <div class="state state--empty">{{ i18n.t('route.empty') }}</div>
   }
 </div>

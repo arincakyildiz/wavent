@@ -13,13 +13,13 @@
       <form [formGroup]="form" (ngSubmit)="confirm()">
         @if (d.requireReason) {
           <label class="dialog__field">
-            <span class="dialog__label">{{ d.reasonLabel ?? 'Gerekçe' }} <span class="req">*</span></span>
+            <span class="dialog__label">{{ d.reasonLabel ?? i18n.t('common.reason') }} <span class="req">*</span></span>
             <textarea
               #reasonInput
               formControlName="reason"
               rows="3"
               maxlength="300"
-              [attr.placeholder]="d.reasonPlaceholder ?? 'Bu işlemin gerekçesini yazın...'"
+              [attr.placeholder]="d.reasonPlaceholder ?? i18n.t('confirm.reasonPlaceholder')"
               [attr.aria-invalid]="reasonInvalid"
               [class.invalid]="reasonInvalid"
             ></textarea>
@@ -27,11 +27,11 @@
             @if (reasonInvalid) {
               <span class="dialog__error" role="alert">
                 @if (form.controls.reason.hasError('required')) {
-                  Gerekçe zorunludur.
+                  {{ i18n.t('common.reason') }} zorunludur.
                 } @else if (form.controls.reason.hasError('minlength')) {
-                  Gerekçe en az 6 karakter olmalıdır.
+                  {{ i18n.t('common.reason') }} en az 6 karakter olmalıdır.
                 } @else {
-                  Gerekçe en fazla 300 karakter olabilir.
+                  {{ i18n.t('common.reason') }} en fazla 300 karakter olabilir.
                 }
               </span>
             }
@@ -39,7 +39,7 @@
         }
 
         <div class="dialog__actions">
-          <button class="btn" type="button" (click)="cancel()">{{ d.cancelLabel ?? 'Vazgeç' }}</button>
+          <button class="btn" type="button" (click)="cancel()">{{ d.cancelLabel ?? i18n.t('common.cancel') }}</button>
           <button
             #confirmBtn
             class="btn btn--primary"

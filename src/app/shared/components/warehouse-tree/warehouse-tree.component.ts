@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * §9 WarehouseTree — renders the warehouse → zone → aisle → bin hierarchy with
@@ -42,8 +43,9 @@ export interface TreeNode {
   styleUrl: './warehouse-tree.component.scss',
 })
 export class WarehouseTreeComponent {
+  readonly i18n = inject(I18nService);
   readonly locations = input.required<WarehouseTreeNodeInput[]>();
-  readonly emptyMessage = input('Gösterilecek lokasyon bulunamadı.');
+  readonly emptyMessage = input('');
 
   /** Collapsed by key; roots start open so the screen is useful without clicking. */
   private readonly collapsed = signal<ReadonlySet<string>>(new Set());

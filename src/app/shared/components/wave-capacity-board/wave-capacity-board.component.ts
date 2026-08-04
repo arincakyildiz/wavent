@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * §9 WaveCapacityBoard — workload, operator capacity and cut-off risk for the waves
@@ -40,10 +41,11 @@ const OVER_CAPACITY_PCT = 90;
   styleUrl: './wave-capacity-board.component.scss',
 })
 export class WaveCapacityBoardComponent {
+  readonly i18n = inject(I18nService);
   readonly waves = input.required<WaveCapacityRow[]>();
   /** Injectable clock keeps the runway calculation testable. */
   readonly now = input<Date>(new Date());
-  readonly emptyMessage = input('Planlanacak dalga bulunamadı.');
+  readonly emptyMessage = input('');
 
   readonly rows = computed<WaveCapacityView[]>(() => {
     const reference = this.now();
@@ -56,17 +58,20 @@ export class WaveCapacityBoardComponent {
         const tight = minutesToCutOff <= TIGHT_MINUTES;
 
         let risk: CutOffRisk = 'ok';
-        let riskReason = 'Kapasite ve cut-off uygun';
+        let riskReason = this.i18n.t('board.reasonOk');
 
         if (over && tight) {
           risk = 'over';
-          riskReason = `Kapasite %${wave.capacityUsedPct} ve cut-off'a ${minutesToCutOff} dk kaldı`;
+          riskReason = this.i18n.t('board.reasonBoth', {
+            pct: wave.capacityUsedPct,
+            minutes: minutesToCutOff,
+          });
         } else if (over) {
           risk = 'over';
-          riskReason = `Vardiya kapasitesi %${wave.capacityUsedPct} dolulukta`;
+          riskReason = this.i18n.t('board.reasonOver', { pct: wave.capacityUsedPct });
         } else if (tight) {
           risk = 'tight';
-          riskReason = `Cut-off'a yalnızca ${minutesToCutOff} dk kaldı`;
+          riskReason = this.i18n.t('board.reasonTight', { minutes: minutesToCutOff });
         }
 
         return { ...wave, risk, minutesToCutOff, riskReason };
@@ -95,9 +100,9 @@ export class WaveCapacityBoardComponent {
 
   riskLabel(risk: CutOffRisk): string {
     const label: Record<CutOffRisk, string> = {
-      ok: 'Uygun',
-      tight: 'Riskli',
-      over: 'Kapasite aşımı',
+      ok: this.i18n.t('board.riskOk'),
+      tight: this.i18n.t('board.riskTight'),
+      over: this.i18n.t('board.riskOver'),
     };
     return label[risk];
   }

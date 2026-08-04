@@ -1,5 +1,6 @@
 import { DestroyRef, Component, computed, inject, input, output, signal } from '@angular/core';
 import { IconComponent } from '../icon/icon.component';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * §2 ScaleInput — simulates reading a package weight off a bench scale.
@@ -30,11 +31,12 @@ export type ScaleState = 'idle' | 'weighing' | 'stable';
   styleUrl: './scale-input.component.scss',
 })
 export class ScaleInputComponent {
+  readonly i18n = inject(I18nService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** The true weight the scale is measuring; the simulation deviates around it. */
   readonly actualWeightKg = input.required<number>();
-  readonly label = input('Paketi tart');
+  readonly label = input('');
   readonly disabled = input(false);
 
   /** Emitted only once the reading has settled. */

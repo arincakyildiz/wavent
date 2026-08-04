@@ -1,6 +1,7 @@
 import { Component, effect, inject, viewChild, ElementRef } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmDialogService } from '../../../core/state/confirm-dialog.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-confirm-dialog',
@@ -9,6 +10,7 @@ import { ConfirmDialogService } from '../../../core/state/confirm-dialog.service
   styleUrl: './confirm-dialog.component.scss',
 })
 export class ConfirmDialogComponent {
+  readonly i18n = inject(I18nService);
   private readonly dialogService = inject(ConfirmDialogService);
 
   readonly dialog = this.dialogService.dialog;

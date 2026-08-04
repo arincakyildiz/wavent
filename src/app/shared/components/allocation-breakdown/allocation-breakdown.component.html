@@ -1,21 +1,21 @@
 <div class="breakdown">
   <div class="breakdown__current">
-    <h3>Mevcut rezervasyon</h3>
+    <h3>{{ i18n.t('allocation.current') }}</h3>
     <dl class="facts">
       <div>
-        <dt>SKU</dt>
+        <dt>{{ i18n.t('common.sku') }}</dt>
         <dd>{{ line().sku }}</dd>
       </div>
       <div>
-        <dt>Lot / Lokasyon</dt>
+        <dt>{{ i18n.t('allocation.lotLocation') }}</dt>
         <dd>{{ line().lot ?? '—' }} · {{ line().locationPath }}</dd>
       </div>
       <div>
-        <dt>Strateji</dt>
+        <dt>{{ i18n.t('allocation.strategy') }}</dt>
         <dd><span class="status-pill tone-neutral">{{ line().strategy }}</span></dd>
       </div>
       <div>
-        <dt>Karşılanan</dt>
+        <dt>{{ i18n.t('allocation.covered') }}</dt>
         <dd>
           {{ line().quantity | number }} / {{ line().requested | number }}
           <span class="muted small">(%{{ coveragePct() }})</span>
@@ -23,13 +23,13 @@
       </div>
       @if (shortfall() > 0) {
         <div>
-          <dt>Eksik</dt>
-          <dd><span class="status-pill tone-warning">{{ shortfall() | number }} adet</span></dd>
+          <dt>{{ i18n.t('allocation.shortfall') }}</dt>
+          <dd><span class="status-pill tone-warning">{{ i18n.t('allocation.shortfallUnits', { count: shortfall() }) }}</span></dd>
         </div>
       }
       @if (line().overrideReason) {
         <div>
-          <dt>Override gerekçesi</dt>
+          <dt>{{ i18n.t('allocation.overrideReason') }}</dt>
           <dd class="muted small">{{ line().overrideReason }}</dd>
         </div>
       }
@@ -37,25 +37,25 @@
   </div>
 
   <div class="breakdown__alternatives">
-    <h3>Alternatif lotlar</h3>
+    <h3>{{ i18n.t('allocation.alternatives') }}</h3>
 
     @if (loading()) {
-      <div class="state state--loading">Yükleniyor...</div>
+      <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
     } @else if (candidates().length) {
       <ul class="candidates">
         @for (c of candidates(); track c.locationPath + (c.lot ?? '')) {
           <li class="candidate">
             <div class="candidate__info">
-              <span class="candidate__lot">{{ c.lot ?? 'Lotsuz' }}</span>
+              <span class="candidate__lot">{{ c.lot ?? i18n.t('allocation.noLot') }}</span>
               <span class="muted small">
-                {{ c.locationPath }} · {{ c.freeQuantity | number }} adet boşta
+                {{ c.locationPath }} · {{ i18n.t('allocation.freeUnits', { count: c.freeQuantity }) }}
                 @if (c.expiryDate) {
-                  · SKT {{ c.expiryDate }}
+                  · {{ i18n.t('common.expiry') }} {{ c.expiryDate }}
                 }
               </span>
               @if (c.fefoViolationLot) {
                 <span class="status-pill tone-warning">
-                  FEFO ihlali — {{ c.fefoViolationLot }} daha erken
+                  {{ i18n.t('allocation.fefoViolation', { lot: c.fefoViolationLot! }) }}
                 </span>
               }
             </div>
@@ -64,15 +64,15 @@
               class="btn"
               [disabled]="busy()"
               (click)="choose(c)"
-              [attr.aria-label]="(c.lot ?? c.locationPath) + ' lotuna taşı'"
+              [attr.aria-label]="i18n.t('allocation.moveToAria', { lot: c.lot ?? c.locationPath })"
             >
-              Bu lota taşı
+              {{ i18n.t('allocation.moveHere') }}
             </button>
           </li>
         }
       </ul>
     } @else {
-      <div class="state state--empty">Taşınabilecek başka lot bulunamadı.</div>
+      <div class="state state--empty">{{ i18n.t('allocation.noCandidates') }}</div>
     }
   </div>
 </div>

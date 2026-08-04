@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * §9 ExceptionWorkbench — the case view for a single exception: the evidence behind
@@ -31,6 +32,7 @@ export interface WorkbenchEvidence {
   styleUrl: './exception-workbench.component.scss',
 })
 export class ExceptionWorkbenchComponent {
+  readonly i18n = inject(I18nService);
   readonly exception = input.required<WorkbenchException>();
   readonly evidence = input<WorkbenchEvidence[]>([]);
   readonly owners = input<string[]>([]);

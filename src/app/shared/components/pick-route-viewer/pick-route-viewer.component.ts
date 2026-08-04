@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * §9 PickRouteViewer — lays a pick task's location sequence out as an ordered walk,
@@ -35,6 +36,7 @@ export interface RouteStop {
   styleUrl: './pick-route-viewer.component.scss',
 })
 export class PickRouteViewerComponent {
+  readonly i18n = inject(I18nService);
   readonly task = input.required<PickRouteTask>();
 
   readonly stops = computed<RouteStop[]>(() => {
@@ -66,10 +68,10 @@ export class PickRouteViewerComponent {
 
   stateLabel(state: StopState): string {
     const label: Record<StopState, string> = {
-      done: 'Toplandı',
-      current: 'Sırada',
-      pending: 'Bekliyor',
-      blocked: 'İstisna',
+      done: this.i18n.t('route.picked'),
+      current: this.i18n.t('route.next'),
+      pending: this.i18n.t('route.pending'),
+      blocked: this.i18n.t('route.exception'),
     };
     return label[state];
   }

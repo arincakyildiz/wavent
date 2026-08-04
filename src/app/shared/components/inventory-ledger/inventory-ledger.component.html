@@ -3,11 +3,11 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Tarih</th>
-          <th>Tip</th>
-          <th>Miktar</th>
-          <th>Bakiye</th>
-          <th>Referans</th>
+          <th>{{ i18n.t('common.date') }}</th>
+          <th>{{ i18n.t('ledger.type') }}</th>
+          <th>{{ i18n.t('common.quantity') }}</th>
+          <th>{{ i18n.t('ledger.balance') }}</th>
+          <th>{{ i18n.t('ledger.reference') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -26,5 +26,5 @@
     </table>
   </div>
 } @else {
-  <div class="state state--empty">{{ emptyMessage() }}</div>
+  <div class="state state--empty">{{ emptyMessage() || i18n.t('ledger.empty') }}</div>
 }

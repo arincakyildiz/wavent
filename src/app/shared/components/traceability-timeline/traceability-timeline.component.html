@@ -11,5 +11,5 @@
     }
   </ol>
 } @else {
-  <div class="state state--empty">{{ emptyMessage() }}</div>
+  <div class="state state--empty">{{ emptyMessage() || i18n.t('timeline.empty') }}</div>
 }

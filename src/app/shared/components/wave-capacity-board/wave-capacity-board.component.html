@@ -2,19 +2,19 @@
   <div class="board">
     <div class="board__summary">
       <div class="kpi-card">
-        <div class="kpi-card__label">Planlanan Dalga</div>
+        <div class="kpi-card__label">{{ i18n.t('board.plannedWaves') }}</div>
         <div class="kpi-card__value">{{ rows().length }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Toplam Sipariş</div>
+        <div class="kpi-card__label">{{ i18n.t('board.totalOrders') }}</div>
         <div class="kpi-card__value">{{ totalOrders() | number }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Ort. Kapasite</div>
+        <div class="kpi-card__label">{{ i18n.t('board.avgCapacity') }}</div>
         <div class="kpi-card__value">%{{ averageCapacity() }}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-card__label">Riskli Dalga</div>
+        <div class="kpi-card__label">{{ i18n.t('board.atRisk') }}</div>
         <div class="kpi-card__value" [class.negative]="atRiskCount() > 0">{{ atRiskCount() }}</div>
       </div>
     </div>
@@ -28,21 +28,21 @@
           </div>
 
           <div class="muted small">
-            {{ w.warehouseCode }} · {{ w.carrier }} · Cut-off {{ w.cutOffTime }} ·
-            {{ w.orderCount | number }} sipariş
+            {{ w.warehouseCode }} · {{ w.carrier }} · {{ i18n.t('board.cutOff') }} {{ w.cutOffTime }} ·
+            {{ i18n.t('board.orderCount', { count: w.orderCount }) }}
           </div>
 
           <div class="board__meters">
             <div class="board__meter">
-              <span class="muted small">Kapasite</span>
+              <span class="muted small">{{ i18n.t('board.capacity') }}</span>
               <span class="progress-bar">
                 <span [style.width.%]="w.capacityUsedPct" [class]="capacityTone(w.capacityUsedPct)"></span>
               </span>
               <span class="muted small">%{{ w.capacityUsedPct }}</span>
             </div>
             <div class="board__meter">
-              <span class="muted small">Cut-off</span>
-              <span class="board__runway">{{ w.minutesToCutOff }} dk</span>
+              <span class="muted small">{{ i18n.t('board.cutOff') }}</span>
+              <span class="board__runway">{{ i18n.t('board.minutes', { count: w.minutesToCutOff }) }}</span>
             </div>
           </div>
 
@@ -52,5 +52,5 @@
     </ul>
   </div>
 } @else {
-  <div class="state state--empty">{{ emptyMessage() }}</div>
+  <div class="state state--empty">{{ emptyMessage() || i18n.t('board.empty') }}</div>
 }

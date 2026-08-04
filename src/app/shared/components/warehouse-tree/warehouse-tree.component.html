@@ -29,7 +29,7 @@
           }
 
           @if (node.binCount) {
-            <span class="muted small">{{ node.binCount }} göz</span>
+            <span class="muted small">{{ i18n.t('tree.bins', { count: node.binCount }) }}</span>
           }
 
           <span class="tree__capacity">
@@ -47,5 +47,5 @@
     }
   </ul>
 } @else {
-  <div class="state state--empty">{{ emptyMessage() }}</div>
+  <div class="state state--empty">{{ emptyMessage() || i18n.t('tree.empty') }}</div>
 }

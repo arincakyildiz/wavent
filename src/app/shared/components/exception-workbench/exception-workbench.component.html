@@ -1,9 +1,9 @@
 <div class="workbench">
   <section class="workbench__case">
-    <h3>Kanıt</h3>
+    <h3>{{ i18n.t('workbench.evidence') }}</h3>
 
     @if (loading()) {
-      <div class="state state--loading">Yükleniyor...</div>
+      <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
     } @else if (evidence().length) {
       <dl class="evidence">
         @for (item of evidence(); track item.label) {
@@ -19,12 +19,12 @@
         }
       </dl>
     } @else {
-      <div class="state state--empty">Bu istisna için ek kanıt kaydı yok.</div>
+      <div class="state state--empty">{{ i18n.t('workbench.noEvidence') }}</div>
     }
   </section>
 
   <section class="workbench__decision">
-    <h3>Karar</h3>
+    <h3>{{ i18n.t('workbench.decision') }}</h3>
 
     <div class="workbench__meta">
       <span class="status-pill" [class]="severityTone(exception().severity)">
@@ -33,19 +33,19 @@
       <span class="status-pill" [class]="statusTone(exception().status)">
         {{ exception().status }}
       </span>
-      <span class="muted small">Sahip: {{ exception().owner ?? 'Atanmadı' }}</span>
+      <span class="muted small">{{ i18n.t('workbench.ownerIs', { owner: exception().owner ?? i18n.t('workbench.unassigned') }) }}</span>
     </div>
 
     @if (isResolved()) {
       <p class="muted small">
-        Bu istisna çözüldü.
+        {{ i18n.t('workbench.alreadyResolved') }}
         @if (exception().resolutionNote) {
-          Gerekçe: {{ exception().resolutionNote }}
+          {{ i18n.t('workbench.resolutionIs', { reason: exception().resolutionNote! }) }}
         }
       </p>
     } @else {
       <div class="field">
-        <label [attr.for]="'owner-' + exception().id">Yeniden ata</label>
+        <label [attr.for]="'owner-' + exception().id">{{ i18n.t('workbench.reassign') }}</label>
         <div class="workbench__reassign">
           <select
             [id]="'owner-' + exception().id"
@@ -53,13 +53,13 @@
             (change)="onOwnerChange($any($event.target).value)"
             [disabled]="busy()"
           >
-            <option value="">Operatör seçin...</option>
+            <option value="">{{ i18n.t('workbench.selectOperator') }}</option>
             @for (owner of owners(); track owner) {
               <option [value]="owner" [disabled]="owner === exception().owner">{{ owner }}</option>
             }
           </select>
           <button type="button" class="btn" [disabled]="!canReassign()" (click)="submitReassign()">
-            Ata
+            {{ i18n.t('workbench.assign') }}
           </button>
         </div>
       </div>
@@ -70,7 +70,7 @@
         [disabled]="busy()"
         (click)="submitResolve()"
       >
-        Çözüldü olarak işaretle
+        {{ i18n.t('workbench.markResolved') }}
       </button>
     }
   </section>
