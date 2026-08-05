@@ -8,6 +8,7 @@ import { ThemeService } from '../../../core/state/theme.service';
 import { ALL_WAREHOUSES, WarehouseScopeService } from '../../../core/state/warehouse-scope.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { IconComponent } from '../icon/icon.component';
+import { LogoMarkComponent } from '../logo-mark/logo-mark.component';
 import { ToastHostComponent } from '../toast-host/toast-host.component';
 
 interface NavItem {
@@ -30,6 +31,7 @@ interface NavGroup {
     RouterLinkActive,
     RouterOutlet,
     IconComponent,
+    LogoMarkComponent,
     ToastHostComponent,
     ConfirmDialogComponent,
   ],

@@ -4,9 +4,9 @@
   <aside class="sidebar" #sidebarEl>
     <div class="sidebar__top">
       <a class="brand" routerLink="/wms/overview" (click)="closeMobileNav()">
-        <span class="brand__mark">W</span>
+        <app-logo-mark class="brand__mark" [size]="28" [detailed]="!collapsed()" />
         @if (!collapsed()) {
-          <span class="brand__name">WAVENT</span>
+          <span class="brand__name"><span class="brand__name-wav">WAV</span><span class="brand__name-ent">ENT</span></span>
         }
       </a>
       @if (!collapsed()) {

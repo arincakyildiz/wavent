@@ -54,15 +54,6 @@
   min-width: 0;
 
   &__mark {
-    width: 28px;
-    height: 28px;
-    display: grid;
-    place-items: center;
-    border-radius: 8px;
-    background: var(--accent);
-    color: #fff;
-    font-weight: 700;
-    font-size: 15px;
     flex-shrink: 0;
   }
 
@@ -70,6 +61,14 @@
     font-weight: 700;
     font-size: 15px;
     letter-spacing: 0.06em;
+
+    &-wav {
+      color: var(--text-primary);
+    }
+
+    &-ent {
+      color: #ff6a00;
+    }
   }
 }
 

@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, Role } from '../../../core/auth/auth.service';
 import { ROLE_CATALOG, ROLE_PERMISSIONS } from '../../../core/auth/permissions';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { LogoMarkComponent } from '../../../shared/components/logo-mark/logo-mark.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 const ROLE_ICONS: Record<Role, string> = {
@@ -16,7 +17,7 @@ const ROLE_ICONS: Record<Role, string> = {
 
 @Component({
   selector: 'app-login',
-  imports: [IconComponent],
+  imports: [IconComponent, LogoMarkComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
