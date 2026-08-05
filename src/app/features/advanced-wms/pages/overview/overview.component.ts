@@ -1,7 +1,7 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { catchError, interval, map, of, switchMap, tap } from 'rxjs';
+import { catchError, interval, map, switchMap, tap } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { IndexedDbService } from '../../../../core/storage/indexed-db.service';
@@ -10,7 +10,7 @@ import { SparklineComponent } from '../../../../shared/components/sparkline/spar
 import { DonutChartComponent } from '../../../../shared/components/donut-chart/donut-chart.component';
 import { BarChartComponent } from '../../../../shared/components/bar-chart/bar-chart.component';
 import { WorldMapComponent } from '../../../../shared/components/world-map/world-map.component';
-import { bindQueryParams, parseString } from '../../../../shared/utils/query-params';
+import { bindQueryParams } from '../../../../shared/utils/query-params';
 import {
   DashboardService,
   DashboardSummary,

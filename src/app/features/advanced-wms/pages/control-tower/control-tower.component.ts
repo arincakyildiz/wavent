@@ -1,12 +1,12 @@
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { Subscription, switchMap } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { bindQueryParams } from '../../../../shared/utils/query-params';
-import { ControlTowerService, TowerEvent, TowerSnapshot , EventKind} from '../../data-access/control-tower.service';
+import { ControlTowerService, TowerEvent, TowerSnapshot, EventKind } from '../../data-access/control-tower.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type LoadState = 'loading' | 'success' | 'error';
