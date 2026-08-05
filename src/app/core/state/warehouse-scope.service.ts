@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
+import { I18nService } from '../i18n/i18n.service';
 
 export interface WarehouseOption {
   code: string;
@@ -26,6 +27,7 @@ export const ALL_WAREHOUSES = 'all';
 @Injectable({ providedIn: 'root' })
 export class WarehouseScopeService {
   private readonly auth = inject(AuthService);
+  private readonly i18n = inject(I18nService);
   private readonly selection = signal<string>(ALL_WAREHOUSES);
 
   /** Warehouses the current role is allowed to see at all. */
@@ -56,7 +58,7 @@ export class WarehouseScopeService {
 
   readonly label = computed(() => {
     const selected = this.selected();
-    if (selected === ALL_WAREHOUSES) return 'All Warehouses';
+    if (selected === ALL_WAREHOUSES) return this.i18n.t('nav.allWarehouses');
     return this.permitted().find((w) => w.code === selected)?.name ?? selected;
   });
 

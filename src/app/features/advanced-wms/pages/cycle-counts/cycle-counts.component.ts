@@ -93,7 +93,7 @@ export class CycleCountsComponent {
       actionType: 'Cycle Count Scheduled',
       targetType: 'CycleCount',
       targetId: count.code,
-      newValue: `${count.scopeLabel} · beklenen ${count.expectedQuantity}`,
+      newValue: this.i18n.t('cycleCounts.auditValue', { scope: count.scopeLabel, qty: count.expectedQuantity }),
     });
     this.notifications.success(this.i18n.t('cycleCounts.scheduled'), `${count.code} — ${count.scopeLabel}`);
     this.list.reload();

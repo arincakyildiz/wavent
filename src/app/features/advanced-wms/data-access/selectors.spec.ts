@@ -1,5 +1,5 @@
 import { StockStatus } from '../models/entities';
-import { LocationRec, db } from './mock-data';
+import { LocationRec, classifyPickException, db } from './mock-data';
 import {
   VARIANCE_THRESHOLD_PCT,
   capacityVerdict,
@@ -272,5 +272,33 @@ describe('wave publish verdicts', () => {
 
   it('returns nothing for an unknown wave', () => {
     expect(waveOrderStatuses('does-not-exist')).toEqual([]);
+  });
+});
+
+describe('seeded exception classification (§12)', () => {
+  /**
+   * Regression guard: exception type used to be inferred with `exceptionReason.includes('barkod')`,
+   * a substring match against Turkish text. Once seeded reasons became catalog keys
+   * (`seed.exception.wrongBarcode`) for i18n, that substring never matched again and every
+   * pick-task exception silently collapsed onto 'short-pick' regardless of its real cause.
+   * Tested directly against the pure classifier rather than the seeded sample, which on any
+   * given seed may or may not happen to contain a wrong-barcode case.
+   */
+  it('classifies wrong-barcode by exact reason, defaulting everything else to short-pick', () => {
+    expect(classifyPickException('seed.exception.wrongBarcode')).toBe('wrong-barcode');
+    expect(classifyPickException('seed.exception.shortPick')).toBe('short-pick');
+    expect(classifyPickException('seed.exception.damaged')).toBe('short-pick');
+    expect(classifyPickException('seed.exception.emptyLocation')).toBe('short-pick');
+    expect(classifyPickException(undefined)).toBe('short-pick');
+  });
+
+  it('applies that classification consistently across the seeded dataset', () => {
+    const pickTaskExceptions = db.exceptions.filter((e) => e.referenceType === 'PickTask');
+    expect(pickTaskExceptions.length).toBeGreaterThan(0);
+
+    for (const exception of pickTaskExceptions) {
+      const task = db.pickTasks.find((t) => t.code === exception.referenceId);
+      expect(exception.type).toBe(classifyPickException(task?.exceptionReason));
+    }
   });
 });

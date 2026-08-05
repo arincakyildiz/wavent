@@ -224,7 +224,7 @@ export function waveOrderStatuses(waveId: string): WaveOrderStatus[] {
       reason = translate('sel.insufficientStock', { code: missing?.skuCode ?? 'SKU' });
     } else if (wave.capacityUsedPct >= 85) {
       status = 'capacity-risk';
-      reason = `Vardiya kapasitesi %${wave.capacityUsedPct} dolulukta`;
+      reason = translate('sel.capacityRisk', { pct: wave.capacityUsedPct });
     }
 
     return {

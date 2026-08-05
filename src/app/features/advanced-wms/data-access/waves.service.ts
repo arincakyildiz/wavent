@@ -156,7 +156,7 @@ export class WavesService {
         const statuses = waveOrderStatuses(id);
         const failed = statuses
           .filter((s) => s.status === 'stock-shortage')
-          .map((s) => ({ orderNumber: s.orderNumber, reason: s.reason ?? 'Stok yetersiz' }));
+          .map((s) => ({ orderNumber: s.orderNumber, reason: s.reason ?? translate('sel.stockShortageFallback') }));
         const released = statuses.filter((s) => s.status !== 'stock-shortage').map((s) => s.orderNumber);
 
         if (!released.length) {

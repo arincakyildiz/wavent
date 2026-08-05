@@ -78,7 +78,7 @@
                 <td>{{ r.warehouseCode }} · {{ r.locationPath }}</td>
                 <td>{{ i18n.n(r.quantity) }}</td>
                 <td>{{ i18n.n(r.requested) }}</td>
-                <td><span class="status-pill tone-info">{{ i18n.t('st.' + r.strategy) }}</span></td>
+                <td><span class="status-pill tone-info">{{ i18n.t('st.' + r.strategy.toLowerCase()) }}</span></td>
                 <td>
                   <span class="status-pill" [class]="fulfilmentTone(r.fulfilment)">
                     {{ fulfilmentLabel(r.fulfilment) }}

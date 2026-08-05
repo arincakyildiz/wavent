@@ -937,6 +937,16 @@ function buildCycleCounts(locations: LocationRec[], skus: SkuRec[]): CycleCountR
   return out;
 }
 
+/**
+ * §12: a pick-task exception is classified by its actual cause, not lumped into
+ * 'short-pick' by default. Exported as a pure function (rather than left inline in
+ * {@link buildExceptions}) so the mapping is unit-testable independent of the seeded
+ * sample, which may or may not happen to contain a wrong-barcode case on a given seed.
+ */
+export function classifyPickException(exceptionReason: string | undefined): ExceptionType {
+  return exceptionReason === 'seed.exception.wrongBarcode' ? 'wrong-barcode' : 'short-pick';
+}
+
 function buildExceptions(
   pickTasks: PickTaskRec[],
   lines: ReceiptLineRec[],
@@ -974,7 +984,7 @@ function buildExceptions(
   // Exceptions are derived from the records that actually went wrong.
   for (const t of pickTasks.filter((t) => t.status === 'exception').slice(0, 8)) {
     push(
-      t.exceptionReason?.includes('barkod') ? 'wrong-barcode' : 'short-pick',
+      classifyPickException(t.exceptionReason),
       pick<ExceptionSeverity>(['medium', 'high']),
       t.warehouseCode,
       'PickTask',

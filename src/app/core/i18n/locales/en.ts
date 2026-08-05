@@ -864,4 +864,7 @@ export const EN: Record<string, string> = {
   'st.blocked': 'Blocked',
   'st.full': 'Full',
   'st.inactive': 'Inactive',
+  'sel.capacityRisk': 'Shift capacity is {pct}% full',
+  'sel.stockShortageFallback': 'Stock shortage',
+  'cycleCounts.auditValue': '{scope} · expected {qty}',
 };

@@ -866,4 +866,7 @@ export const TR: Record<string, string> = {
   'st.blocked': 'Bloke',
   'st.full': 'Dolu',
   'st.inactive': 'Pasif',
+  'sel.capacityRisk': 'Vardiya kapasitesi %{pct} dolulukta',
+  'sel.stockShortageFallback': 'Stok yetersiz',
+  'cycleCounts.auditValue': '{scope} · beklenen {qty}',
 };

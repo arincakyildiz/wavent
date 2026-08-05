@@ -112,12 +112,7 @@ export class ReservationsComponent {
   }
 
   fulfilmentLabel(value: ReservationRow['fulfilment']): string {
-    const label: Record<ReservationRow['fulfilment'], string> = {
-      full: 'Tam',
-      partial: this.i18n.t('reservations.partial'),
-      backorder: 'Backorder',
-    };
-    return label[value];
+    return this.i18n.t(`st.fulfil.${value}`);
   }
 
   /* ---------- Manual lot override (§4 / §11) ---------- */
