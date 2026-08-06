@@ -25,6 +25,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Configure headless Chrome
         run: |
-          node -e "console.log('CHROME_BIN=' + require('playwright').chromium.executablePath())" >> "$GITHUB_ENV"
+          chrome_path="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          printf '#!/usr/bin/env bash\nexec "%s" --no-sandbox --disable-setuid-sandbox "$@"\n' "$chrome_path" > "$RUNNER_TEMP/chrome-ci"
+          chmod +x "$RUNNER_TEMP/chrome-ci"
+          echo "CHROME_BIN=$RUNNER_TEMP/chrome-ci" >> "$GITHUB_ENV"
       - run: npm run test:ci
       - run: npm run test:e2e
