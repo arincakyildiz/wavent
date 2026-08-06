@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Wavent — an Angular 19 (standalone + Signals) advanced WMS control panel covering warehouse
+Wavent — an Angular 20 (standalone + Signals) advanced WMS control panel covering warehouse
 topology, lot/serial traceability, FEFO/FIFO reservation, wave planning, pick-pack-ship and
 exception handling. There is no backend: a mock transport layer simulates latency, failures and
 optimistic-concurrency conflicts.
@@ -17,6 +17,8 @@ UI text is Turkish; code, comments and identifiers are English.
 npm start                    # dev server on :4200
 npm run build                # production build (also the authoritative template type-check)
 npm test                     # Karma + Jasmine, watch mode
+npm run lint                 # TypeScript + template ESLint
+npm run test:e2e             # Playwright Chromium E2E
 npx ng test --watch=false --browsers=ChromeHeadless   # single CI-style run
 npx tsc -p tsconfig.app.json --noEmit                 # fast TS-only check, skips templates
 ```

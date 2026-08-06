@@ -4,6 +4,7 @@
       <li
         class="tree__node"
         role="treeitem"
+        aria-selected="false"
         [attr.aria-level]="node.depth + 1"
         [attr.aria-expanded]="node.children.length ? !isCollapsed(node) : null"
         [style.--depth]="node.depth"

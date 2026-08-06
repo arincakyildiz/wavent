@@ -4,6 +4,7 @@ import { describeError } from '../../../../core/api/api-error';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { AsnRow, ReceiptLineRow, ReceivingService } from '../../data-access/receiving.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { forkJoin } from 'rxjs';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -39,10 +40,13 @@ export class ReceivingDetailComponent {
     this.state.set('loading');
     this.errorMessage.set(null);
 
-    this.receivingService.getById(this.id).subscribe({
-      next: (asn) => {
+    forkJoin({
+      asn: this.receivingService.getById(this.id),
+      lines: this.receivingService.getLines(this.id),
+    }).subscribe({
+      next: ({ asn, lines }) => {
         this.asn.set(asn);
-        this.receivingService.getLines(this.id).subscribe((lines) => this.lines.set(lines));
+        this.lines.set(lines);
         this.state.set('success');
       },
       error: (err) => {

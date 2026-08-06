@@ -55,6 +55,8 @@ export class I18nService implements OnDestroy {
   private readonly messages = computed(() => CATALOGS[this.current()]);
 
   constructor() {
+    // Pure business-rule helpers use this module-level bridge outside injection contexts.
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     active = this;
   }
 

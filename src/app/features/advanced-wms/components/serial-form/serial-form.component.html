@@ -24,7 +24,7 @@
         <input
           formControlName="serial"
           type="text"
-          placeholder="SN-88999"
+          [attr.placeholder]="i18n.t('serial.numberExample')"
           autocomplete="off"
           maxlength="40"
           [class.invalid]="invalid('serial')"
@@ -89,7 +89,7 @@
         <input
           formControlName="lot"
           type="text"
-          placeholder="L-24100"
+          [attr.placeholder]="i18n.t('serial.lotExample')"
           autocomplete="off"
           maxlength="20"
         />
@@ -106,7 +106,7 @@
         {{ i18n.t('common.cancel') }}
       </button>
       <button type="submit" class="btn btn--primary" [disabled]="submitting() || form.pending">
-        {{ submitting() ? 'Kaydediliyor...' : 'Seriyi kaydet' }}
+        {{ i18n.t(submitting() ? 'common.saving' : 'serial.submit') }}
       </button>
     </div>
   </form>

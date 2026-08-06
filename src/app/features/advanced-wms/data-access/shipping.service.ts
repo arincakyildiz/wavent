@@ -55,7 +55,10 @@ export class ShippingService {
     const rows: ShipmentPackageRow[] = shipment
       ? db.packages
           .filter((p) => shipment.packageCodes.includes(p.code))
-          .map((p) => ({ ...p, skuSummary: `${p.itemCount} kalem` }))
+          .map((p) => ({
+            ...p,
+            skuSummary: translate('shippingDetail.itemCount', { count: p.itemCount }),
+          }))
       : [];
 
     return this.api.simulate(rows, { delayMs: 280 });

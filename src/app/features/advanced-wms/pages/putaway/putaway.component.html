@@ -20,7 +20,7 @@
       <input
         type="search"
         maxlength="80"
-        placeholder="SKU, lot, lokasyon veya ASN ara..."
+        [attr.placeholder]="i18n.t('putaway.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
         [attr.aria-label]="i18n.t('putaway.searchAria')"
@@ -77,7 +77,7 @@
                       (click)="accept(s)"
                       *appHasPermission="'putaway.accept'"
                     >
-                      {{ pendingId() === s.id ? 'Kaydediliyor...' : 'Kabul Et' }}
+                      {{ i18n.t(pendingId() === s.id ? 'common.saving' : 'putaway.accept') }}
                     </button>
                   }
                 </td>

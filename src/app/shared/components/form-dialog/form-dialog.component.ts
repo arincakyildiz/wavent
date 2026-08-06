@@ -1,4 +1,5 @@
-import { Component, ElementRef, output, input, viewChild, AfterViewInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, inject, input, output, viewChild } from '@angular/core';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * Presentational shell for create/edit forms: backdrop, focus trap entry point and
@@ -18,7 +19,7 @@ import { Component, ElementRef, output, input, viewChild, AfterViewInit } from '
               <p class="dialog__subtitle">{{ subtitle() }}</p>
             }
           </div>
-          <button class="dialog__close" type="button" (click)="dismissed.emit()" aria-label="Kapat">×</button>
+          <button class="dialog__close" type="button" (click)="dismissed.emit()" [attr.aria-label]="i18n.t('common.close')">×</button>
         </div>
 
         <ng-content />
@@ -27,12 +28,14 @@ import { Component, ElementRef, output, input, viewChild, AfterViewInit } from '
   `,
   styleUrl: './form-dialog.component.scss',
 })
-export class FormDialogComponent implements AfterViewInit {
+export class FormDialogComponent implements AfterViewInit, OnDestroy {
+  readonly i18n = inject(I18nService);
   readonly title = input.required<string>();
   readonly subtitle = input<string>();
   readonly dismissed = output<void>();
 
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
+  private readonly previouslyFocused = document.activeElement as HTMLElement | null;
 
   ngAfterViewInit(): void {
     // Move focus into the dialog so keyboard and screen-reader users start inside it.
@@ -41,7 +44,36 @@ export class FormDialogComponent implements AfterViewInit {
     focusable?.focus();
   }
 
+  ngOnDestroy(): void {
+    this.previouslyFocused?.focus();
+  }
+
   onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') this.dismissed.emit();
+    if (event.key === 'Escape') {
+      this.dismissed.emit();
+      return;
+    }
+    if (event.key === 'Tab') this.trapFocus(event);
+  }
+
+  private trapFocus(event: KeyboardEvent): void {
+    const focusable = this.focusableElements();
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  private focusableElements(): HTMLElement[] {
+    const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return Array.from(this.panel()?.nativeElement.querySelectorAll<HTMLElement>(selector) ?? []);
   }
 }

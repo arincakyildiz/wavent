@@ -45,7 +45,7 @@ export class AllocationBreakdownComponent {
   /** Blocks selection while a write is in flight. */
   readonly busy = input(false);
   /** Emitted when the operator picks an alternative lot to re-allocate to. */
-  readonly select = output<AllocationCandidate>();
+  readonly candidateSelected = output<AllocationCandidate>();
 
   /** Share of the requested quantity this reservation actually covers. */
   readonly coveragePct = computed(() => {
@@ -58,6 +58,6 @@ export class AllocationBreakdownComponent {
 
   choose(candidate: AllocationCandidate): void {
     if (this.busy()) return;
-    this.select.emit(candidate);
+    this.candidateSelected.emit(candidate);
   }
 }

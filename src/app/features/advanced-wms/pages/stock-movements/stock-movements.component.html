@@ -37,12 +37,12 @@
       <input
         type="search"
         maxlength="80"
-        placeholder="SKU, lot veya referans ara..."
+        [attr.placeholder]="i18n.t('movements.searchPlaceholder')"
         [value]="search()"
         (input)="search.set($any($event.target).value)"
-        aria-label="Hareket ara"
+        [attr.aria-label]="i18n.t('movements.searchAria')"
       />
-      <select [value]="typeFilter()" (change)="typeFilter.set($any($event.target).value)" aria-label="Tip filtresi">
+      <select [value]="typeFilter()" (change)="typeFilter.set($any($event.target).value)" [attr.aria-label]="i18n.t('movements.typeFilterAria')">
         <option value="all">{{ i18n.t('movements.allTypes') }}</option>
         <option value="receipt">{{ i18n.t('st.receipt') }}</option>
         <option value="putaway">{{ i18n.t('st.putaway') }}</option>

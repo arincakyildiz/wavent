@@ -6,7 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { ExceptionRec, db } from './mock-data';
 import { translate } from '../../../core/i18n/i18n.service';
 
-export interface ExceptionRow extends ExceptionRec {}
+export type ExceptionRow = ExceptionRec;
 
 /** A record that corroborates the exception, gathered from the entities it references. */
 export interface ExceptionEvidence {

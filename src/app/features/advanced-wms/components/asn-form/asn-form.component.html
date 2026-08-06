@@ -1,5 +1,5 @@
 <app-form-dialog
-  title="Yeni ASN"
+  [title]="i18n.t('asn.title')"
   [subtitle]="i18n.t('asn.subtitle')"
   (dismissed)="dismissed.emit()"
 >
@@ -10,7 +10,7 @@
         <input
           formControlName="number"
           type="text"
-          placeholder="ASN-4901"
+          [attr.placeholder]="i18n.t('asn.numberExample')"
           autocomplete="off"
           maxlength="8"
           [class.invalid]="invalid('number')"

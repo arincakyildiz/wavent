@@ -1,5 +1,5 @@
 <div class="shell" [class.shell--collapsed]="collapsed()" [class.shell--mobile-nav-open]="mobileNavOpen()">
-  <div class="sidebar-backdrop" (click)="closeMobileNav()"></div>
+  <button class="sidebar-backdrop" type="button" (click)="closeMobileNav()" [attr.aria-label]="i18n.t('nav.closeMenu')"></button>
 
   <aside class="sidebar" #sidebarEl>
     <div class="sidebar__top">

@@ -1,6 +1,6 @@
 import { Signal, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { Observable, catchError, of, switchMap } from 'rxjs';
+import { Observable, catchError, defer, finalize, of, switchMap } from 'rxjs';
 import { describeError } from '../../core/api/api-error';
 import { ListQuery, ListResult } from './list-query';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -31,6 +31,7 @@ export function createListResource<T>(
   fetch: (scope: string[], query: ListQuery) => Observable<ListResult<T>>,
 ): ListResource<T> {
   const error = signal<string | null>(null);
+  const activeRequests = signal(0);
   const token = signal(0);
   // Rows can carry server-derived text (rule violations, reasons), so a language
   // switch has to re-issue the query rather than leave stale wording on screen.
@@ -40,15 +41,20 @@ export function createListResource<T>(
 
   const result = toSignal(
     toObservable(source).pipe(
-      switchMap(({ scope, query }) => {
-        error.set(null);
-        return fetch(scope, query).pipe(
-          catchError((err) => {
-            error.set(describeError(err));
-            return of(null);
-          }),
-        );
-      }),
+      switchMap(({ scope, query }) =>
+        defer(() => {
+          error.set(null);
+          activeRequests.update((count) => count + 1);
+
+          return fetch(scope, query).pipe(
+            catchError((err) => {
+              error.set(describeError(err));
+              return of(null);
+            }),
+            finalize(() => activeRequests.update((count) => Math.max(0, count - 1))),
+          );
+        }),
+      ),
     ),
     { initialValue: undefined },
   );
@@ -58,8 +64,7 @@ export function createListResource<T>(
     total: computed(() => result()?.total ?? 0),
     totalPages: computed(() => result()?.totalPages ?? 1),
     page: computed(() => result()?.page ?? 1),
-    // `undefined` means "no response yet"; `null` means the call failed.
-    loading: computed(() => result() === undefined && error() === null),
+    loading: computed(() => activeRequests() > 0),
     error: error.asReadonly(),
     reload: () => {
       error.set(null);

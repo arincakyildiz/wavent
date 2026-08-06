@@ -1,5 +1,5 @@
 <app-form-dialog
-  title="Yeni Depo"
+  [title]="i18n.t('warehouseForm.title')"
   [subtitle]="i18n.t('warehouseForm.subtitle')"
   (dismissed)="dismissed.emit()"
 >
@@ -10,7 +10,7 @@
         <input
           formControlName="code"
           type="text"
-          placeholder="IST-02"
+          [attr.placeholder]="i18n.t('warehouseForm.codeExample')"
           autocomplete="off"
           maxlength="7"
           [class.invalid]="invalid('code')"
@@ -40,7 +40,7 @@
         <input
           formControlName="name"
           type="text"
-          placeholder="Istanbul Anadolu DC"
+          [attr.placeholder]="i18n.t('warehouseForm.nameExample')"
           maxlength="60"
           [class.invalid]="invalid('name')"
         />

@@ -10,7 +10,7 @@
         <input
           formControlName="code"
           type="text"
-          placeholder="CC-140"
+          [attr.placeholder]="i18n.t('cycleCount.codeExample')"
           autocomplete="off"
           maxlength="6"
           [class.invalid]="invalid('code')"

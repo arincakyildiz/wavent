@@ -1,6 +1,6 @@
 # Wavent — İleri Depo Yönetimi, Lot/Seri, Dalga Toplama ve Sevkiyat Kontrol Kulesi
 
-Angular 19 (standalone + Signals) tabanlı ileri seviye WMS kontrol paneli. Birden fazla
+Angular 20 (standalone + Signals) tabanlı ileri seviye WMS kontrol paneli. Birden fazla
 depo/lokasyonda ürün, lot/seri, son kullanma, rezervasyon, sayım, dalga toplama, paketleme ve
 sevkiyat istisnalarını yönetir.
 
@@ -14,6 +14,8 @@ npm install
 npm start          # http://localhost:4200
 npm run build      # production build
 npm test           # Karma + Jasmine (watch)
+npm run lint       # TypeScript ve template lint
+npm run test:e2e   # Playwright Chromium E2E
 ```
 
 Tek seferlik test çalıştırma:
@@ -145,7 +147,7 @@ unit/component testlerle kaplıdır:
   kararsız okuma kaydedilemez
 - `core/storage/indexed-db.service.spec.ts` — offline anlık görüntü önbelleği ve yaş kontrolü
 
-Dört ana kullanıcı akışı component/integration seviyesinde uçtan uca kaplıdır:
+Beş ana kullanıcı akışı component/integration seviyesinde uçtan uca kaplıdır:
 
 - `pages/exceptions/exceptions.component.spec.ts` — istisna çözme (zorunlu gerekçe → servis →
   audit → bildirim)
@@ -157,6 +159,12 @@ Dört ana kullanıcı akışı component/integration seviyesinde uçtan uca kapl
   çakışması, version çakışması)
 - `pages/overview/overview.component.spec.ts` — offline fallback (servis hatasında önbellekten
   "çevrimdışı" etiketiyle sunum, önbellek yokken düz hata, bağlantı dönünce etiketin kalkması)
+- `data-access/putaway.service.spec.ts` — kapasite override gerekçesinin servis sınırında doğrulanması
+- `shared/utils/list-resource.spec.ts` — ilk istek ve yeniden yüklemede loading durumunun doğruluğu
+
+Playwright E2E paketi, canlı dil geçişini ve gerekçeli kapasite override akışını gerçek Chromium
+üzerinde doğrular. Aynı build, lint, unit, audit ve E2E adımları `.github/workflows/ci.yml` ile her
+push ve pull request'te çalışır.
 
 ## Paylaşılan Bileşenler
 
@@ -172,7 +180,7 @@ ekranda kullanılır; bunlara ek olarak tartı simülasyonu için `ScaleInput` (
 
 - Tüm veriler mock; gerçek backend entegrasyonu yok ve oturum içi değişiklikler kalıcı değildir.
   Mock veri her sayfa yenilemesinde sabit tohumdan yeniden üretilir.
-- Component/integration testler dört ana akışı kapsar; kalan ekranlarda kapsam unit
+- Component/integration testler beş ana akışı kapsar; kalan ekranlarda kapsam unit
   seviyesindedir (selectors, servisler).
 - Fiziksel cihaz **bağlantısı** yoktur; cihazlar yazılımda simüle edilir: barkod okuma Putaway'de
   `BarcodeInput` (yinelenen okumaları yutar, eşleşmeyen barkod istisna üretir), tartı Packing'de

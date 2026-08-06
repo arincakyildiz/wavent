@@ -4,6 +4,7 @@ import { describeError } from '../../../../core/api/api-error';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { ShipmentPackageRow, ShipmentRow, ShippingService } from '../../data-access/shipping.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { forkJoin } from 'rxjs';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -41,10 +42,13 @@ export class ShippingDetailComponent {
     this.state.set('loading');
     this.errorMessage.set(null);
 
-    this.shippingService.getById(this.id).subscribe({
-      next: (shipment) => {
+    forkJoin({
+      shipment: this.shippingService.getById(this.id),
+      packages: this.shippingService.getPackages(this.id),
+    }).subscribe({
+      next: ({ shipment, packages }) => {
         this.shipment.set(shipment);
-        this.shippingService.getPackages(this.id).subscribe((pkgs) => this.packages.set(pkgs));
+        this.packages.set(packages);
         this.state.set('success');
       },
       error: (err) => {

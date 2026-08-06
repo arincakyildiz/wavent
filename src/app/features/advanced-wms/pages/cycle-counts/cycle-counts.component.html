@@ -25,7 +25,7 @@
       <input
         type="search"
         maxlength="80"
-        placeholder="Kod, kapsam veya depo ara..."
+        [attr.placeholder]="i18n.t('cycleCounts.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
         [attr.aria-label]="i18n.t('cycleCounts.searchAria')"

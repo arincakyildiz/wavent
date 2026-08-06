@@ -8,7 +8,7 @@ import { db } from './mock-data';
 import { SkuStock, balancesInScope, skuStock, skuStockFor } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
 
-export interface InventoryRow extends SkuStock {}
+export type InventoryRow = SkuStock;
 
 export interface InventoryLotRow {
   id: string;

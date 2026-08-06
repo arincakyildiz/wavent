@@ -36,7 +36,8 @@ export function operatingHoursRange(openKey = 'open', closeKey = 'close'): Valid
     if (invalid) {
       closeControl.setErrors({ ...existing, hoursRange: true });
     } else if (existing['hoursRange']) {
-      const { hoursRange, ...rest } = existing;
+      const rest = { ...existing };
+      delete rest['hoursRange'];
       closeControl.setErrors(Object.keys(rest).length ? rest : null);
     }
 
@@ -64,7 +65,8 @@ export function cutOffRunway(cutOffKey: string, minMinutes: number, now: () => D
     if (invalid) {
       control!.setErrors({ ...existing, cutOffRunway: { minMinutes, runway } });
     } else if (existing['cutOffRunway']) {
-      const { cutOffRunway: _drop, ...rest } = existing;
+      const rest = { ...existing };
+      delete rest['cutOffRunway'];
       control!.setErrors(Object.keys(rest).length ? rest : null);
     }
 

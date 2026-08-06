@@ -1,5 +1,5 @@
 <app-form-dialog
-  title="Yeni Dalga"
+  [title]="i18n.t('waveForm.title')"
   [subtitle]="i18n.t('waveForm.subtitle')"
   (dismissed)="dismissed.emit()"
 >
@@ -10,7 +10,7 @@
         <input
           formControlName="name"
           type="text"
-          placeholder="Wave #260"
+          [attr.placeholder]="i18n.t('waveForm.nameExample')"
           autocomplete="off"
           [attr.maxlength]="limits.nameMax"
           [class.invalid]="invalid('name')"

@@ -142,7 +142,7 @@ export class PutawayComponent {
     this.optimistic.update((set) => new Set(set).add(row.id));
     this.pendingId.set(row.id);
 
-    this.putawayService.accept(row.id, row.version).subscribe({
+    this.putawayService.accept(row.id, row.version, reason).subscribe({
       next: (updated) => {
         this.pendingId.set(null);
         this.optimistic.update((set) => {

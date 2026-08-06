@@ -13,6 +13,7 @@ import {
 } from '../../data-access/inventory.service';
 import { stockIsBalanced } from '../../data-access/selectors';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { forkJoin } from 'rxjs';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -53,11 +54,15 @@ export class InventoryDetailComponent {
     this.errorMessage.set(null);
     const scope = this.scope.activeCodes();
 
-    this.inventoryService.getBySku(this.sku(), scope).subscribe({
-      next: (item) => {
+    forkJoin({
+      item: this.inventoryService.getBySku(this.sku(), scope),
+      lots: this.inventoryService.getLots(this.sku(), scope),
+      ledger: this.inventoryService.getLedger(this.sku(), scope),
+    }).subscribe({
+      next: ({ item, lots, ledger }) => {
         this.item.set(item);
-        this.inventoryService.getLots(this.sku(), scope).subscribe((lots) => this.lots.set(lots));
-        this.inventoryService.getLedger(this.sku(), scope).subscribe((ledger) => this.ledger.set(ledger));
+        this.lots.set(lots);
+        this.ledger.set(ledger);
         this.state.set('success');
       },
       error: (err) => {

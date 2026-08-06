@@ -64,7 +64,7 @@ export class PutawayService {
    * optimistic-concurrency, so a stale screen gets a conflict rather than silently
    * overwriting someone else's decision.
    */
-  accept(id: string, expectedVersion: number): Observable<PutawaySuggestionRow> {
+  accept(id: string, expectedVersion: number, overrideReason?: string): Observable<PutawaySuggestionRow> {
     return this.api.simulate(id, { delayMs: 460, kind: 'write' }).pipe(
       map(() => {
         const record = db.putaway.find((p) => p.id === id);
@@ -73,14 +73,8 @@ export class PutawayService {
         this.api.assertVersion(expectedVersion, record.version);
 
         const row = toRow(record);
-        if (!row.capacityOk) {
-          throw new ApiError(
-            'validation',
-            translate('svc.locationUnfit', {
-        path: record.suggestedLocationPath,
-        violations: row.capacityViolations.join('; '),
-      }),
-          );
+        if (!row.capacityOk && (overrideReason?.trim().length ?? 0) < 6) {
+          throw new ApiError('validation', translate('svc.overrideReasonRequired'));
         }
 
         record.accepted = true;

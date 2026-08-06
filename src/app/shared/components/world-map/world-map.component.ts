@@ -126,7 +126,7 @@ const DOTS = buildDots();
   standalone: true,
   imports: [],
   template: `
-    <svg [attr.viewBox]="'0 0 ' + viewW + ' ' + viewH" class="map" role="img" aria-label="Inventory distribution by warehouse">
+    <svg [attr.viewBox]="'0 0 ' + viewW + ' ' + viewH" class="map" role="img" [attr.aria-label]="i18n.t('worldMap.aria')">
       <g fill="var(--map-dot)">
         @for (d of dots; track $index) {
           <circle [attr.cx]="d.x.toFixed(1)" [attr.cy]="d.y.toFixed(1)" r="1.35" />
@@ -146,9 +146,9 @@ const DOTS = buildDots();
     </svg>
 
     <div class="legend">
-      <span class="legend__label">Low</span>
+      <span class="legend__label">{{ i18n.t('worldMap.low') }}</span>
       <span class="legend__scale"></span>
-      <span class="legend__label">High</span>
+      <span class="legend__label">{{ i18n.t('worldMap.high') }}</span>
     </div>
   `,
   styles: `

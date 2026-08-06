@@ -21,7 +21,7 @@
         [attr.placeholder]="i18n.t('packing.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Paket ara"
+        [attr.aria-label]="i18n.t('packing.searchAria')"
       />
       <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
         <option value="all">{{ i18n.t('common.allStatuses') }}</option>
@@ -81,7 +81,7 @@
                       [attr.aria-expanded]="weighingRow()?.id === p.id"
                       (click)="toggleScale(p)"
                     >
-                      {{ weighingRow()?.id === p.id ? 'Kapat' : 'Tart' }}
+                      {{ i18n.t(weighingRow()?.id === p.id ? 'common.close' : 'packing.weigh') }}
                     </button>
                   }
                   @if (!p.weightOk) {

@@ -40,7 +40,7 @@
         [attr.placeholder]="i18n.t('reservations.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Rezervasyon ara"
+        [attr.aria-label]="i18n.t('reservations.searchAria')"
       />
       <select [value]="filter()" (change)="onFilter($any($event.target).value)" [attr.aria-label]="i18n.t('reservations.fulfilmentFilter')">
         <option value="all">{{ i18n.t('common.all') }}</option>
@@ -105,7 +105,7 @@
                       [candidates]="candidates()"
                       [loading]="candidatesLoading()"
                       [busy]="overriding()"
-                      (select)="chooseCandidate($event)"
+                      (candidateSelected)="chooseCandidate($event)"
                     />
                   </td>
                 </tr>

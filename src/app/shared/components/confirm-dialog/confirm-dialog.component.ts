@@ -17,6 +17,8 @@ export class ConfirmDialogComponent {
 
   private readonly confirmButton = viewChild<ElementRef<HTMLButtonElement>>('confirmBtn');
   private readonly reasonInput = viewChild<ElementRef<HTMLTextAreaElement>>('reasonInput');
+  private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
+  private previouslyFocused: HTMLElement | null = null;
 
   readonly form = new FormGroup({
     reason: new FormControl('', { nonNullable: true }),
@@ -25,7 +27,16 @@ export class ConfirmDialogComponent {
   constructor() {
     effect(() => {
       const open = this.dialog();
-      if (!open) return;
+      if (!open) {
+        const previous = this.previouslyFocused;
+        this.previouslyFocused = null;
+        queueMicrotask(() => previous?.focus());
+        return;
+      }
+
+      if (!this.previouslyFocused) {
+        this.previouslyFocused = document.activeElement as HTMLElement | null;
+      }
 
       const reason = this.form.controls.reason;
       reason.reset('');
@@ -64,6 +75,29 @@ export class ConfirmDialogComponent {
   }
 
   onBackdropKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') this.cancel();
+    if (event.key === 'Escape') {
+      this.cancel();
+      return;
+    }
+    if (event.key === 'Tab') this.trapFocus(event);
+  }
+
+  private trapFocus(event: KeyboardEvent): void {
+    const selector = 'button:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusable = Array.from(
+      this.panel()?.nativeElement.querySelectorAll<HTMLElement>(selector) ?? [],
+    );
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 }

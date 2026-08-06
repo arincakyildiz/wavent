@@ -8,7 +8,7 @@
     <div class="page__actions">
       <span class="live-pill" [class.live-pill--paused]="!streaming()">
         <span class="live-pill__dot"></span>
-        {{ streaming() ? 'Live' : 'Paused' }}
+        {{ i18n.t(streaming() ? 'tower.live' : 'tower.pausedShort') }}
       </span>
       <button class="btn" type="button" (click)="toggleStream()">
         {{ streaming() ? i18n.t('tower.stopStream') : i18n.t('tower.startStream') }}

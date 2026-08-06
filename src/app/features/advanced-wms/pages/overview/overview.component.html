@@ -35,7 +35,7 @@
         {{ i18n.t('overview.newWave') }}
       </button>
 
-      <button class="btn" type="button" (click)="reload()" aria-label="Yenile">
+      <button class="btn" type="button" (click)="reload()" [attr.aria-label]="i18n.t('common.refresh')">
         <app-icon name="refresh" [size]="14" />
       </button>
     </div>
@@ -279,7 +279,7 @@
         {{ i18n.t('overview.live') }}
       </span>
       <span class="muted small">{{ i18n.t('overview.lastUpdated') }} {{ clock() }}</span>
-      <button class="icon-action" type="button" (click)="reload()" aria-label="Yenile">
+      <button class="icon-action" type="button" (click)="reload()" [attr.aria-label]="i18n.t('common.refresh')">
         <app-icon name="refresh" [size]="14" />
       </button>
     </div>

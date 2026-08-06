@@ -5,7 +5,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { MovementRec, db } from './mock-data';
 
 export type MovementType = MovementRec['type'];
-export interface StockMovementRow extends MovementRec {}
+export type StockMovementRow = MovementRec;
 
 const ACCESSOR = (row: StockMovementRow, key: string): unknown =>
   (row as unknown as Record<string, unknown>)[key];

@@ -21,7 +21,7 @@
         [attr.placeholder]="i18n.t('shipping.searchPlaceholder')"
         [value]="search()"
         (input)="onSearch($any($event.target).value)"
-        aria-label="Sevkiyat ara"
+        [attr.aria-label]="i18n.t('shipping.searchAria')"
       />
       <select [value]="statusFilter()" (change)="onStatus($any($event.target).value)" [attr.aria-label]="i18n.t('common.statusFilter')">
         <option value="all">{{ i18n.t('common.allStatuses') }}</option>

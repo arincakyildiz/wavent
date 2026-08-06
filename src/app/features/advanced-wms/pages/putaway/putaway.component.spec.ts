@@ -104,21 +104,22 @@ describe('PutawayComponent — accept flow', () => {
     expect(notifications.notifications()[0].kind).toBe('success');
   }));
 
-  it('demands a justified override when the suggestion breaks capacity', fakeAsync(() => {
+  it('accepts a capacity override only after capturing a justification', fakeAsync(() => {
     loadInFakeZone();
 
     const row = takePending((r) => !r.capacityOk);
     if (!row) return pending('no capacity-violating pending suggestion');
 
-    const ask = spyOn(confirm, 'ask').and.returnValue(of({ confirmed: false }));
+    const reason = 'Vardiya lideri kapasite aşımını onayladı';
+    const ask = spyOn(confirm, 'ask').and.returnValue(of({ confirmed: true, reason }));
 
     component.accept(row);
     tick(1000);
 
     expect(ask).toHaveBeenCalled();
     expect(ask.calls.mostRecent().args[0].requireReason).toBe(true);
-    // Cancelling leaves the suggestion pending.
-    expect(db.putaway.find((p) => p.id === row.id)!.accepted).toBe(false);
+    expect(db.putaway.find((p) => p.id === row.id)!.accepted).toBe(true);
+    expect(audit.events()[0].reason).toBe(reason);
   }));
 
   it('rolls the optimistic row back when the write fails', fakeAsync(() => {

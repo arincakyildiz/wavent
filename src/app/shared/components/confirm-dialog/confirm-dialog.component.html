@@ -2,6 +2,7 @@
   <div class="backdrop" (keydown)="onBackdropKeydown($event)" tabindex="-1">
     <div
       class="dialog"
+      #panel
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="'confirm-title-' + d.id"
@@ -46,7 +47,7 @@
             [class.btn--danger]="d.tone === 'danger'"
             type="submit"
           >
-            {{ d.confirmLabel ?? 'Onayla' }}
+            {{ d.confirmLabel ?? i18n.t('common.confirm') }}
           </button>
         </div>
       </form>
