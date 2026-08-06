@@ -13,6 +13,8 @@ import { CycleCountFormComponent } from '../../components/cycle-count-form/cycle
 import { CycleCountRow, CycleCountsService } from '../../data-access/cycle-counts.service';
 import { VARIANCE_THRESHOLD_PCT } from '../../data-access/selectors';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { describeError } from '../../../../core/api/api-error';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -23,6 +25,7 @@ const DEFAULT_PAGE_SIZE = 20;
     SortableDirective, PaginationComponent,
     HasPermissionDirective,
     CycleCountFormComponent,
+    ReactiveFormsModule,
   ],
   templateUrl: './cycle-counts.component.html',
   styleUrl: './cycle-counts.component.scss',
@@ -41,6 +44,11 @@ export class CycleCountsComponent {
   readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly sort = signal<SortState | null>({ key: 'code', direction: 'desc' });
   readonly formOpen = signal(false);
+  readonly activeCount = signal<CycleCountRow | null>(null);
+  readonly saving = signal(false);
+  readonly countForm = new FormGroup({
+    countedQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+  });
 
   readonly list = createListResource<CycleCountRow>(
     computed(() => ({
@@ -97,6 +105,40 @@ export class CycleCountsComponent {
     });
     this.notifications.success(this.i18n.t('cycleCounts.scheduled'), `${count.code} — ${count.scopeLabel}`);
     this.list.reload();
+  }
+
+  editCount(row: CycleCountRow): void {
+    this.activeCount.set(row);
+    this.countForm.setValue({ countedQuantity: row.countedQuantity });
+  }
+
+  saveCount(): void {
+    const row = this.activeCount();
+    if (!row || this.countForm.invalid) return;
+    this.saving.set(true);
+    const quantity = this.countForm.getRawValue().countedQuantity;
+    this.cycleCountsService.recordCount(row.id, row.version, quantity).subscribe({
+      next: (updated) => {
+        this.saving.set(false);
+        this.activeCount.set(null);
+        this.audit.record({
+          actionType: updated.status === 'closed' ? 'Cycle Count Closed' : 'Second Count Requested',
+          targetType: 'CycleCount',
+          targetId: updated.code,
+          oldValue: row.countedQuantity,
+          newValue: updated.countedQuantity,
+        });
+        this.notifications.success(
+          updated.status === 'closed' ? this.i18n.t('cycleCounts.closedToast') : this.i18n.t('cycleCounts.secondRequiredToast'),
+          updated.code,
+        );
+        this.list.reload();
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.notifications.error(this.i18n.t('cycleCounts.saveFailed'), describeError(err), () => this.list.reload());
+      },
+    });
   }
 
   statusTone(status: CycleCountRow['status']): string {

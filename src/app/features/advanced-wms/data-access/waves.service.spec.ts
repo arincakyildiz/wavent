@@ -177,4 +177,21 @@ describe('WavesService', () => {
       });
     });
   });
+
+  describe('controlled order changes', () => {
+    it('requires a reason when a released wave is changed', (done) => {
+      const wave = db.waves.find((row) => row.status === 'released' && row.orderNumbers.length > 1);
+      if (!wave) {
+        pending('no released wave');
+        return;
+      }
+      service.removeOrder(wave.id, wave.version, wave.orderNumbers[0]).subscribe({
+        next: () => done.fail('expected a validation error'),
+        error: (error) => {
+          expect((error as ApiError).kind).toBe('validation');
+          done();
+        },
+      });
+    });
+  });
 });

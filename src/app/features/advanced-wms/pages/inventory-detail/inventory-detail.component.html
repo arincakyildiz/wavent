@@ -63,6 +63,16 @@
         <div class="grid-2">
           <div class="panel">
             <h2>{{ i18n.t('inventory.lotLocationBreakdown') }}</h2>
+            @if (activeLot(); as active) {
+              <form class="form adjustment-form" [formGroup]="adjustmentForm" (ngSubmit)="saveAdjustment()">
+                <strong>{{ active.lot }} · {{ active.locationPath }}</strong>
+                <div class="form__row">
+                  <label class="field"><span class="field__label">{{ i18n.t('common.quantity') }}</span><input type="number" min="0" step="1" formControlName="quantity" /></label>
+                  <label class="field"><span class="field__label">{{ i18n.t('common.status') }}</span><select formControlName="status">@for (status of stockStatuses; track status) { <option [value]="status">{{ i18n.t('st.' + status) }}</option> }</select></label>
+                </div>
+                <div class="form__actions"><button class="btn" type="button" (click)="activeLot.set(null)">{{ i18n.t('common.cancel') }}</button><button class="btn btn--primary" type="submit" [disabled]="adjustmentForm.invalid || saving()">{{ i18n.t('inventoryDetail.adjust') }}</button></div>
+              </form>
+            }
             @if (lots().length) {
               <div class="table-scroll">
                 <table class="data-table">
@@ -74,6 +84,7 @@
                       <th>{{ i18n.t('common.quantity') }}</th>
                       <th>{{ i18n.t('common.status') }}</th>
                       <th>{{ i18n.t('common.expiry') }}</th>
+                      <th *appHasPermission="'inventory.adjust'">{{ i18n.t('common.action') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -85,6 +96,7 @@
                         <td>{{ i18n.n(l.quantity) }}</td>
                         <td><span class="status-pill" [class]="statusTone(l.status)">{{ l.status }}</span></td>
                         <td>{{ l.expiryDate ?? '—' }}</td>
+                        <td *appHasPermission="'inventory.adjust'"><button class="btn" type="button" (click)="editBalance(l)">{{ i18n.t('inventoryDetail.adjust') }}</button></td>
                       </tr>
                     }
                   </tbody>

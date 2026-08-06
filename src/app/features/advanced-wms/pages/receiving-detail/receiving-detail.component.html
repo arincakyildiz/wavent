@@ -56,6 +56,31 @@
 
       <div class="panel">
         <h2>{{ i18n.t('receivingDetail.lines') }}</h2>
+        @if (activeLine(); as active) {
+          <form class="form operation-form" [formGroup]="receiptForm" (ngSubmit)="saveReceipt()">
+            <strong>{{ active.skuCode }} · {{ active.skuName }}</strong>
+            <div class="form__row">
+              <label class="field">
+                <span class="field__label">{{ i18n.t('receivingDetail.received') }}</span>
+                <input type="number" min="0" step="1" formControlName="receivedQuantity" />
+              </label>
+              <label class="field">
+                <span class="field__label">{{ i18n.t('receivingDetail.damaged') }}</span>
+                <input type="number" min="0" step="1" formControlName="damagedQuantity" />
+              </label>
+              <label class="field field--check">
+                <input type="checkbox" formControlName="quarantine" />
+                <span>{{ i18n.t('receivingDetail.quarantine') }}</span>
+              </label>
+            </div>
+            <div class="form__actions">
+              <button class="btn" type="button" (click)="activeLine.set(null)">{{ i18n.t('common.cancel') }}</button>
+              <button class="btn btn--primary" type="submit" [disabled]="receiptForm.invalid || saving()">
+                {{ saving() ? i18n.t('common.saving') : i18n.t('receivingDetail.process') }}
+              </button>
+            </div>
+          </form>
+        }
         @if (lines().length) {
           <div class="table-scroll">
             <table class="data-table">
@@ -68,6 +93,7 @@
                   <th>{{ i18n.t('receivingDetail.received') }}</th>
                   <th>{{ i18n.t('receivingDetail.damaged') }}</th>
                   <th>{{ i18n.t('common.status') }}</th>
+                  <th *appHasPermission="'receiving.process'">{{ i18n.t('common.action') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -80,6 +106,9 @@
                     <td>{{ i18n.n(l.receivedQuantity) }}</td>
                     <td>{{ i18n.n(l.damagedQuantity) }}</td>
                     <td><span class="status-pill" [class]="lineTone(l.status)">{{ i18n.t('st.' + l.status) }}</span></td>
+                    <td *appHasPermission="'receiving.process'">
+                      <button class="btn" type="button" (click)="editLine(l)">{{ i18n.t('receivingDetail.process') }}</button>
+                    </td>
                   </tr>
                 }
               </tbody>

@@ -50,69 +50,49 @@
     </div>
 
     @if (list.rows().length) {
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.task') }}</th>
-              <th appSortable="waveName" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.wave') }}</th>
-              <th appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.type') }}</th>
-              <th appSortable="assignedTo" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.assignee') }}</th>
-              <th appSortable="locationCount" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.location') }}</th>
-              <th appSortable="progressPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.progress') }}</th>
-              <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
-              <th>{{ i18n.t('picking.exception') }}</th>
-              <th>{{ i18n.t('picking.route') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (t of list.rows(); track t.id) {
-              <tr>
-                <td>{{ t.code }}</td>
-                <td>{{ t.waveName }}</td>
-                <td>{{ i18n.t('st.' + t.type) }}</td>
-                <td>{{ t.assignedTo ?? '—' }}</td>
-                <td>{{ t.locationCount }}</td>
-                <td>
-                  <div class="progress-bar">
-                    <span [style.width.%]="t.progressPct" class="tone-success"></span>
-                  </div>
-                  <span class="muted small">{{ t.pickedLines }}/{{ t.lineCount }}</span>
-                </td>
-                <td><span class="status-pill" [class]="statusTone(t.status)">{{ i18n.t('st.' + t.status) }}</span></td>
-                <td class="muted small">{{ t.exceptionReason ? i18n.t(t.exceptionReason) : '—' }}</td>
-                <td>
-                  <button
-                    type="button"
-                    class="btn"
-                    [attr.aria-expanded]="activeRow()?.id === t.id"
-                    (click)="toggleRoute(t)"
-                  >
-                    {{ activeRow()?.id === t.id ? i18n.t('common.close') : i18n.t('picking.viewRoute') }}
-                  </button>
-                </td>
-              </tr>
+      @if (activeRow(); as t) {
+        <div class="panel task-detail">
+          <div class="panel__head"><h2>{{ t.code }}</h2><button class="btn" type="button" (click)="activeRow.set(null)">{{ i18n.t('common.close') }}</button></div>
+          <app-pick-route-viewer [task]="t" />
+          @if (t.status !== 'completed') {
+            <form class="form task-operation" [formGroup]="taskForm" *appHasPermission="'picking.execute'">
+              <div class="form__row">
+                <label class="field" *appHasPermission="'picking.assign'"><span class="field__label">{{ i18n.t('picking.assignee') }}</span><select formControlName="operator">@for (operator of operators; track operator) { <option [value]="operator">{{ operator }}</option> }</select><button class="btn" type="button" (click)="assign(t)" [disabled]="saving()">{{ i18n.t('picking.assign') }}</button></label>
+                <label class="field"><span class="field__label">{{ i18n.t('picking.barcode') }}</span><input type="text" maxlength="40" formControlName="barcode" /><span class="field__hint">{{ i18n.t('picking.expectedBarcode', { barcode: t.expectedBarcode }) }}</span></label>
+                <label class="field"><span class="field__label">{{ i18n.t('common.quantity') }}</span><input type="number" min="1" [max]="t.reservedQuantity - t.pickedQuantity" formControlName="quantity" /><span class="field__hint">{{ i18n.t('picking.remaining', { count: t.reservedQuantity - t.pickedQuantity }) }}</span></label>
+              </div>
+              <button class="btn btn--primary" type="button" (click)="recordPick(t)" [disabled]="saving() || taskForm.controls.barcode.invalid || taskForm.controls.quantity.invalid">{{ i18n.t('picking.recordPick') }}</button>
+              <div class="form__row issue-row">
+                <label class="field"><span class="field__label">{{ i18n.t('picking.issueType') }}</span><select formControlName="issueType"><option value="short-pick">{{ i18n.t('picking.shortPick') }}</option><option value="damage">{{ i18n.t('picking.damage') }}</option></select></label>
+                <label class="field"><span class="field__label">{{ i18n.t('common.reason') }}</span><input type="text" maxlength="240" formControlName="reason" /></label>
+                <button class="btn" type="button" (click)="reportIssue(t)" [disabled]="saving()">{{ i18n.t('picking.openException') }}</button>
+              </div>
+            </form>
+          }
+        </div>
+      }
 
-              @if (activeRow()?.id === t.id) {
-                <tr class="expanded-row">
-                  <td [attr.colspan]="9">
-                    <app-pick-route-viewer [task]="t" />
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
+      <div class="task-vtable" role="table" [attr.aria-rowcount]="list.total()">
+        <div class="task-vtable__head" role="row">
+          <span role="columnheader" appSortable="code" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.task') }}</span>
+          <span role="columnheader" appSortable="waveName" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.wave') }}</span>
+          <span role="columnheader" appSortable="type" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.type') }}</span>
+          <span role="columnheader" appSortable="assignedTo" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('picking.assignee') }}</span>
+          <span role="columnheader">{{ i18n.t('common.progress') }}</span>
+          <span role="columnheader" appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</span>
+          <span role="columnheader">{{ i18n.t('picking.exception') }}</span>
+          <span role="columnheader">{{ i18n.t('picking.route') }}</span>
+        </div>
+        <cdk-virtual-scroll-viewport class="task-vtable__viewport" [itemSize]="rowHeight">
+          <div class="task-vtable__row" role="row" *cdkVirtualFor="let t of list.rows()">
+            <span role="cell">{{ t.code }}</span><span role="cell">{{ t.waveName }}</span><span role="cell">{{ i18n.t('st.' + t.type) }}</span><span role="cell">{{ t.assignedTo ?? '—' }}</span>
+            <span role="cell"><span class="muted small">{{ t.pickedQuantity }}/{{ t.reservedQuantity }}</span></span>
+            <span role="cell"><span class="status-pill" [class]="statusTone(t.status)">{{ i18n.t('st.' + t.status) }}</span></span>
+            <span role="cell" class="muted small">{{ t.exceptionReason ? i18n.t(t.exceptionReason) : '—' }}</span>
+            <span role="cell"><button type="button" class="btn" [attr.aria-expanded]="activeRow()?.id === t.id" (click)="toggleRoute(t)">{{ i18n.t('picking.viewRoute') }}</button></span>
+          </div>
+        </cdk-virtual-scroll-viewport>
       </div>
-
-      <app-pagination
-        [page]="page()"
-        [totalPages]="list.totalPages()"
-        [total]="list.total()"
-        [pageSize]="pageSize()"
-        (pageChange)="page.set($event)"
-        (pageSizeChange)="onPageSize($event)"
-      />
     } @else {
       <div class="state state--empty">{{ i18n.t('picking.empty') }}</div>
     }

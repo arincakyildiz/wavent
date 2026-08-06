@@ -72,6 +72,7 @@ export class ShellComponent {
       items: [
         { labelKey: 'nav.overview', path: '/wms/overview', icon: 'dashboard', permission: 'overview.view' },
         { labelKey: 'nav.warehouses', path: '/wms/warehouses', icon: 'warehouse', permission: 'warehouse.view' },
+        { labelKey: 'nav.locations', path: '/wms/locations', icon: 'gitBranch', permission: 'warehouse.view' },
       ],
     },
     {

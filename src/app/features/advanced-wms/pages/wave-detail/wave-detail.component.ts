@@ -6,15 +6,16 @@ import { NotificationService } from '../../../../core/observability/notification
 import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
-import { ReleaseResult, WaveOrderStatus, WaveRow, WavesService } from '../../data-access/waves.service';
+import { ReleaseResult, WaveOrderCandidate, WaveOrderStatus, WaveRow, WavesService } from '../../data-access/waves.service';
 import { WavePlanningStore } from '../../state/wave-planning.store';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 type LoadState = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-wave-detail',
-  imports: [IconComponent, HasPermissionDirective],
+  imports: [IconComponent, HasPermissionDirective, ReactiveFormsModule],
   templateUrl: './wave-detail.component.html',
   styleUrl: './wave-detail.component.scss',
 })
@@ -33,6 +34,11 @@ export class WaveDetailComponent {
   readonly wave = signal<WaveRow | undefined>(undefined);
   readonly orders = signal<WaveOrderStatus[]>([]);
   readonly releasing = signal(false);
+  readonly editing = signal(false);
+  readonly candidates = signal<WaveOrderCandidate[]>([]);
+  readonly orderForm = new FormGroup({
+    orderNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
   /** Per-order outcome of the last publish attempt (§11 partial result). */
   readonly lastRelease = signal<ReleaseResult | null>(null);
 
@@ -59,6 +65,7 @@ export class WaveDetailComponent {
       next: (wave) => {
         this.wave.set(wave);
         this.wavesService.getOrders(this.id).subscribe((orders) => this.orders.set(orders));
+        this.loadCandidates();
         this.state.set('success');
       },
       error: (err) => {
@@ -66,6 +73,79 @@ export class WaveDetailComponent {
         this.state.set('error');
       },
     });
+  }
+
+  addOrder(): void {
+    const wave = this.wave();
+    if (!wave || this.orderForm.invalid) return;
+    const orderNumber = this.orderForm.getRawValue().orderNumber;
+    if (wave.status === 'released') {
+      this.confirm.ask({
+        title: this.i18n.t('waveDetail.addReleasedTitle'),
+        message: this.i18n.t('waveDetail.addReleasedMessage', { order: orderNumber }),
+        confirmLabel: this.i18n.t('waveDetail.addOrder'),
+        requireReason: true,
+        reasonLabel: this.i18n.t('waveDetail.changeReason'),
+      }).subscribe((result) => {
+        if (result.confirmed) this.commitOrderChange('add', orderNumber, result.reason);
+      });
+      return;
+    }
+    this.commitOrderChange('add', orderNumber);
+  }
+
+  removeOrder(orderNumber: string): void {
+    const wave = this.wave();
+    if (!wave) return;
+    this.confirm.ask({
+      title: this.i18n.t('waveDetail.removeTitle', { order: orderNumber }),
+      message: this.i18n.t('waveDetail.removeMessage'),
+      confirmLabel: this.i18n.t('waveDetail.removeOrder'),
+      tone: 'danger',
+      requireReason: wave.status === 'released',
+      reasonLabel: this.i18n.t('waveDetail.changeReason'),
+    }).subscribe((result) => {
+      if (result.confirmed) this.commitOrderChange('remove', orderNumber, result.reason);
+    });
+  }
+
+  private commitOrderChange(kind: 'add' | 'remove', orderNumber: string, reason?: string): void {
+    const wave = this.wave();
+    if (!wave) return;
+    this.editing.set(true);
+    const request = kind === 'add'
+      ? this.wavesService.addOrder(wave.id, wave.version, orderNumber, reason)
+      : this.wavesService.removeOrder(wave.id, wave.version, orderNumber, reason);
+    request.subscribe({
+      next: (updated) => {
+        this.editing.set(false);
+        this.wave.set(updated);
+        this.store.upsert(updated);
+        this.orderForm.reset({ orderNumber: '' });
+        this.audit.record({
+          actionType: kind === 'add' ? 'Order Added To Wave' : 'Order Removed From Wave',
+          targetType: 'Wave',
+          targetId: updated.name,
+          oldValue: wave.orderCount,
+          newValue: updated.orderCount,
+          reason,
+        });
+        this.notifications.success(
+          this.i18n.t(kind === 'add' ? 'waveDetail.orderAdded' : 'waveDetail.orderRemoved'),
+          orderNumber,
+        );
+        this.wavesService.getOrders(this.id).subscribe((orders) => this.orders.set(orders));
+        this.loadCandidates();
+      },
+      error: (err) => {
+        this.editing.set(false);
+        this.notifications.error(this.i18n.t('waveDetail.changeFailed'), describeError(err), () => this.load());
+      },
+    });
+  }
+
+  private loadCandidates(): void {
+    this.wavesService.eligibleOrders(this.id).subscribe((rows) => this.candidates.set(rows));
   }
 
   back(): void {

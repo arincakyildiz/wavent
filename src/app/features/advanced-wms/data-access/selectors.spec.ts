@@ -28,6 +28,7 @@ function makeLocation(overrides: Partial<LocationRec> = {}): LocationRec {
     maxVolumeM3: 4,
     usedWeightKg: 400,
     usedVolumeM3: 3,
+    version: 1,
     ...overrides,
   };
 }

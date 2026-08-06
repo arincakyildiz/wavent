@@ -117,4 +117,21 @@ describe('PackingService — scale readings (§2/§10)', () => {
 
     expect(isApiError(error) && error.kind).toBe('validation');
   });
+
+  it('splits a package without losing items', async () => {
+    const record = db.packages.find((p) => p.status !== 'shipped' && p.itemCount > 1);
+    if (!record) return pending('no splittable package');
+    const snapshot = { ...record };
+    const packageCount = db.packages.length;
+    const shipmentSnapshots = db.shipments.map((shipment) => ({ shipment, packageCodes: [...shipment.packageCodes], version: shipment.version }));
+    const firstItems = Math.floor(record.itemCount / 2);
+    const [first, second] = await firstValueFrom(service.split(record.id, record.version, firstItems));
+    expect(first.itemCount + second.itemCount).toBe(snapshot.itemCount);
+    Object.assign(record, snapshot);
+    db.packages.splice(0, db.packages.length - packageCount);
+    for (const entry of shipmentSnapshots) {
+      entry.shipment.packageCodes = entry.packageCodes;
+      entry.shipment.version = entry.version;
+    }
+  });
 });

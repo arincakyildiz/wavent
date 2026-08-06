@@ -21,6 +21,21 @@
       <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
+    @if (activeCount(); as active) {
+      <form class="form count-entry" [formGroup]="countForm" (ngSubmit)="saveCount()">
+        <strong>{{ active.code }} · {{ active.scopeLabel }}</strong>
+        <label class="field">
+          <span class="field__label">{{ active.countAttempts > 0 ? i18n.t('cycleCounts.secondCountEntry') : i18n.t('cycleCounts.countEntry') }}</span>
+          <input type="number" min="0" step="1" formControlName="countedQuantity" />
+        </label>
+        <div class="form__actions">
+          <button class="btn" type="button" (click)="activeCount.set(null)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn--primary" type="submit" [disabled]="countForm.invalid || saving()">
+            {{ saving() ? i18n.t('common.saving') : i18n.t('common.save') }}
+          </button>
+        </div>
+      </form>
+    }
     <div class="toolbar">
       <input
         type="search"
@@ -55,6 +70,7 @@
               <th appSortable="variancePct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('cycleCounts.variancePct') }}</th>
               <th>{{ i18n.t('cycleCounts.secondCount') }}</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
+              <th *appHasPermission="'cycleCount.execute'">{{ i18n.t('common.action') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -77,6 +93,13 @@
                   }
                 </td>
                 <td><span class="status-pill" [class]="statusTone(r.status)">{{ i18n.t('st.' + r.status) }}</span></td>
+                <td *appHasPermission="'cycleCount.execute'">
+                  @if (r.status !== 'closed') {
+                    <button class="btn" type="button" (click)="editCount(r)">
+                      {{ r.countAttempts > 0 ? i18n.t('cycleCounts.secondCount') : i18n.t('cycleCounts.enterCount') }}
+                    </button>
+                  }
+                </td>
               </tr>
             }
           </tbody>

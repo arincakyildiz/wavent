@@ -30,6 +30,12 @@ export interface AsnDraft {
   expectedDate: string;
 }
 
+export interface ReceiptInput {
+  receivedQuantity: number;
+  damagedQuantity: number;
+  quarantine: boolean;
+}
+
 const DISCREPANT: ReceiptLineStatus[] = ['short', 'over', 'damaged', 'quarantined'];
 
 function toRow(a: AsnRec): AsnRow {
@@ -105,9 +111,96 @@ export class ReceivingService {
           warehouseCode: d.warehouseCode,
           expectedDate: d.expectedDate,
           status: 'expected',
+          version: 1,
         };
         db.asns.unshift(record);
         return toRow(record);
+      }),
+    );
+  }
+
+  receiveLine(id: string, expectedVersion: number, input: ReceiptInput): Observable<ReceiptLineRow> {
+    return this.api.simulate(id, { delayMs: 520, kind: 'write' }).pipe(
+      map(() => {
+        const line = db.receiptLines.find((record) => record.id === id);
+        if (!line) throw new ApiError('not-found', translate('svc.receiptLineNotFound'));
+        this.api.assertVersion(expectedVersion, line.version);
+        if (!Number.isInteger(input.receivedQuantity) || input.receivedQuantity < 0) {
+          throw new ApiError('validation', translate('svc.invalidReceivedQuantity'));
+        }
+        if (!Number.isInteger(input.damagedQuantity) || input.damagedQuantity < 0 || input.damagedQuantity > input.receivedQuantity) {
+          throw new ApiError('validation', translate('svc.invalidDamagedQuantity'));
+        }
+
+        line.receivedQuantity = input.receivedQuantity;
+        line.damagedQuantity = input.damagedQuantity;
+        line.status = input.quarantine
+          ? 'quarantined'
+          : input.damagedQuantity > 0
+            ? 'damaged'
+            : input.receivedQuantity < line.expectedQuantity
+              ? 'short'
+              : input.receivedQuantity > line.expectedQuantity
+                ? 'over'
+                : 'matched';
+        line.version += 1;
+
+        const asn = db.asns.find((record) => record.number === line.asnNumber);
+        if (asn && asn.status !== 'closed') {
+          asn.status = 'receiving';
+          asn.version += 1;
+        }
+
+        const warehouseCode = asn?.warehouseCode ?? db.warehouses[0].code;
+        const goodQuantity = input.receivedQuantity - input.damagedQuantity;
+        const sku = db.skus.find((record) => record.code === line.skuCode);
+        const target = db.locations.find(
+          (location) => location.warehouseCode === warehouseCode && location.type === 'bin' && location.locationClass === sku?.storageClass && location.status === 'active',
+        );
+        if (goodQuantity > 0 && target && !db.putaway.some((record) => record.receiptLineId === line.id)) {
+          db.putaway.unshift({
+            id: `pw-${db.putaway.length + 1}`,
+            receiptLineId: line.id,
+            asnNumber: line.asnNumber,
+            skuCode: line.skuCode,
+            lot: line.lot,
+            quantity: goodQuantity,
+            warehouseCode,
+            suggestedLocationPath: target.path,
+            score: 95,
+            reasons: ['seed.putaway.classOk', 'seed.putaway.capacityOk'],
+            accepted: false,
+            version: 1,
+          });
+        }
+        if (input.damagedQuantity > 0 || input.quarantine) {
+          db.exceptions.unshift({
+            id: `ex-live-${db.exceptions.length + 1}`,
+            type: 'damage',
+            severity: input.quarantine ? 'high' : 'medium',
+            warehouseCode,
+            referenceType: 'ReceiptLine',
+            referenceId: line.id,
+            status: 'open',
+            createdAt: new Date().toISOString(),
+            version: 1,
+          });
+        }
+        db.movements.unshift({
+          id: `mv-live-${db.movements.length + 1}`,
+          at: new Date().toISOString(),
+          skuCode: line.skuCode,
+          lot: line.lot,
+          warehouseCode,
+          quantity: input.receivedQuantity,
+          toLocation: 'STAGE/IN',
+          type: 'receipt',
+          reasonCode: line.asnNumber,
+          performedBy: 'Current user',
+        });
+
+        const skuName = db.skus.find((record) => record.code === line.skuCode)?.name ?? line.skuCode;
+        return { ...line, skuName };
       }),
     );
   }

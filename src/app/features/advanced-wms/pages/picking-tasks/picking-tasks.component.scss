@@ -1,6 +1,56 @@
 
-/* The route viewer sits in a full-width row under the task it belongs to. */
-.expanded-row > td {
+$task-cols: 92px 130px 80px 130px 100px 110px minmax(130px, 1fr) 100px;
+
+.task-vtable {
+  min-width: 980px;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  background: var(--surface-1);
+}
+
+.task-vtable__head,
+.task-vtable__row {
+  display: grid;
+  grid-template-columns: $task-cols;
+  gap: 10px;
+  align-items: center;
+  padding: 0 14px;
+}
+
+.task-vtable__head {
+  height: 40px;
   background: var(--surface-2);
-  border-top: none;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.task-vtable__viewport {
+  height: min(58vh, 560px);
+}
+
+.task-vtable__row {
+  height: 48px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.task-vtable__row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-detail {
+  margin-bottom: 14px;
+}
+
+.task-operation {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.issue-row {
+  align-items: end;
 }

@@ -19,6 +19,7 @@ export interface InventoryLotRow {
   quantity: number;
   status: StockStatus;
   expiryDate?: string;
+  version: number;
 }
 
 export interface LedgerEntry {
@@ -71,6 +72,7 @@ export class InventoryService {
         quantity: b.quantity,
         status: b.status,
         expiryDate: b.expiryDate,
+        version: b.version,
       }));
 
     return this.api.simulate(rows, { delayMs: 280 });
@@ -105,5 +107,53 @@ export class InventoryService {
     });
 
     return this.api.simulate(entries.reverse(), { delayMs: 300 });
+  }
+
+  adjustBalance(
+    id: string,
+    expectedVersion: number,
+    quantity: number,
+    status: StockStatus,
+    reason: string,
+  ): Observable<InventoryLotRow> {
+    return this.api.simulate(id, { delayMs: 500, kind: 'write' }).pipe(
+      map(() => {
+        const balance = db.balances.find((record) => record.id === id);
+        if (!balance) throw new ApiError('not-found', translate('svc.balanceNotFound'));
+        this.api.assertVersion(expectedVersion, balance.version);
+        if (!Number.isInteger(quantity) || quantity < 0) {
+          throw new ApiError('validation', translate('svc.invalidAdjustmentQuantity'));
+        }
+        if (reason.trim().length < 6) throw new ApiError('validation', translate('svc.reasonTooShort'));
+        const delta = quantity - balance.quantity;
+        balance.quantity = quantity;
+        balance.status = status;
+        balance.version += 1;
+        db.movements.unshift({
+          id: `mv-live-${db.movements.length + 1}`,
+          at: new Date().toISOString(),
+          skuCode: balance.skuCode,
+          lot: balance.lot,
+          warehouseCode: balance.warehouseCode,
+          quantity: delta,
+          fromLocation: balance.locationPath,
+          toLocation: balance.locationPath,
+          type: 'adjustment',
+          reasonCode: reason.trim(),
+          performedBy: 'Current user',
+        });
+        return {
+          id: balance.id,
+          lot: balance.lot ?? '—',
+          serial: balance.serial,
+          locationPath: balance.locationPath,
+          warehouseCode: balance.warehouseCode,
+          quantity: balance.quantity,
+          status: balance.status,
+          expiryDate: balance.expiryDate,
+          version: balance.version,
+        };
+      }),
+    );
   }
 }

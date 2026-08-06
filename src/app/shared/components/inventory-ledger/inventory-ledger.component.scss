@@ -3,3 +3,42 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+
+.ledger {
+  min-width: 680px;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.ledger__head,
+.ledger__row {
+  display: grid;
+  grid-template-columns: 150px 1fr 110px 110px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 0 14px;
+}
+
+.ledger__head {
+  height: 40px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.ledger__viewport {
+  height: min(48vh, 440px);
+}
+
+.ledger__row {
+  height: 44px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.ledger__row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

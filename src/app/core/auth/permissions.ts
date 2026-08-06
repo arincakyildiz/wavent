@@ -26,12 +26,21 @@ export type Permission =
   | 'settings.view'
   // acting
   | 'warehouse.create'
+  | 'location.manage'
   | 'wave.create'
   | 'wave.release'
+  | 'wave.editReleased'
   | 'putaway.accept'
   | 'receiving.create'
+  | 'receiving.process'
+  | 'picking.execute'
+  | 'picking.assign'
+  | 'packing.verify'
   | 'packing.approveWeight'
+  | 'shipping.manage'
   | 'cycleCount.create'
+  | 'cycleCount.execute'
+  | 'inventory.adjust'
   | 'exception.resolve'
   | 'reservation.override'
   | 'settings.manage';
@@ -71,13 +80,22 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'cycleCount.view',
     'exception.view',
     'putaway.accept',
+    'receiving.process',
+    'picking.execute',
+    'packing.verify',
+    'cycleCount.execute',
   ],
   // Owns task assignment, wave planning, capacity and exception decisions.
   'shift-lead': [
     ...ALL_VIEWS.filter((p) => p !== 'settings.view' && p !== 'audit.view'),
     'wave.create',
     'wave.release',
+    'wave.editReleased',
     'putaway.accept',
+    'receiving.process',
+    'picking.execute',
+    'picking.assign',
+    'packing.verify',
     'exception.resolve',
     'packing.approveWeight',
   ],
@@ -85,6 +103,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   'inventory-controller': [
     ...ALL_VIEWS.filter((p) => p !== 'settings.view'),
     'cycleCount.create',
+    'cycleCount.execute',
+    'inventory.adjust',
     'exception.resolve',
     'reservation.override',
     'putaway.accept',
@@ -101,6 +121,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'traceability.view',
     'controlTower.view',
     'packing.approveWeight',
+    'packing.verify',
+    'shipping.manage',
   ],
   // Owns order priority, wave rules and capacity scenarios.
   planner: [
@@ -115,18 +137,28 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'traceability.view',
     'wave.create',
     'wave.release',
+    'wave.editReleased',
     'reservation.override',
   ],
   // Full access, including configuration and the audit trail.
   'warehouse-manager': [
     ...ALL_VIEWS,
     'warehouse.create',
+    'location.manage',
     'wave.create',
     'wave.release',
+    'wave.editReleased',
     'putaway.accept',
     'receiving.create',
+    'receiving.process',
+    'picking.execute',
+    'picking.assign',
+    'packing.verify',
     'packing.approveWeight',
+    'shipping.manage',
     'cycleCount.create',
+    'cycleCount.execute',
+    'inventory.adjust',
     'exception.resolve',
     'reservation.override',
     'settings.manage',

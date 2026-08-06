@@ -8,8 +8,13 @@ import { WarehouseTreeComponent } from '../../../../shared/components/warehouse-
 import { SortableDirective } from '../../../../shared/directives/sortable.directive';
 import { ListQuery, SortState } from '../../../../shared/utils/list-query';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
-import { LocationRow, LocationsService } from '../../data-access/locations.service';
+import { LocationDraft, LocationRow, LocationsService } from '../../data-access/locations.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { NotificationService } from '../../../../core/observability/notification.service';
+import { AuditService } from '../../../../core/observability/audit.service';
+import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 /** The tree needs the whole hierarchy, not the current page of it. */
@@ -17,7 +22,7 @@ const TREE_PAGE_SIZE = 500;
 
 @Component({
   selector: 'app-locations',
-  imports: [SortableDirective, PaginationComponent, WarehouseTreeComponent],
+  imports: [SortableDirective, PaginationComponent, WarehouseTreeComponent, ReactiveFormsModule, HasPermissionDirective],
   templateUrl: './locations.component.html',
   styleUrl: './locations.component.scss',
 })
@@ -25,6 +30,9 @@ export class LocationsComponent {
   readonly i18n = inject(I18nService);
   private readonly locationsService = inject(LocationsService);
   private readonly scope = inject(WarehouseScopeService);
+  private readonly notifications = inject(NotificationService);
+  private readonly audit = inject(AuditService);
+  private readonly confirm = inject(ConfirmDialogService);
 
   readonly search = signal('');
   readonly classFilter = signal('all');
@@ -34,6 +42,18 @@ export class LocationsComponent {
   readonly sort = signal<SortState | null>({ key: 'path', direction: 'asc' });
   readonly errorMessage = signal<string | null>(null);
   readonly reloadToken = signal(0);
+  readonly formOpen = signal(false);
+  readonly saving = signal(false);
+  readonly warehouses = this.scope.permitted;
+  readonly locationForm = new FormGroup({
+    warehouseCode: new FormControl(this.scope.permitted()[0]?.code ?? '', { nonNullable: true, validators: [Validators.required] }),
+    parentPath: new FormControl('', { nonNullable: true }),
+    code: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^[A-Z0-9-]{1,12}$/)] }),
+    type: new FormControl<LocationDraft['type']>('bin', { nonNullable: true, validators: [Validators.required] }),
+    locationClass: new FormControl<LocationDraft['locationClass']>('ambient', { nonNullable: true, validators: [Validators.required] }),
+    maxWeightKg: new FormControl(500, { nonNullable: true, validators: [Validators.min(0)] }),
+    maxVolumeM3: new FormControl(4, { nonNullable: true, validators: [Validators.min(0)] }),
+  });
 
   private readonly request = computed(() => ({
     scope: this.scope.activeCodes(),
@@ -114,6 +134,47 @@ export class LocationsComponent {
   onPageSize(size: number): void {
     this.pageSize.set(size);
     this.page.set(1);
+  }
+
+  createLocation(): void {
+    if (this.locationForm.invalid) return;
+    this.saving.set(true);
+    this.locationsService.create(this.locationForm.getRawValue()).subscribe({
+      next: (created) => {
+        this.saving.set(false);
+        this.formOpen.set(false);
+        this.audit.record({ actionType: 'Location Created', targetType: 'Location', targetId: created.path, newValue: `${created.type} · ${created.locationClass}` });
+        this.notifications.success(this.i18n.t('locations.createdToast'), created.path);
+        this.locationForm.patchValue({ parentPath: '', code: '' });
+        this.reload();
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.notifications.error(this.i18n.t('locations.createFailed'), describeError(err));
+      },
+    });
+  }
+
+  toggleStatus(row: LocationRow): void {
+    const next = row.status === 'blocked' ? 'active' : 'blocked';
+    this.confirm.ask({
+      title: this.i18n.t('locations.statusTitle', { path: row.path }),
+      message: this.i18n.t(next === 'blocked' ? 'locations.blockMessage' : 'locations.activateMessage'),
+      confirmLabel: this.i18n.t(next === 'blocked' ? 'locations.block' : 'locations.activate'),
+      tone: next === 'blocked' ? 'danger' : 'default',
+      requireReason: next === 'blocked',
+      reasonLabel: this.i18n.t('common.reason'),
+    }).subscribe((result) => {
+      if (!result.confirmed) return;
+      this.locationsService.setStatus(row.id, row.version, next).subscribe({
+        next: (updated) => {
+          this.audit.record({ actionType: 'Location Status Changed', targetType: 'Location', targetId: updated.path, oldValue: row.status, newValue: updated.status, reason: result.reason });
+          this.notifications.success(this.i18n.t('locations.statusSaved'), updated.path);
+          this.reload();
+        },
+        error: (err) => this.notifications.error(this.i18n.t('locations.statusFailed'), describeError(err), () => this.reload()),
+      });
+    });
   }
 
   capacityTone(row: LocationRow): string {

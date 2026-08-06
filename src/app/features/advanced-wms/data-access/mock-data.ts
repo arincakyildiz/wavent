@@ -95,6 +95,7 @@ export interface LocationRec {
   usedVolumeM3: number;
   /** Present only on temperature-controlled bins; drives the §4 putaway check. */
   temperatureRangeC?: { min: number; max: number };
+  version: number;
 }
 
 export interface SkuRec {
@@ -120,6 +121,7 @@ export interface BalanceRec {
   quantity: number;
   status: StockStatus;
   expiryDate?: string;
+  version: number;
 }
 
 export interface OrderRec {
@@ -174,8 +176,12 @@ export interface PickTaskRec {
   route: string[];
   lineCount: number;
   pickedLines: number;
+  reservedQuantity: number;
+  pickedQuantity: number;
+  expectedBarcode: string;
   status: PickTaskStatus;
   exceptionReason?: string;
+  version: number;
 }
 
 export interface PackageRec {
@@ -199,9 +205,11 @@ export interface ShipmentRec {
   carrier: string;
   door: string;
   packageCodes: string[];
+  loadedPackageCodes: string[];
   status: ShipmentStatus;
   progressPct: number;
   closedAt?: string;
+  version: number;
 }
 
 export interface AsnRec {
@@ -211,6 +219,7 @@ export interface AsnRec {
   warehouseCode: string;
   expectedDate: string;
   status: ASNStatus;
+  version: number;
 }
 
 export interface ReceiptLineRec {
@@ -222,10 +231,12 @@ export interface ReceiptLineRec {
   receivedQuantity: number;
   damagedQuantity: number;
   status: ReceiptLineStatus;
+  version: number;
 }
 
 export interface PutawayRec {
   id: string;
+  receiptLineId?: string;
   asnNumber: string;
   skuCode: string;
   lot?: string;
@@ -245,7 +256,9 @@ export interface CycleCountRec {
   scopeLabel: string;
   expectedQuantity: number;
   countedQuantity: number;
+  countAttempts: number;
   status: CycleCountStatus;
+  version: number;
 }
 
 export interface ExceptionRec {
@@ -379,10 +392,41 @@ function buildLocations(): LocationRec[] {
         maxVolumeM3: 0,
         usedWeightKg: 0,
         usedVolumeM3: 0,
+        version: 1,
       });
 
       const aisles = zone === 'HZ' ? 1 : wh.code === 'GRU-01' ? 2 : 3;
       for (let a = 1; a <= aisles; a++) {
+        const aislePath = `${zone}/${String(a).padStart(2, '0')}`;
+        out.push({
+          id: `loc-${++n}`,
+          path: aislePath,
+          warehouseCode: wh.code,
+          type: 'aisle',
+          locationClass: CLASS_BY_ZONE[zone],
+          status: 'active',
+          maxWeightKg: 0,
+          maxVolumeM3: 0,
+          usedWeightKg: 0,
+          usedVolumeM3: 0,
+          version: 1,
+        });
+
+        const rackPath = `${aislePath}/01`;
+        out.push({
+          id: `loc-${++n}`,
+          path: rackPath,
+          warehouseCode: wh.code,
+          type: 'rack',
+          locationClass: CLASS_BY_ZONE[zone],
+          status: 'active',
+          maxWeightKg: 0,
+          maxVolumeM3: 0,
+          usedWeightKg: 0,
+          usedVolumeM3: 0,
+          version: 1,
+        });
+
         const bins = zone === 'HZ' ? 2 : 4;
         for (let b = 1; b <= bins; b++) {
           const maxWeight = zone === 'HZ' ? 200 : zone === 'C' || zone === 'F' ? 400 : 500;
@@ -390,7 +434,7 @@ function buildLocations(): LocationRec[] {
           const fill = rand();
           out.push({
             id: `loc-${++n}`,
-            path: `${zone}/${String(a).padStart(2, '0')}/${String(b).padStart(2, '0')}`,
+            path: `${rackPath}/${String(b).padStart(2, '0')}`,
             warehouseCode: wh.code,
             type: 'bin',
             locationClass: CLASS_BY_ZONE[zone],
@@ -400,6 +444,7 @@ function buildLocations(): LocationRec[] {
             usedWeightKg: Math.round(maxWeight * fill),
             usedVolumeM3: Math.round(maxVolume * fill * 10) / 10,
             temperatureRangeC: CLASS_TEMPERATURE_C[CLASS_BY_ZONE[zone]] ?? undefined,
+            version: 1,
           });
         }
       }
@@ -416,6 +461,7 @@ function buildLocations(): LocationRec[] {
       maxVolumeM3: 20,
       usedWeightKg: int(200, 1400),
       usedVolumeM3: int(2, 16),
+      version: 1,
     });
   }
 
@@ -468,6 +514,7 @@ function buildBalances(skus: SkuRec[], locations: LocationRec[]): BalanceRec[] {
               quantity: 1,
               status: chance(0.12) ? pick([StockStatus.Reserved, StockStatus.Blocked]) : StockStatus.Available,
               expiryDate: expiry,
+              version: 1,
             });
           }
           continue;
@@ -497,6 +544,7 @@ function buildBalances(skus: SkuRec[], locations: LocationRec[]): BalanceRec[] {
             quantity: qty,
             status,
             expiryDate: expiry,
+            version: 1,
           });
         }
       }
@@ -709,6 +757,10 @@ function buildPickTasks(waves: WaveRec[], orders: OrderRec[], locations: Locatio
       if (!slice.length) continue;
 
       const lineCount = slice.reduce((sum, num) => sum + (byNumber.get(num)?.lines.length ?? 0), 0);
+      const reservedQuantity = slice.reduce(
+        (sum, num) => sum + (byNumber.get(num)?.lines.reduce((lineSum, line) => lineSum + line.quantity, 0) ?? 0),
+        0,
+      );
       const complete = wave.status === 'completed';
       const isException = !complete && chance(0.22);
       const picked = complete ? lineCount : isException ? int(0, lineCount - 1) : int(0, lineCount);
@@ -723,6 +775,9 @@ function buildPickTasks(waves: WaveRec[], orders: OrderRec[], locations: Locatio
         route: bins.slice(g * 2, g * 2 + int(2, 6)).map((l) => l.path),
         lineCount,
         pickedLines: Math.min(picked, lineCount),
+        reservedQuantity,
+        pickedQuantity: lineCount ? Math.round((Math.min(picked, lineCount) / lineCount) * reservedQuantity) : 0,
+        expectedBarcode: `PK-${2700 + n}`,
         status: complete
           ? 'completed'
           : isException
@@ -738,6 +793,7 @@ function buildPickTasks(waves: WaveRec[], orders: OrderRec[], locations: Locatio
               'seed.exception.emptyLocation',
             ])
           : undefined,
+        version: 1,
       });
     }
   }
@@ -819,9 +875,11 @@ function buildShipments(packages: PackageRec[]): ShipmentRec[] {
       carrier: pick(CARRIERS),
       door: `D-${String(int(1, 6)).padStart(2, '0')}`,
       packageCodes: group.map((p) => p.code),
+      loadedPackageCodes: status === 'staged' ? [] : group.slice(0, Math.ceil((progress / 100) * group.length)).map((p) => p.code),
       status,
       progressPct: progress,
       closedAt: status === 'delivered' ? stamp(shiftDays(-int(1, 3))) : undefined,
+      version: 1,
     });
   }
 
@@ -849,6 +907,7 @@ function buildAsns(skus: SkuRec[]): { asns: AsnRec[]; lines: ReceiptLineRec[]; p
       warehouseCode: wh.code,
       expectedDate: isoDate(shiftDays(int(-6, 6))),
       status,
+      version: 1,
     });
 
     if (status === 'cancelled' || status === 'expected') continue;
@@ -882,6 +941,7 @@ function buildAsns(skus: SkuRec[]): { asns: AsnRec[]; lines: ReceiptLineRec[]; p
         receivedQuantity: received,
         damagedQuantity: damaged,
         status: lineStatus,
+        version: 1,
       });
 
       if (received > 0) {
@@ -893,7 +953,7 @@ function buildAsns(skus: SkuRec[]): { asns: AsnRec[]; lines: ReceiptLineRec[]; p
           lot,
           quantity: received - damaged,
           warehouseCode: wh.code,
-          suggestedLocationPath: `${sku.storageClass === 'hazmat' ? 'HZ' : sku.storageClass === 'frozen' ? 'F' : sku.storageClass === 'chilled' ? 'C' : 'A'}/${String(int(1, 3)).padStart(2, '0')}/${String(int(1, 4)).padStart(2, '0')}`,
+          suggestedLocationPath: `${sku.storageClass === 'hazmat' ? 'HZ' : sku.storageClass === 'frozen' ? 'F' : sku.storageClass === 'chilled' ? 'C' : 'A'}/${String(int(1, 3)).padStart(2, '0')}/01/${String(int(1, 4)).padStart(2, '0')}`,
           score,
           reasons: [
             'seed.putaway.classOk',
@@ -930,7 +990,9 @@ function buildCycleCounts(locations: LocationRec[], skus: SkuRec[]): CycleCountR
       scopeLabel: byLocation && bins.length ? pick(bins).path : pick(skus).code,
       expectedQuantity: expected,
       countedQuantity: status === 'scheduled' ? expected : counted,
+      countAttempts: status === 'scheduled' ? 0 : status === 'variance-review' ? 1 : 2,
       status,
+      version: 1,
     });
   }
 

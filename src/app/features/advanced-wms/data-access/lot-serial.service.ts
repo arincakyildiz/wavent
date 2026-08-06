@@ -100,6 +100,7 @@ export class LotSerialService {
           quantity: 1,
           status: StockStatus.Available,
           expiryDate: draft.expiryDate,
+          version: 1,
         };
         db.balances.push(record);
 

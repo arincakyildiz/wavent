@@ -41,6 +41,12 @@ export interface ReleaseResult {
   failed: { orderNumber: string; reason: string }[];
 }
 
+export interface WaveOrderCandidate {
+  orderNumber: string;
+  priority: number;
+  route: string;
+}
+
 function toRow(w: WaveRec): WaveRow {
   const statuses = waveOrderStatuses(w.id);
   return {
@@ -173,5 +179,71 @@ export class WavesService {
         return { wave: toRow(record), released, failed };
       }),
     );
+  }
+
+  eligibleOrders(id: string): Observable<WaveOrderCandidate[]> {
+    const wave = db.waves.find((record) => record.id === id);
+    const used = new Set(db.waves.flatMap((record) => record.orderNumbers));
+    const rows = wave
+      ? db.orders
+          .filter(
+            (order) =>
+              order.warehouseCode === wave.warehouseCode &&
+              !used.has(order.number) &&
+              db.allocations.some((allocation) => allocation.orderNumber === order.number && allocation.quantity > 0),
+          )
+          .map((order) => ({ orderNumber: order.number, priority: order.priority, route: order.route }))
+      : [];
+    return this.api.simulate(rows, { delayMs: 280 });
+  }
+
+  addOrder(id: string, expectedVersion: number, orderNumber: string, reason?: string): Observable<WaveRow> {
+    return this.api.simulate(id, { delayMs: 480, kind: 'write' }).pipe(
+      map(() => {
+        const wave = this.findEditable(id, expectedVersion, reason);
+        const order = db.orders.find((record) => record.number === orderNumber);
+        if (!order || order.warehouseCode !== wave.warehouseCode) {
+          throw new ApiError('validation', translate('svc.orderNotEligible'));
+        }
+        if (db.waves.some((record) => record.orderNumbers.includes(orderNumber))) {
+          throw new ApiError('conflict', translate('svc.orderAlreadyWaved'));
+        }
+        wave.orderNumbers.push(orderNumber);
+        wave.capacityUsedPct = Math.min(100, wave.capacityUsedPct + 6);
+        wave.version += 1;
+        order.status = wave.status === 'released' ? 'picking' : 'waved';
+        return toRow(wave);
+      }),
+    );
+  }
+
+  removeOrder(id: string, expectedVersion: number, orderNumber: string, reason?: string): Observable<WaveRow> {
+    return this.api.simulate(id, { delayMs: 480, kind: 'write' }).pipe(
+      map(() => {
+        const wave = this.findEditable(id, expectedVersion, reason);
+        const index = wave.orderNumbers.indexOf(orderNumber);
+        if (index < 0) throw new ApiError('not-found', translate('svc.orderNotInWave'));
+        if (wave.orderNumbers.length === 1) throw new ApiError('validation', translate('svc.waveCannotBeEmpty'));
+        wave.orderNumbers.splice(index, 1);
+        wave.capacityUsedPct = Math.max(0, wave.capacityUsedPct - 6);
+        wave.version += 1;
+        const order = db.orders.find((record) => record.number === orderNumber);
+        if (order) order.status = 'allocated';
+        return toRow(wave);
+      }),
+    );
+  }
+
+  private findEditable(id: string, expectedVersion: number, reason?: string): WaveRec {
+    const wave = db.waves.find((record) => record.id === id);
+    if (!wave) throw new ApiError('not-found', translate('svc.waveNotFound'));
+    this.api.assertVersion(expectedVersion, wave.version);
+    if (wave.status === 'completed' || wave.status === 'cancelled') {
+      throw new ApiError('validation', translate('svc.waveLocked'));
+    }
+    if (wave.status === 'released' && (reason?.trim().length ?? 0) < 6) {
+      throw new ApiError('validation', translate('svc.releasedWaveReasonRequired'));
+    }
+    return wave;
   }
 }

@@ -34,6 +34,25 @@
     }
     @case ('success') {
       @if (shipment(); as s) {
+        @if (s.status !== 'in-transit' && s.status !== 'delivered') {
+          <div class="panel shipment-actions" *appHasPermission="'shipping.manage'">
+            <form class="form door-form" [formGroup]="doorForm" (ngSubmit)="saveDoor()">
+              <label class="field">
+                <span class="field__label">{{ i18n.t('shippingDetail.loadingDoor') }}</span>
+                <input type="text" maxlength="4" formControlName="door" placeholder="D-01" />
+              </label>
+              <button class="btn" type="submit" [disabled]="doorForm.invalid || saving()">{{ i18n.t('shippingDetail.assignDoor') }}</button>
+            </form>
+            <div class="shipment-actions__commands">
+              <button class="btn" type="button" (click)="loadNext()" [disabled]="saving() || s.loadedPackageCodes.length === s.packageCount">
+                {{ i18n.t('shippingDetail.loadNext') }}
+              </button>
+              <button class="btn btn--primary" type="button" (click)="closeShipment()" [disabled]="saving() || s.loadedPackageCodes.length !== s.packageCount">
+                {{ i18n.t('shippingDetail.closeShipment') }}
+              </button>
+            </div>
+          </div>
+        }
         <div class="kpi-row">
           <div class="kpi-card">
             <div class="kpi-card__label">{{ i18n.t('shippingDetail.package') }}</div>
@@ -106,6 +125,7 @@
                     <th>{{ i18n.t('shippingDetail.tolerance') }}</th>
                     <th>{{ i18n.t('packing.content') }}</th>
                     <th>{{ i18n.t('common.status') }}</th>
+                    <th>{{ i18n.t('shippingDetail.loadStatus') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -131,6 +151,11 @@
                         }
                       </td>
                       <td><span class="status-pill" [class]="packageTone(p.status)">{{ i18n.t('st.' + p.status) }}</span></td>
+                      <td>
+                        <span class="status-pill" [class]="s.loadedPackageCodes.includes(p.code) ? 'tone-success' : 'tone-neutral'">
+                          {{ i18n.t(s.loadedPackageCodes.includes(p.code) ? 'shippingDetail.loaded' : 'shippingDetail.waitingLoad') }}
+                        </span>
+                      </td>
                     </tr>
                   }
                 </tbody>

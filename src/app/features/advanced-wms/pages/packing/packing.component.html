@@ -14,6 +14,19 @@
       <button type="button" (click)="list.reload()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else {
+    @if (splitRow(); as row) {
+      <form class="form split-form" [formGroup]="splitForm" (ngSubmit)="saveSplit()">
+        <strong>{{ i18n.t('packing.splitTitle', { code: row.code, count: row.itemCount }) }}</strong>
+        <label class="field">
+          <span class="field__label">{{ i18n.t('packing.firstPackageItems') }}</span>
+          <input type="number" min="1" [max]="row.itemCount - 1" step="1" formControlName="firstPackageItems" />
+        </label>
+        <div class="form__actions">
+          <button class="btn" type="button" (click)="splitRow.set(null)">{{ i18n.t('common.cancel') }}</button>
+          <button class="btn btn--primary" type="submit" [disabled]="splitForm.invalid || pendingId() === row.id">{{ i18n.t('packing.split') }}</button>
+        </div>
+      </form>
+    }
     <div class="toolbar">
       <input
         type="search"
@@ -74,6 +87,16 @@
                 </td>
                 <td><span class="status-pill" [class]="statusTone(p.status)">{{ i18n.t('st.' + p.status) }}</span></td>
                 <td class="packing__actions">
+                  @if (!p.contentVerified && p.status !== 'shipped') {
+                    <button class="btn" type="button" (click)="verifyContent(p)" *appHasPermission="'packing.verify'">
+                      {{ i18n.t('packing.verifyContent') }}
+                    </button>
+                  }
+                  @if (p.itemCount > 1 && p.status !== 'shipped') {
+                    <button class="btn" type="button" (click)="openSplit(p)" *appHasPermission="'packing.verify'">
+                      {{ i18n.t('packing.split') }}
+                    </button>
+                  }
                   @if (p.status !== 'shipped') {
                     <button
                       class="btn"
@@ -104,7 +127,7 @@
                     <app-scale-input
                       [actualWeightKg]="p.weightKg"
                       [disabled]="pendingId() === p.id"
-                      [label]="p.code + ' — beklenen ' + p.expectedWeightKg + ' kg ±' + p.toleranceKg"
+                      [label]="i18n.t('packing.scaleLabel', { code: p.code, expected: p.expectedWeightKg, tolerance: p.toleranceKg })"
                       (weighed)="onWeighed(p, $event)"
                     />
                   </td>

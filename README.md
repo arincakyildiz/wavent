@@ -16,6 +16,7 @@ npm run build      # production build
 npm test           # Karma + Jasmine (watch)
 npm run lint       # TypeScript ve template lint
 npm run test:e2e   # Playwright Chromium E2E
+npm run demo:record # Çalışan uygulamadan teslim demosunu yeniden üretir
 ```
 
 Tek seferlik test çalıştırma:
@@ -85,6 +86,12 @@ başarısızlıkta rollback + "tekrar dene" bildirimi → audit kaydı.
 
 **Dalga yayınlama** — stok yetersizliği olan siparişler dalgada kalır, kalanlar açılır; sonuç
 satır bazında raporlanır.
+
+**Tam operasyon akışları** — kabul satırında eksik/fazla/hasar/karantina; barkodlu toplama,
+miktar sınırı, kısa toplama, hasar ve görev devri; ilk/ikinci sayım ve stok düzeltmesi; paket
+içerik doğrulama, koli ayrıştırma ve tartım; sıralı yükleme, kapı atama ve gerekçeli sevkiyat
+kapatma işlemleri aynı ilişkili veri grafiğini günceller. Yayınlanmış dalgaya sipariş ekleme veya
+çıkarma yalnız gerekçeli ve version kontrollü akışla yapılır.
 
 **Gerçek zamanlı akış** — Control Tower'da RxJS ile simüle edilmiş görev olayları; sayaçlar sayfa
 yenilenmeden güncellenir.
@@ -162,9 +169,17 @@ Beş ana kullanıcı akışı component/integration seviyesinde uçtan uca kapl�
 - `data-access/putaway.service.spec.ts` — kapasite override gerekçesinin servis sınırında doğrulanması
 - `shared/utils/list-resource.spec.ts` — ilk istek ve yeniden yüklemede loading durumunun doğruluğu
 
-Playwright E2E paketi, canlı dil geçişini ve gerekçeli kapasite override akışını gerçek Chromium
-üzerinde doğrular. Aynı build, lint, unit, audit ve E2E adımları `.github/workflows/ci.yml` ile her
-push ve pull request'te çalışır.
+Playwright E2E paketi; canlı dil geçişi, gerekçeli kapasite override, sanal listeden toplama görevi,
+zorunlu ikinci sayım ve hiyerarşik lokasyon oluşturma akışlarını gerçek Chromium üzerinde doğrular.
+Aynı build, lint, unit, audit ve E2E adımları `.github/workflows/ci.yml` ile her push ve pull
+request'te çalışır.
+
+## Demo Videosu
+
+Teslim demosu: [`docs/wavent-demo.webm`](docs/wavent-demo.webm). Video ana dashboard, dalga,
+toplama, gerçek zamanlı kontrol kulesi, audit, rol bazlı menü daralması ve zorunlu ağ hatası
+sonrası optimistic rollback/retry bildirimini gösterir. Uygulama `npm start` ile çalışırken
+`npm run demo:record` komutu videoyu deterministik olarak yeniden üretir.
 
 ## Paylaşılan Bileşenler
 
@@ -176,12 +191,10 @@ ekranda kullanılır; bunlara ek olarak tartı simülasyonu için `ScaleInput` (
 `ExceptionWorkbench` (Exceptions · kanıt + yeniden atama + karar), `TraceabilityTimeline`
 (Traceability).
 
-## Bilinen Eksikler
+## Bilinen Sınırlar
 
 - Tüm veriler mock; gerçek backend entegrasyonu yok ve oturum içi değişiklikler kalıcı değildir.
   Mock veri her sayfa yenilemesinde sabit tohumdan yeniden üretilir.
-- Component/integration testler beş ana akışı kapsar; kalan ekranlarda kapsam unit
-  seviyesindedir (selectors, servisler).
 - Fiziksel cihaz **bağlantısı** yoktur; cihazlar yazılımda simüle edilir: barkod okuma Putaway'de
   `BarcodeInput` (yinelenen okumaları yutar, eşleşmeyen barkod istisna üretir), tartı Packing'de
   `ScaleInput` (load cell oturma süresi, kalibrasyon sapması; kararsız okuma kaydedilemez),
@@ -190,3 +203,7 @@ ekranda kullanılır; bunlara ek olarak tartı simülasyonu için `ScaleInput` (
 - Offline desteği **okuma yönlüdür**: IndexedDB'deki anlık görüntü, servis hata verdiğinde
   Overview'de "çevrimdışı veri" etiketiyle gösterilir. Çevrimdışıyken yapılan yazmaların
   kuyruklanıp bağlantı gelince gönderilmesi (background sync) uygulanmadı.
+
+Bu sınırlar şartnamenin backend ve fiziksel cihaz entegrasyonunu zorunlu tutmayan simülasyon
+kapsamıyla uyumludur; kullanıcıya gösterilen WMS iş akışlarının tamamı mock transport üzerinden
+çalışır.

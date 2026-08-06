@@ -103,4 +103,61 @@ export class PackingService {
       }),
     );
   }
+
+  verifyContent(id: string, expectedVersion: number): Observable<PackageRow> {
+    return this.api.simulate(id, { delayMs: 420, kind: 'write' }).pipe(
+      map(() => {
+        const record = db.packages.find((pkg) => pkg.id === id);
+        if (!record) throw new ApiError('not-found', translate('svc.packageNotFound'));
+        this.api.assertVersion(expectedVersion, record.version);
+        if (record.status === 'shipped') throw new ApiError('validation', translate('svc.shippedPackageLocked'));
+        record.contentVerified = true;
+        record.version += 1;
+        return toRow(record);
+      }),
+    );
+  }
+
+  split(id: string, expectedVersion: number, firstPackageItems: number): Observable<[PackageRow, PackageRow]> {
+    return this.api.simulate(id, { delayMs: 520, kind: 'write' }).pipe(
+      map(() => {
+        const record = db.packages.find((pkg) => pkg.id === id);
+        if (!record) throw new ApiError('not-found', translate('svc.packageNotFound'));
+        this.api.assertVersion(expectedVersion, record.version);
+        if (record.status === 'shipped') throw new ApiError('validation', translate('svc.shippedPackageLocked'));
+        if (!Number.isInteger(firstPackageItems) || firstPackageItems <= 0 || firstPackageItems >= record.itemCount) {
+          throw new ApiError('validation', translate('svc.invalidSplitQuantity'));
+        }
+
+        const originalItems = record.itemCount;
+        const ratio = firstPackageItems / originalItems;
+        const secondItems = originalItems - firstPackageItems;
+        const second: PackageRec = {
+          ...record,
+          id: `pk-${db.packages.length + 1}`,
+          code: `PKG-${4500 + db.packages.length + 1}`,
+          itemCount: secondItems,
+          weightKg: Math.round(record.weightKg * (1 - ratio) * 10) / 10,
+          expectedWeightKg: Math.round(record.expectedWeightKg * (1 - ratio) * 10) / 10,
+          contentVerified: false,
+          status: 'open',
+          version: 1,
+        };
+        record.itemCount = firstPackageItems;
+        record.weightKg = Math.round(record.weightKg * ratio * 10) / 10;
+        record.expectedWeightKg = Math.round(record.expectedWeightKg * ratio * 10) / 10;
+        record.contentVerified = false;
+        record.status = 'open';
+        record.version += 1;
+        db.packages.unshift(second);
+
+        for (const shipment of db.shipments.filter((value) => value.packageCodes.includes(record.code))) {
+          const index = shipment.packageCodes.indexOf(record.code);
+          shipment.packageCodes.splice(index + 1, 0, second.code);
+          shipment.version += 1;
+        }
+        return [toRow(record), toRow(second)];
+      }),
+    );
+  }
 }

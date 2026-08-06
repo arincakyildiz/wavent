@@ -88,6 +88,26 @@
           </div>
         }
 
+        @if (w.status !== 'completed' && w.status !== 'cancelled') {
+          <div class="panel" *appHasPermission="'wave.editReleased'">
+            <div class="panel__head">
+              <h2>{{ i18n.t('waveDetail.manageOrders') }}</h2>
+            </div>
+            <form class="form wave-order-form" [formGroup]="orderForm" (ngSubmit)="addOrder()">
+              <label class="field">
+                <span class="field__label">{{ i18n.t('waveDetail.eligibleOrder') }}</span>
+                <select formControlName="orderNumber">
+                  <option value="">{{ i18n.t('waveDetail.selectOrder') }}</option>
+                  @for (candidate of candidates(); track candidate.orderNumber) {
+                    <option [value]="candidate.orderNumber">{{ candidate.orderNumber }} · P{{ candidate.priority }} · {{ candidate.route }}</option>
+                  }
+                </select>
+              </label>
+              <button class="btn btn--primary" type="submit" [disabled]="orderForm.invalid || editing()">{{ i18n.t('waveDetail.addOrder') }}</button>
+            </form>
+          </div>
+        }
+
         <div class="panel">
           <h2>{{ i18n.t('waveDetail.orderLines') }}</h2>
           @if (orders().length) {
@@ -101,6 +121,7 @@
                     <th>{{ i18n.t('waveDetail.lines') }}</th>
                     <th>{{ i18n.t('common.status') }}</th>
                     <th>{{ i18n.t('waveDetail.reason') }}</th>
+                    <th *appHasPermission="'wave.editReleased'">{{ i18n.t('common.action') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -112,6 +133,11 @@
                       <td>{{ o.lineCount }}</td>
                       <td><span class="status-pill" [class]="orderTone(o.status)">{{ i18n.t('st.' + o.status) }}</span></td>
                       <td class="muted small">{{ o.reason ?? '—' }}</td>
+                      <td *appHasPermission="'wave.editReleased'">
+                        @if (w.status !== 'completed' && w.status !== 'cancelled') {
+                          <button class="btn" type="button" (click)="removeOrder(o.orderNumber)" [disabled]="editing()">{{ i18n.t('waveDetail.removeOrder') }}</button>
+                        }
+                      </td>
                     </tr>
                   }
                 </tbody>

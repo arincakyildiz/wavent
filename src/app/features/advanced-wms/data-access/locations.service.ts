@@ -4,6 +4,18 @@ import { MockApiService } from '../../../core/api/mock-api.service';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { LocationRec, db } from './mock-data';
 import { locationCapacityPct } from './selectors';
+import { ApiError } from '../../../core/api/api-error';
+import { translate } from '../../../core/i18n/i18n.service';
+
+export interface LocationDraft {
+  warehouseCode: string;
+  parentPath: string;
+  code: string;
+  type: LocationRec['type'];
+  locationClass: LocationRec['locationClass'];
+  maxWeightKg: number;
+  maxVolumeM3: number;
+}
 
 export interface LocationRow extends LocationRec {
   capacityPct: number;
@@ -18,7 +30,6 @@ export class LocationsService {
 
   query(scope: string[], query: ListQuery): Observable<ListResult<LocationRow>> {
     const source: LocationRow[] = db.locations
-      .filter((l) => l.type === 'bin' || l.type === 'staging')
       .filter((l) => !scope.length || scope.includes(l.warehouseCode))
       .map((l) => ({ ...l, capacityPct: locationCapacityPct(l) }));
 
@@ -29,6 +40,45 @@ export class LocationsService {
           searchable: (r) => [r.path, r.warehouseCode, r.locationClass, r.type],
         }),
       ),
+    );
+  }
+
+  create(draft: LocationDraft): Observable<LocationRow> {
+    return this.api.simulate(draft, { delayMs: 460, kind: 'write' }).pipe(
+      map((value) => {
+        const path = [value.parentPath.trim(), value.code.trim().toUpperCase()].filter(Boolean).join('/');
+        if (!path || db.locations.some((l) => l.warehouseCode === value.warehouseCode && l.path === path)) {
+          throw new ApiError('conflict', translate('svc.locationExists'));
+        }
+        const record: LocationRec = {
+          id: `loc-${db.locations.length + 1}`,
+          path,
+          warehouseCode: value.warehouseCode,
+          type: value.type,
+          locationClass: value.locationClass,
+          status: 'active',
+          maxWeightKg: value.maxWeightKg,
+          maxVolumeM3: value.maxVolumeM3,
+          usedWeightKg: 0,
+          usedVolumeM3: 0,
+          version: 1,
+        };
+        db.locations.push(record);
+        return { ...record, capacityPct: 0 };
+      }),
+    );
+  }
+
+  setStatus(id: string, expectedVersion: number, status: LocationRec['status']): Observable<LocationRow> {
+    return this.api.simulate(id, { delayMs: 420, kind: 'write' }).pipe(
+      map(() => {
+        const record = db.locations.find((location) => location.id === id);
+        if (!record) throw new ApiError('not-found', translate('svc.locationNotFound'));
+        this.api.assertVersion(expectedVersion, record.version);
+        record.status = status;
+        record.version += 1;
+        return { ...record, capacityPct: locationCapacityPct(record) };
+      }),
     );
   }
 }

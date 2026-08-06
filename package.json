@@ -9,6 +9,7 @@
     "test": "ng test",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
     "test:e2e": "playwright test",
+    "demo:record": "node scripts/record-demo.mjs",
     "lint": "ng lint",
     "check": "npm run lint && npm run build && npm run test:ci"
   },

@@ -1,3 +1,21 @@
 .mt {
   margin: 10px 0 0;
 }
+
+.operation-form {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+}
+
+.field--check {
+  flex-direction: row;
+  align-items: center;
+  align-self: end;
+  min-height: 36px;
+}
+
+.field--check input {
+  width: auto;
+}

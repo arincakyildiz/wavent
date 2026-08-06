@@ -4,7 +4,25 @@
       <h1>{{ i18n.t('locations.title') }}</h1>
       <p class="muted">{{ i18n.t('locations.subtitle') }}</p>
     </div>
+    <button class="btn btn--primary" type="button" (click)="formOpen.set(true)" *appHasPermission="'location.manage'">
+      {{ i18n.t('locations.new') }}
+    </button>
   </div>
+
+  @if (formOpen()) {
+    <form class="form location-form" [formGroup]="locationForm" (ngSubmit)="createLocation()">
+      <div class="form__row">
+        <label class="field"><span class="field__label">{{ i18n.t('common.warehouse') }}</span><select formControlName="warehouseCode">@for (warehouse of warehouses(); track warehouse.code) { <option [value]="warehouse.code">{{ warehouse.code }}</option> }</select></label>
+        <label class="field"><span class="field__label">{{ i18n.t('locations.parentPath') }}</span><input type="text" maxlength="40" formControlName="parentPath" placeholder="A/01/01" /></label>
+        <label class="field"><span class="field__label">{{ i18n.t('locations.code') }}</span><input type="text" maxlength="12" formControlName="code" /></label>
+        <label class="field"><span class="field__label">{{ i18n.t('locations.type') }}</span><select formControlName="type"><option value="zone">{{ i18n.t('st.zone') }}</option><option value="aisle">{{ i18n.t('locations.aisle') }}</option><option value="rack">{{ i18n.t('locations.rack') }}</option><option value="bin">{{ i18n.t('locations.bin') }}</option><option value="staging">{{ i18n.t('locations.staging') }}</option></select></label>
+        <label class="field"><span class="field__label">{{ i18n.t('locations.class') }}</span><select formControlName="locationClass"><option value="ambient">{{ i18n.t('st.ambient') }}</option><option value="chilled">{{ i18n.t('st.chilled') }}</option><option value="frozen">{{ i18n.t('st.frozen') }}</option><option value="hazmat">{{ i18n.t('st.hazmat') }}</option></select></label>
+        <label class="field"><span class="field__label">{{ i18n.t('locations.maxWeight') }}</span><input type="number" min="0" formControlName="maxWeightKg" /></label>
+        <label class="field"><span class="field__label">{{ i18n.t('locations.maxVolume') }}</span><input type="number" min="0" step="0.1" formControlName="maxVolumeM3" /></label>
+      </div>
+      <div class="form__actions"><button class="btn" type="button" (click)="formOpen.set(false)">{{ i18n.t('common.cancel') }}</button><button class="btn btn--primary" type="submit" [disabled]="locationForm.invalid || saving()">{{ i18n.t('common.save') }}</button></div>
+    </form>
+  }
 
   @if (loading()) {
     <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
@@ -73,6 +91,7 @@
               <th appSortable="capacityPct" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('locations.weightCapacity') }}</th>
               <th>{{ i18n.t('locations.volumeCapacity') }}</th>
               <th appSortable="status" [sort]="sort()" (sortChange)="onSort($event)">{{ i18n.t('common.status') }}</th>
+              <th *appHasPermission="'location.manage'">{{ i18n.t('common.action') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -92,6 +111,7 @@
                 <td>
                   <span class="status-pill" [class]="statusTone(l.status)">{{ statusLabel(l.status) }}</span>
                 </td>
+                <td *appHasPermission="'location.manage'"><button class="btn" type="button" (click)="toggleStatus(l)">{{ i18n.t(l.status === 'blocked' ? 'locations.activate' : 'locations.block') }}</button></td>
               </tr>
             }
           </tbody>

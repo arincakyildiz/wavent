@@ -13,6 +13,7 @@ import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { PackageRow, PackingService } from '../../data-access/packing.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -23,6 +24,7 @@ const DEFAULT_PAGE_SIZE = 20;
     PaginationComponent,
     HasPermissionDirective,
     ScaleInputComponent,
+    ReactiveFormsModule,
   ],
   templateUrl: './packing.component.html',
   styleUrl: './packing.component.scss',
@@ -44,6 +46,10 @@ export class PackingComponent {
 
   /** Package currently on the bench scale. */
   readonly weighingRow = signal<PackageRow | null>(null);
+  readonly splitRow = signal<PackageRow | null>(null);
+  readonly splitForm = new FormGroup({
+    firstPackageItems: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
+  });
 
   readonly list = createListResource<PackageRow>(
     computed(() => ({
@@ -197,6 +203,53 @@ export class PackingComponent {
           conflict ? () => this.list.reload() : () => this.commitApproval(row, reason),
         );
         if (conflict) this.list.reload();
+      },
+    });
+  }
+
+  verifyContent(row: PackageRow): void {
+    this.pendingId.set(row.id);
+    this.packingService.verifyContent(row.id, row.version).subscribe({
+      next: (updated) => {
+        this.pendingId.set(null);
+        this.audit.record({ actionType: 'Package Content Verified', targetType: 'Package', targetId: updated.code, oldValue: 'pending', newValue: 'verified' });
+        this.notifications.success(this.i18n.t('packing.contentVerifiedToast'), updated.code);
+        this.list.reload();
+      },
+      error: (err) => {
+        this.pendingId.set(null);
+        this.notifications.error(this.i18n.t('packing.contentVerifyFailed'), describeError(err), () => this.list.reload());
+      },
+    });
+  }
+
+  openSplit(row: PackageRow): void {
+    this.splitRow.set(row);
+    this.splitForm.setValue({ firstPackageItems: Math.max(1, Math.floor(row.itemCount / 2)) });
+  }
+
+  saveSplit(): void {
+    const row = this.splitRow();
+    if (!row || this.splitForm.invalid) return;
+    const quantity = this.splitForm.getRawValue().firstPackageItems;
+    this.pendingId.set(row.id);
+    this.packingService.split(row.id, row.version, quantity).subscribe({
+      next: ([first, second]) => {
+        this.pendingId.set(null);
+        this.splitRow.set(null);
+        this.audit.record({
+          actionType: 'Package Split',
+          targetType: 'Package',
+          targetId: row.code,
+          oldValue: row.itemCount,
+          newValue: `${first.code}:${first.itemCount}, ${second.code}:${second.itemCount}`,
+        });
+        this.notifications.success(this.i18n.t('packing.splitToast'), `${first.code} + ${second.code}`);
+        this.list.reload();
+      },
+      error: (err) => {
+        this.pendingId.set(null);
+        this.notifications.error(this.i18n.t('packing.splitFailed'), describeError(err), () => this.list.reload());
       },
     });
   }
