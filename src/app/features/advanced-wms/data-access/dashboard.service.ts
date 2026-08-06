@@ -293,10 +293,7 @@ export class DashboardService {
       shipments: shipments.map((s) => ({
         code: s.code,
         carrier: s.carrier,
-        status: s.status
-          .split('-')
-          .map((w) => w[0].toUpperCase() + w.slice(1))
-          .join(' '),
+        status: translate(`st.${s.status}`),
         tone:
           s.status === 'delivered' || s.status === 'loading'
             ? 'success'
@@ -309,46 +306,48 @@ export class DashboardService {
       })),
       today: [
         {
-          label: 'Receiving Today',
+          label: translate('dashboard.receivingToday'),
           value: String(receivingToday.length),
           unit: 'ASN',
-          secondary: `${db.receiptLines.filter((l) => receivingToday.some((a) => a.number === l.asnNumber)).length} Lines`,
+          secondary: translate('dashboard.lines', {
+            count: db.receiptLines.filter((l) => receivingToday.some((a) => a.number === l.asnNumber)).length,
+          }),
           icon: 'inbox',
           tone: 'info',
           link: '/wms/receiving',
         },
         {
-          label: 'Putaway Today',
+          label: translate('dashboard.putawayToday'),
           value: String(putawayPending.length),
-          unit: 'Tasks',
-          secondary: `${fmt(putawayPending.reduce((s, p) => s + p.quantity, 0))} Units`,
+          unit: translate('dashboard.tasks'),
+          secondary: translate('dashboard.units', { count: fmt(putawayPending.reduce((s, p) => s + p.quantity, 0)) }),
           icon: 'putaway',
           tone: 'success',
           link: '/wms/putaway',
         },
         {
-          label: 'Picking Today',
+          label: translate('dashboard.pickingToday'),
           value: String(pickingActive.length),
-          unit: 'Tasks',
-          secondary: `${fmt(pickingActive.reduce((s, t) => s + t.lineCount, 0))} Lines`,
+          unit: translate('dashboard.tasks'),
+          secondary: translate('dashboard.lines', { count: fmt(pickingActive.reduce((s, t) => s + t.lineCount, 0)) }),
           icon: 'target',
           tone: 'violet',
           link: '/wms/picking/tasks',
         },
         {
-          label: 'Packing Today',
+          label: translate('dashboard.packingToday'),
           value: String(packingOpen.length),
-          unit: 'Tasks',
-          secondary: `${fmt(packingOpen.reduce((s, p) => s + p.itemCount, 0))} Items`,
+          unit: translate('dashboard.tasks'),
+          secondary: translate('dashboard.items', { count: fmt(packingOpen.reduce((s, p) => s + p.itemCount, 0)) }),
           icon: 'package',
           tone: 'info',
           link: '/wms/packing',
         },
         {
-          label: 'Shipping Today',
+          label: translate('dashboard.shippingToday'),
           value: String(shippingActive.length),
-          unit: 'Shipments',
-          secondary: `${fmt(shippingActive.reduce((s, x) => s + x.packageCodes.length, 0))} Packages`,
+          unit: translate('dashboard.shipments'),
+          secondary: translate('dashboard.packages', { count: fmt(shippingActive.reduce((s, x) => s + x.packageCodes.length, 0)) }),
           icon: 'truck',
           tone: 'warning',
           link: '/wms/shipping',

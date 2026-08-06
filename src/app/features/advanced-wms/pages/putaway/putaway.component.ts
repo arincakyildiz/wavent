@@ -160,7 +160,7 @@ export class PutawayComponent {
           reason,
         });
         this.notifications.success(
-          'Putaway kabul edildi',
+          this.i18n.t('putaway.acceptedToast'),
           `${updated.skuCode} · ${updated.suggestedLocationPath}`,
         );
         this.list.reload();
