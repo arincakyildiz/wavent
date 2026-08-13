@@ -41,7 +41,19 @@
     </div>
   </div>
 
-  @if (loading()) {
+  @if (!demoData.loaded()) {
+    <section class="panel first-run">
+      <span class="first-run__icon"><app-icon name="boxes" [size]="28" /></span>
+      <div class="first-run__body">
+        <h2>{{ i18n.t('demoData.emptyTitle') }}</h2>
+        <p class="muted">{{ i18n.t('demoData.emptyBody') }}</p>
+      </div>
+      <button class="btn btn--primary" type="button" (click)="loadSampleData()">
+        <app-icon name="plus" [size]="15" />
+        {{ i18n.t('demoData.load') }}
+      </button>
+    </section>
+  } @else if (loading()) {
     <div class="state state--loading">{{ i18n.t('common.loading') }}</div>
   } @else if (errorMessage() && !summary()) {
     <div class="state state--error" role="alert">

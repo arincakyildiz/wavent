@@ -41,7 +41,7 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-const rand = mulberry32(20240520);
+let rand = mulberry32(20240520);
 
 const pick = <T>(list: readonly T[]): T => list[Math.floor(rand() * list.length)];
 const int = (min: number, max: number): number => min + Math.floor(rand() * (max - min + 1));
@@ -1263,6 +1263,8 @@ export interface Db {
 }
 
 function buildDb(): Db {
+  // Re-seed on every reset so loading the sample dataset is deterministic.
+  rand = mulberry32(20240520);
   const skus = buildSkus();
   const locations = buildLocations();
   const balances = buildBalances(skus, locations);
@@ -1279,7 +1281,7 @@ function buildDb(): Db {
   const auditEvents = buildAudit(waves, packages, pickTasks, allocations, cycleCounts);
 
   return {
-    warehouses: WAREHOUSES,
+    warehouses: [...WAREHOUSES],
     locations,
     skus,
     balances,
@@ -1296,10 +1298,50 @@ function buildDb(): Db {
     exceptions,
     movements,
     auditEvents,
-    operators: OPERATORS,
-    carriers: CARRIERS,
+    operators: [...OPERATORS],
+    carriers: [...CARRIERS],
   };
 }
 
 /** Built once per bundle; services mutate it to simulate persistence within a session. */
 export const db: Db = buildDb();
+
+const DB_COLLECTIONS: (keyof Db)[] = [
+  'warehouses',
+  'locations',
+  'skus',
+  'balances',
+  'orders',
+  'allocations',
+  'waves',
+  'pickTasks',
+  'packages',
+  'shipments',
+  'asns',
+  'receiptLines',
+  'putaway',
+  'cycleCounts',
+  'exceptions',
+  'movements',
+  'auditEvents',
+  'operators',
+  'carriers',
+];
+
+function replaceDb(source?: Db): void {
+  for (const key of DB_COLLECTIONS) {
+    const target = db[key] as unknown[];
+    const next = (source?.[key] ?? []) as unknown[];
+    target.splice(0, target.length, ...next);
+  }
+}
+
+/** Restores a clean, deterministic sample graph without replacing shared array references. */
+export function resetDbToSampleData(): void {
+  replaceDb(buildDb());
+}
+
+/** Removes all reference and operational records for a first-run empty workspace. */
+export function clearDb(): void {
+  replaceDb();
+}

@@ -18,6 +18,8 @@ const pause = (ms = 1400) => page.waitForTimeout(ms);
 await page.goto('http://127.0.0.1:4200');
 await page.getByRole('button', { name: /Depo Yöneticisi/ }).click();
 await pause(2200);
+await page.getByRole('button', { name: 'Örnek verileri yükle' }).click();
+await pause(2200);
 await page.getByRole('link', { name: 'Dalgalar' }).click();
 await pause();
 await page.locator('tbody tr').first().click();

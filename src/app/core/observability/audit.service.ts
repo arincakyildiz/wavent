@@ -58,4 +58,8 @@ export class AuditService {
     this.recorded.update((list) => [record, ...list]);
     return record;
   }
+
+  clear(): void {
+    this.recorded.set([]);
+  }
 }

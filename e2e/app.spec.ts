@@ -1,4 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
+
+async function loadSampleData(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Örnek verileri yükle' }).click();
+  await expect(page.getByText('Örnek veriler yüklendi')).toBeVisible();
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -13,7 +18,31 @@ test('switches language without reloading the application', async ({ page }) => 
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 
+test('starts empty and persists the sample dataset after loading it', async ({ page }) => {
+  await expect(page.getByRole('heading', { name: 'Henüz depo verisi bulunmuyor' })).toBeVisible();
+  await loadSampleData(page);
+  await page.reload();
+  await page.getByRole('button', { name: /Depo Yöneticisi/ }).click();
+  await expect(page).toHaveURL(/\/wms\/overview/);
+
+  await expect(page.getByRole('heading', { name: 'Henüz depo verisi bulunmuyor' })).toHaveCount(0);
+  await expect(page.getByText('Depo Bazında Envanter')).toBeVisible();
+});
+
+test('clears the sample dataset from settings after confirmation', async ({ page }) => {
+  await loadSampleData(page);
+  await page.getByRole('link', { name: 'Ayarlar' }).click();
+  await page.getByRole('button', { name: 'Tüm verileri temizle' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Tüm verileri temizle' }).click();
+
+  await expect(page).toHaveURL(/\/wms\/overview/);
+  await expect(page.getByRole('heading', { name: 'Henüz depo verisi bulunmuyor' })).toBeVisible();
+});
+
 test('completes a justified putaway capacity override', async ({ page }) => {
+  await loadSampleData(page);
   await page.getByRole('link', { name: 'Yerleştirme' }).click();
   await expect(page).toHaveURL(/\/wms\/putaway/);
   await page.getByRole('combobox', { name: 'Sayfa başına' }).selectOption('60');
@@ -41,6 +70,7 @@ test('completes a justified putaway capacity override', async ({ page }) => {
 });
 
 test('executes a pick task from the virtual task list', async ({ page }) => {
+  await loadSampleData(page);
   await page.getByRole('link', { name: 'Toplama', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Toplama Görevleri' })).toBeVisible();
   await page.getByRole('combobox', { name: 'Durum filtresi' }).selectOption('in-progress');
@@ -54,6 +84,7 @@ test('executes a pick task from the virtual task list', async ({ page }) => {
 });
 
 test('records a cycle count and requests the mandatory recount', async ({ page }) => {
+  await loadSampleData(page);
   await page.getByRole('link', { name: 'Sayımlar', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Sayımlar' })).toBeVisible();
   await page.getByRole('combobox', { name: 'Durum filtresi' }).selectOption('scheduled');
@@ -66,6 +97,7 @@ test('records a cycle count and requests the mandatory recount', async ({ page }
 });
 
 test('creates a managed hierarchy location', async ({ page }) => {
+  await loadSampleData(page);
   await page.getByRole('link', { name: 'Lokasyonlar', exact: true }).click();
   await page.getByRole('button', { name: 'Yeni lokasyon' }).click();
   await page.getByRole('textbox', { name: 'Üst lokasyon yolu' }).fill('E2E');

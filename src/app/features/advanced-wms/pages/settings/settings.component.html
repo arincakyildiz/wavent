@@ -9,6 +9,31 @@
     }
   </div>
 
+  <section class="panel data-setup" *appHasPermission="'settings.manage'">
+    <div class="data-setup__body">
+      <div class="panel__head">
+        <h2>{{ i18n.t('demoData.settingsTitle') }}</h2>
+        <span class="status-pill" [class]="demoData.loaded() ? 'tone-success' : 'tone-neutral'">
+          {{ i18n.t(demoData.loaded() ? 'demoData.statusLoaded' : 'demoData.statusEmpty') }}
+        </span>
+      </div>
+      <p class="muted small">{{ i18n.t('demoData.settingsBody') }}</p>
+      @if (demoData.loaded()) {
+        <span class="muted small">{{ i18n.t('demoData.recordCount', { count: demoData.recordCount() }) }}</span>
+      }
+    </div>
+    <div class="data-setup__actions">
+      @if (!demoData.loaded()) {
+        <button class="btn btn--primary" type="button" (click)="loadSampleData()">
+          {{ i18n.t('demoData.load') }}
+        </button>
+      } @else {
+        <button class="btn" type="button" (click)="loadSampleData()">{{ i18n.t('demoData.reload') }}</button>
+        <button class="btn btn--danger" type="button" (click)="clearAllData()">{{ i18n.t('demoData.clear') }}</button>
+      }
+    </div>
+  </section>
+
   <div class="grid-2">
     <section class="panel">
       <div class="panel__head">

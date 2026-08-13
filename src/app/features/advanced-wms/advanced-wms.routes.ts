@@ -1,11 +1,18 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Routes } from '@angular/router';
 import { requirePermission } from '../../core/auth/permission.guard';
+import { DemoDataService } from './data-access/demo-data.service';
+
+const initializeDemoData: CanActivateFn = () => {
+  inject(DemoDataService).initialize();
+  return true;
+};
 
 /**
  * Every screen is guarded by the capability it needs, so an unauthorised role cannot
  * reach it — or download its lazy bundle — by typing the URL.
  */
-export const ADVANCED_WMS_ROUTES: Routes = [
+const WMS_ROUTES: Routes = [
   {
     path: 'overview',
     canActivate: [requirePermission('overview.view')],
@@ -134,4 +141,12 @@ export const ADVANCED_WMS_ROUTES: Routes = [
       import('./pages/unauthorized/unauthorized.component').then((m) => m.UnauthorizedComponent),
   },
   { path: '', pathMatch: 'full', redirectTo: 'overview' },
+];
+
+export const ADVANCED_WMS_ROUTES: Routes = [
+  {
+    path: '',
+    canActivate: [initializeDemoData],
+    children: WMS_ROUTES,
+  },
 ];

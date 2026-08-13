@@ -41,6 +41,11 @@ role göre daralır. Settings ekranından rol değiştirilerek uygulama o rolün
 
 Varsayılan demo kullanıcı: **John Doe / Depo Yöneticisi**.
 
+Yeni bir tarayıcı profili operasyonel veri olmadan, boş çalışma alanıyla açılır. Genel Bakış'taki
+**Örnek verileri yükle** düğmesi veya Ayarlar → Örnek Veri Yönetimi alanı, ilişkili demo veri
+grafiğini tek işlemle yükler. Seçim tarayıcıda saklanır; aynı alandaki **Tüm verileri temizle**
+işlemi çalışma alanını yeniden ilk açılıştaki boş durumuna döndürür.
+
 ## Mimari Kararlar
 
 - **Standalone components + Signals** — NgModule yok; state Signals ile, asenkron akışlar RxJS ile.

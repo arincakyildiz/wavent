@@ -10,6 +10,8 @@ import { ThemeService } from '../../../../core/state/theme.service';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { VARIANCE_THRESHOLD_PCT } from '../../data-access/selectors';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
+import { DemoDataService } from '../../data-access/demo-data.service';
 
 interface RuleToggle {
   /** Catalog key stem — label and description come from `rule.<key>` / `rule.<key>.desc`. */
@@ -31,6 +33,8 @@ export class SettingsComponent {
   private readonly notifications = inject(NotificationService);
   private readonly audit = inject(AuditService);
   private readonly router = inject(Router);
+  private readonly confirm = inject(ConfirmDialogService);
+  readonly demoData = inject(DemoDataService);
 
   readonly currentUser = this.auth.currentUser;
   readonly theme = this.themeService.theme;
@@ -116,6 +120,38 @@ export class SettingsComponent {
   resetFaults(): void {
     this.faults.reset();
     this.notifications.success(this.i18n.t('settings.faultsReset'));
+  }
+
+  loadSampleData(): void {
+    this.demoData.loadSampleData();
+    this.audit.record({
+      actionType: 'Sample Data Loaded',
+      targetType: 'System',
+      targetId: 'WMS Demo Dataset',
+      newValue: this.demoData.recordCount(),
+    });
+    this.notifications.success(
+      this.i18n.t('demoData.loadedTitle'),
+      this.i18n.t('demoData.loadedBody'),
+    );
+    this.router.navigateByUrl('/wms/overview');
+  }
+
+  clearAllData(): void {
+    this.confirm
+      .ask({
+        title: this.i18n.t('demoData.clearTitle'),
+        message: this.i18n.t('demoData.clearConfirm'),
+        confirmLabel: this.i18n.t('demoData.clear'),
+        tone: 'danger',
+      })
+      .subscribe(({ confirmed }) => {
+        if (!confirmed) return;
+        this.demoData.clearAllData();
+        this.audit.clear();
+        this.notifications.success(this.i18n.t('demoData.clearedTitle'));
+        this.router.navigateByUrl('/wms/overview');
+      });
   }
 
   private flagSaved(): void {
