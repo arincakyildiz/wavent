@@ -104,6 +104,21 @@
       </form>
 
       <div class="topbar__actions">
+        @if (!demoData.loaded()) {
+          <button
+            class="btn btn--primary sample-data-action"
+            [class.sample-data-action--loading]="sampleDataLoading()"
+            type="button"
+            [disabled]="sampleDataLoading()"
+            [title]="i18n.t('demoData.load')"
+            [attr.aria-label]="i18n.t('demoData.load')"
+            (click)="loadSampleData()"
+          >
+            <app-icon [name]="sampleDataLoading() ? 'refresh' : 'plus'" [size]="15" />
+            <span class="sample-data-action__label">{{ i18n.t('demoData.load') }}</span>
+          </button>
+        }
+
         <button class="icon-btn icon-btn--badge" type="button" [attr.aria-label]="i18n.t('nav.notifications')">
           <app-icon name="bell" [size]="18" />
           @if (notificationCount() > 0) {

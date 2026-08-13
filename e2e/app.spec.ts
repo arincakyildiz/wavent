@@ -1,7 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 
 async function loadSampleData(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Örnek verileri yükle' }).click();
+  await page.locator('.topbar').getByRole('button', { name: 'Örnek verileri yükle' }).click();
   await expect(page.getByText('Örnek veriler yüklendi')).toBeVisible();
 }
 

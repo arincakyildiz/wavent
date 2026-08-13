@@ -10,6 +10,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 import { IconComponent } from '../icon/icon.component';
 import { LogoMarkComponent } from '../logo-mark/logo-mark.component';
 import { ToastHostComponent } from '../toast-host/toast-host.component';
+import { DemoDataService } from '../../../features/advanced-wms/data-access/demo-data.service';
 
 interface NavItem {
   /** Translation key; resolved in the template so it follows the active locale. */
@@ -49,6 +50,7 @@ export class ShellComponent {
   private readonly scope = inject(WarehouseScopeService);
   private readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
+  readonly demoData = inject(DemoDataService);
 
   readonly currentUser = this.auth.currentUser;
   readonly theme = this.themeService.theme;
@@ -57,6 +59,7 @@ export class ShellComponent {
   readonly scopeMenuOpen = signal(false);
   readonly mobileNavOpen = signal(false);
   readonly userMenuOpen = signal(false);
+  readonly sampleDataLoading = signal(false);
 
   readonly warehouses = this.scope.permitted;
   readonly scopeLabel = this.scope.label;
@@ -65,6 +68,10 @@ export class ShellComponent {
   readonly allWarehouses = ALL_WAREHOUSES;
 
   readonly notificationCount = computed(() => this.notifications.notifications().length);
+
+  constructor() {
+    this.demoData.initialize();
+  }
 
   private readonly allGroups: NavGroup[] = [
     {
@@ -156,6 +163,23 @@ export class ShellComponent {
   selectScope(code: string): void {
     this.scope.select(code);
     this.scopeMenuOpen.set(false);
+  }
+
+  loadSampleData(): void {
+    if (this.sampleDataLoading()) return;
+    this.sampleDataLoading.set(true);
+
+    setTimeout(() => {
+      this.demoData.loadSampleData();
+      this.notifications.success(
+        this.i18n.t('demoData.loadedTitle'),
+        this.i18n.t('demoData.loadedBody'),
+      );
+      this.sampleDataLoading.set(false);
+      if (!this.router.url.startsWith('/wms/overview')) {
+        this.router.navigateByUrl('/wms/overview');
+      }
+    });
   }
 
   /** Global search routes to Inventory with the term pre-applied. */

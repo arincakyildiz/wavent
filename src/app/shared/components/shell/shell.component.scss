@@ -214,6 +214,21 @@
   }
 }
 
+.sample-data-action {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sample-data-action--loading app-icon {
+  animation: sample-data-spin 800ms linear infinite;
+}
+
+@keyframes sample-data-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .searchbox {
   display: flex;
   align-items: center;
@@ -505,6 +520,17 @@
 
   .user__meta {
     display: none;
+  }
+
+  .sample-data-action {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+
+    &__label {
+      display: none;
+    }
   }
 
   .content {

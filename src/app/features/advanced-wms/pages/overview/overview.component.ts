@@ -18,7 +18,6 @@ import {
   Period,
 } from '../../data-access/dashboard.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
-import { NotificationService } from '../../../../core/observability/notification.service';
 import { DemoDataService } from '../../data-access/demo-data.service';
 
 /** Beyond this the snapshot is too old to be worth showing at all. */
@@ -54,7 +53,6 @@ export class OverviewComponent {
   readonly i18n = inject(I18nService);
   readonly demoData = inject(DemoDataService);
   private readonly dashboard = inject(DashboardService);
-  private readonly notifications = inject(NotificationService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -83,6 +81,7 @@ export class OverviewComponent {
         scope: this.scope.activeCodes(),
         period: this.period(),
         token: this.reloadToken(),
+        dataRevision: this.demoData.revision(),
       })),
     ).pipe(
       switchMap(({ scope, period }) => {
@@ -139,15 +138,6 @@ export class OverviewComponent {
   reload(): void {
     this.reloadToken.update((n) => n + 1);
     this.lastUpdated.set(new Date());
-  }
-
-  loadSampleData(): void {
-    this.demoData.loadSampleData();
-    this.notifications.success(
-      this.i18n.t('demoData.loadedTitle'),
-      this.i18n.t('demoData.loadedBody'),
-    );
-    this.reload();
   }
 
   selectScope(code: string): void {

@@ -6,12 +6,7 @@
     </div>
 
     <div class="page__actions">
-      @if (!demoData.loaded()) {
-        <button class="btn btn--primary" type="button" (click)="loadSampleData()">
-          <app-icon name="plus" [size]="15" />
-          {{ i18n.t('demoData.load') }}
-        </button>
-      } @else {
+      @if (demoData.loaded()) {
         <label class="select-control">
           <select
             [value]="selectedScope()"

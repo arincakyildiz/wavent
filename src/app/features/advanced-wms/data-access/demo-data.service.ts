@@ -8,9 +8,11 @@ const SAMPLE_DATA_KEY = 'sample-data-loaded';
 export class DemoDataService {
   private readonly storage = inject(LocalStorageService);
   private readonly hasSampleData = signal(false);
+  private readonly dataRevision = signal(0);
   private initialized = false;
 
   readonly loaded = this.hasSampleData.asReadonly();
+  readonly revision = this.dataRevision.asReadonly();
   readonly recordCount = computed(() => {
     this.hasSampleData();
     return Object.values(db).reduce((total, rows) => total + rows.length, 0);
@@ -33,11 +35,13 @@ export class DemoDataService {
     resetDbToSampleData();
     this.storage.write(SAMPLE_DATA_KEY, true);
     this.hasSampleData.set(true);
+    this.dataRevision.update((value) => value + 1);
   }
 
   clearAllData(): void {
     clearDb();
     this.storage.remove(SAMPLE_DATA_KEY);
     this.hasSampleData.set(false);
+    this.dataRevision.update((value) => value + 1);
   }
 }
