@@ -29,6 +29,32 @@ test('starts empty and persists the sample dataset after loading it', async ({ p
   await expect(page.getByText('Depo Bazında Envanter')).toBeVisible();
 });
 
+test('opens the notification center and keeps recent notifications', async ({ page }) => {
+  await loadSampleData(page);
+  await page.getByRole('button', { name: 'Bildirimler' }).click();
+
+  const panel = page.getByRole('dialog', { name: 'Bildirimler' });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByText('Örnek veriler yüklendi')).toBeVisible();
+  await panel.getByRole('button', { name: 'Tümünü temizle' }).click();
+  await expect(panel.getByText('Henüz bildirim yok')).toBeVisible();
+});
+
+test('shows a newly created warehouse in the list and global scope', async ({ page }) => {
+  await page.getByRole('link', { name: 'Depolar', exact: true }).click();
+  await page.getByRole('button', { name: 'Depo Ekle' }).click();
+  await page.getByRole('textbox', { name: 'Depo Kodu' }).fill('ANK-01');
+  await page.getByRole('textbox', { name: 'Depo Adı' }).fill('Ankara Dağıtım Merkezi');
+  await page.getByRole('textbox', { name: 'Şehir' }).fill('Ankara');
+  await page.getByRole('textbox', { name: 'Ülke' }).fill('Türkiye');
+  await page.getByRole('button', { name: 'Depoyu Oluştur' }).click();
+
+  await expect(page.getByRole('cell', { name: 'ANK-01' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Ankara Dağıtım Merkezi' })).toBeVisible();
+  await page.getByRole('button', { name: /Depo kapsamı/ }).click();
+  await expect(page.getByRole('menuitem', { name: /ANK-01.*Ankara Dağıtım Merkezi/ })).toBeVisible();
+});
+
 test('clears the sample dataset from settings after confirmation', async ({ page }) => {
   await loadSampleData(page);
   await page.getByRole('link', { name: 'Ayarlar' }).click();

@@ -29,12 +29,16 @@ export class WarehouseScopeService {
   private readonly auth = inject(AuthService);
   private readonly i18n = inject(I18nService);
   private readonly selection = signal<string>(ALL_WAREHOUSES);
+  private readonly registeredWarehouses = signal<WarehouseOption[]>([]);
+
+  private readonly available = computed(() => [...WAREHOUSES, ...this.registeredWarehouses()]);
 
   /** Warehouses the current role is allowed to see at all. */
   readonly permitted = computed<WarehouseOption[]>(() => {
     const user = this.auth.currentUser();
-    if (this.auth.warehouseScope() === 'all') return WAREHOUSES;
-    return WAREHOUSES.filter((w) => w.code === user.homeWarehouseCode);
+    const available = this.available();
+    if (this.auth.warehouseScope() === 'all') return available;
+    return available.filter((w) => w.code === user.homeWarehouseCode);
   });
 
   /** The selection, corrected when the role no longer permits it. */
@@ -64,6 +68,16 @@ export class WarehouseScopeService {
 
   select(code: string): void {
     this.selection.set(code);
+  }
+
+  register(warehouse: WarehouseOption): void {
+    if (this.available().some((item) => item.code === warehouse.code)) return;
+    this.registeredWarehouses.update((items) => [...items, warehouse]);
+  }
+
+  resetRegistered(): void {
+    this.registeredWarehouses.set([]);
+    this.selection.set(ALL_WAREHOUSES);
   }
 
   /** True when a row belonging to `code` is in scope. */

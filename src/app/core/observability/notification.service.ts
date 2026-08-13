@@ -25,17 +25,20 @@ let counter = 0;
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly items = signal<AppNotification[]>([]);
+  private readonly historyItems = signal<AppNotification[]>([]);
 
   readonly notifications = this.items.asReadonly();
+  readonly history = this.historyItems.asReadonly();
 
   push(input: Omit<AppNotification, 'id' | 'createdAt'>): string {
     const id = `n-${++counter}`;
     const notification: AppNotification = { ...input, id, createdAt: new Date() };
     this.items.update((list) => [notification, ...list].slice(0, 6));
+    this.historyItems.update((list) => [notification, ...list].slice(0, 20));
 
     const ttl = AUTO_DISMISS_MS[notification.kind];
     if (ttl !== null) {
-      setTimeout(() => this.dismiss(id), ttl);
+      setTimeout(() => this.dismissToast(id), ttl);
     }
     return id;
   }
@@ -57,10 +60,16 @@ export class NotificationService {
   }
 
   dismiss(id: string): void {
+    this.dismissToast(id);
+    this.historyItems.update((list) => list.filter((n) => n.id !== id));
+  }
+
+  private dismissToast(id: string): void {
     this.items.update((list) => list.filter((n) => n.id !== id));
   }
 
   clear(): void {
     this.items.set([]);
+    this.historyItems.set([]);
   }
 }

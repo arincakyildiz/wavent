@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { LocalStorageService } from '../../../core/storage/local-storage.service';
+import { WarehouseScopeService } from '../../../core/state/warehouse-scope.service';
 import { clearDb, db, resetDbToSampleData } from './mock-data';
 
 const SAMPLE_DATA_KEY = 'sample-data-loaded';
@@ -7,6 +8,7 @@ const SAMPLE_DATA_KEY = 'sample-data-loaded';
 @Injectable({ providedIn: 'root' })
 export class DemoDataService {
   private readonly storage = inject(LocalStorageService);
+  private readonly warehouseScope = inject(WarehouseScopeService);
   private readonly hasSampleData = signal(false);
   private readonly dataRevision = signal(0);
   private initialized = false;
@@ -33,6 +35,7 @@ export class DemoDataService {
 
   loadSampleData(): void {
     resetDbToSampleData();
+    this.warehouseScope.resetRegistered();
     this.storage.write(SAMPLE_DATA_KEY, true);
     this.hasSampleData.set(true);
     this.dataRevision.update((value) => value + 1);
@@ -40,6 +43,7 @@ export class DemoDataService {
 
   clearAllData(): void {
     clearDb();
+    this.warehouseScope.resetRegistered();
     this.storage.remove(SAMPLE_DATA_KEY);
     this.hasSampleData.set(false);
     this.dataRevision.update((value) => value + 1);

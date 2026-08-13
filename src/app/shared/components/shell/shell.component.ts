@@ -9,6 +9,7 @@ import { ALL_WAREHOUSES, WarehouseScopeService } from '../../../core/state/wareh
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { IconComponent } from '../icon/icon.component';
 import { LogoMarkComponent } from '../logo-mark/logo-mark.component';
+import { NotificationPanelComponent } from '../notification-panel/notification-panel.component';
 import { ToastHostComponent } from '../toast-host/toast-host.component';
 import { DemoDataService } from '../../../features/advanced-wms/data-access/demo-data.service';
 
@@ -33,6 +34,7 @@ interface NavGroup {
     RouterOutlet,
     IconComponent,
     LogoMarkComponent,
+    NotificationPanelComponent,
     ToastHostComponent,
     ConfirmDialogComponent,
   ],
@@ -59,6 +61,7 @@ export class ShellComponent {
   readonly scopeMenuOpen = signal(false);
   readonly mobileNavOpen = signal(false);
   readonly userMenuOpen = signal(false);
+  readonly notificationPanelOpen = signal(false);
   readonly sampleDataLoading = signal(false);
 
   readonly warehouses = this.scope.permitted;
@@ -67,7 +70,8 @@ export class ShellComponent {
   readonly selectedScope = this.scope.selected;
   readonly allWarehouses = ALL_WAREHOUSES;
 
-  readonly notificationCount = computed(() => this.notifications.notifications().length);
+  readonly notificationHistory = this.notifications.history;
+  readonly notificationCount = computed(() => this.notificationHistory().length);
 
   constructor() {
     this.demoData.initialize();
@@ -157,12 +161,22 @@ export class ShellComponent {
   }
 
   toggleScopeMenu(): void {
-    if (this.canChooseScope()) this.scopeMenuOpen.update((v) => !v);
+    if (this.canChooseScope()) {
+      this.notificationPanelOpen.set(false);
+      this.userMenuOpen.set(false);
+      this.scopeMenuOpen.update((v) => !v);
+    }
   }
 
   selectScope(code: string): void {
     this.scope.select(code);
     this.scopeMenuOpen.set(false);
+  }
+
+  toggleNotifications(): void {
+    this.notificationPanelOpen.update((open) => !open);
+    this.scopeMenuOpen.set(false);
+    this.userMenuOpen.set(false);
   }
 
   loadSampleData(): void {
@@ -206,6 +220,8 @@ export class ShellComponent {
   }
 
   toggleUserMenu(): void {
+    this.notificationPanelOpen.set(false);
+    this.scopeMenuOpen.set(false);
     this.userMenuOpen.update((v) => !v);
   }
 

@@ -119,12 +119,25 @@
           </button>
         }
 
-        <button class="icon-btn icon-btn--badge" type="button" [attr.aria-label]="i18n.t('nav.notifications')">
-          <app-icon name="bell" [size]="18" />
-          @if (notificationCount() > 0) {
-            <span class="badge badge--danger">{{ notificationCount() }}</span>
+        <div class="notification-center">
+          <button
+            class="icon-btn icon-btn--badge"
+            type="button"
+            (click)="toggleNotifications()"
+            [attr.aria-label]="i18n.t('nav.notifications')"
+            [attr.aria-expanded]="notificationPanelOpen()"
+            aria-controls="notification-panel"
+          >
+            <app-icon name="bell" [size]="18" />
+            @if (notificationCount() > 0) {
+              <span class="badge badge--danger">{{ notificationCount() }}</span>
+            }
+          </button>
+
+          @if (notificationPanelOpen()) {
+            <app-notification-panel />
           }
-        </button>
+        </div>
 
         <!-- Globe doubles as the warehouse (region) scope switch. -->
         <div class="scope">
