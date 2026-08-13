@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { AllocationRec, BalanceRec, db } from './mock-data';
 import { fefoViolation, isReservable } from './stock-rules';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export interface ReservationRow {
   id: string;
@@ -34,6 +35,17 @@ export interface LotCandidate {
   freeQuantity: number;
   /** Set when choosing this lot would skip an earlier-expiry one (§10 FEFO). */
   fefoViolationLot: string | null;
+}
+
+export interface SalesOrderDraft {
+  number: string;
+  warehouseCode: string;
+  priority: number;
+  carrier: string;
+  route: string;
+  cutOffTime: string;
+  skuCode: string;
+  quantity: number;
 }
 
 function toRow(a: AllocationRec): ReservationRow {
@@ -90,6 +102,7 @@ const ACCESSOR = (row: ReservationRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class ReservationsService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<ReservationRow>> {
     const source = db.allocations
@@ -116,6 +129,84 @@ export class ReservationsService {
         overrides: rows.filter((r) => r.overrideReason).length,
       },
       { delayMs: 200 },
+    );
+  }
+
+  orderOptions(): { skus: { code: string; name: string }[]; carriers: string[] } {
+    return { skus: db.skus.map(({ code, name }) => ({ code, name })), carriers: [...db.carriers] };
+  }
+
+  createOrder(draft: SalesOrderDraft): Observable<ReservationRow> {
+    return this.api.simulate(draft, { delayMs: 560, kind: 'write' }).pipe(
+      map((value) => {
+        const number = value.number.trim().toUpperCase();
+        if (db.orders.some((order) => order.number === number)) throw new ApiError('conflict', translate('svc.orderNumberTaken'));
+        const sku = db.skus.find((item) => item.code === value.skuCode);
+        if (!sku) throw new ApiError('validation', translate('svc.skuNotFound'));
+        if (!Number.isInteger(value.quantity) || value.quantity <= 0) throw new ApiError('validation', translate('svc.invalidExpectedQuantity'));
+
+        const strategy: 'FEFO' | 'FIFO' = sku.lotTracked ? 'FEFO' : 'FIFO';
+        const pool = db.balances
+          .filter((balance) => balance.skuCode === sku.code && balance.warehouseCode === value.warehouseCode && isReservable(balance.status))
+          .sort((a, b) => strategy === 'FEFO'
+            ? (a.expiryDate ?? '9999').localeCompare(b.expiryDate ?? '9999')
+            : a.id.localeCompare(b.id));
+        let remaining = value.quantity;
+        const allocations: AllocationRec[] = [];
+        for (const balance of pool) {
+          const quantity = Math.min(remaining, freeQuantity(balance));
+          if (quantity <= 0) continue;
+          allocations.push({
+            id: `al-live-${db.allocations.length + allocations.length + 1}`,
+            orderNumber: number,
+            skuCode: sku.code,
+            lot: balance.lot,
+            locationPath: balance.locationPath,
+            warehouseCode: value.warehouseCode,
+            quantity,
+            requested: value.quantity,
+            strategy,
+            isPartial: false,
+            isBackorder: false,
+            version: 1,
+          });
+          remaining -= quantity;
+          if (!remaining) break;
+        }
+        if (remaining > 0) {
+          if (allocations.length) {
+            allocations.forEach((allocation) => (allocation.isPartial = true));
+          } else {
+            allocations.push({
+              id: `al-live-${db.allocations.length + 1}`,
+              orderNumber: number,
+              skuCode: sku.code,
+              locationPath: '—',
+              warehouseCode: value.warehouseCode,
+              quantity: 0,
+              requested: value.quantity,
+              strategy,
+              isPartial: true,
+              isBackorder: true,
+              version: 1,
+            });
+          }
+        }
+        db.orders.unshift({
+          id: `ord-${db.orders.length + 1}`,
+          number,
+          warehouseCode: value.warehouseCode,
+          priority: value.priority,
+          carrier: value.carrier,
+          route: value.route.trim(),
+          cutOffTime: value.cutOffTime,
+          status: allocations.some((allocation) => allocation.quantity > 0) ? 'allocated' : 'new',
+          lines: [{ skuCode: sku.code, quantity: value.quantity }],
+        });
+        db.allocations.unshift(...allocations);
+        return toRow(allocations[0]);
+      }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -191,6 +282,7 @@ export class ReservationsService {
 
         return toRow(alloc);
       }),
+      this.persistence.afterWrite(),
     );
   }
 }

@@ -1336,6 +1336,11 @@ function replaceDb(source?: Db): void {
   }
 }
 
+/** Restores a validated persisted graph while preserving every shared array reference. */
+export function restoreDb(source: Db): void {
+  replaceDb(source);
+}
+
 /** Restores a clean, deterministic sample graph without replacing shared array references. */
 export function resetDbToSampleData(): void {
   replaceDb(buildDb());

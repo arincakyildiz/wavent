@@ -5,8 +5,10 @@ import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { StockStatus } from '../models/entities';
 import { db } from './mock-data';
+import { LocationClass } from '../models/entities';
 import { SkuStock, balancesInScope, skuStock, skuStockFor } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export type InventoryRow = SkuStock;
 
@@ -33,12 +35,28 @@ export interface LedgerEntry {
   reasonCode: string;
 }
 
+export interface InventoryItemDraft {
+  code: string;
+  name: string;
+  uom: string;
+  weightKg: number;
+  volumeM3: number;
+  lotTracked: boolean;
+  serialTracked: boolean;
+  storageClass: LocationClass;
+  warehouseCode: string;
+  locationPath: string;
+  quantity: number;
+  lot?: string;
+}
+
 const ACCESSOR = (row: InventoryRow, key: string): unknown =>
   (row as unknown as Record<string, unknown>)[key];
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<InventoryRow>> {
     return this.api.simulate(skuStock(scope), { delayMs: 340 }).pipe(
@@ -48,6 +66,52 @@ export class InventoryService {
           searchable: (r) => [r.skuCode, r.name],
         }),
       ),
+    );
+  }
+
+  locations(warehouseCode: string): { path: string }[] {
+    return db.locations.filter((location) => location.warehouseCode === warehouseCode && location.status === 'active');
+  }
+
+  createItem(draft: InventoryItemDraft): Observable<InventoryRow> {
+    return this.api.simulate(draft, { delayMs: 520, kind: 'write' }).pipe(
+      map((value) => {
+        const code = value.code.trim().toUpperCase();
+        if (db.skus.some((sku) => sku.code === code)) throw new ApiError('conflict', translate('svc.skuCodeTaken'));
+        const location = db.locations.find(
+          (item) => item.warehouseCode === value.warehouseCode && item.path === value.locationPath,
+        );
+        if (!location) throw new ApiError('validation', translate('svc.locationNotFound'));
+        if (!Number.isInteger(value.quantity) || value.quantity < 0) {
+          throw new ApiError('validation', translate('svc.invalidAdjustmentQuantity'));
+        }
+        if (value.lotTracked && !value.lot?.trim()) throw new ApiError('validation', translate('svc.lotRequired'));
+        db.skus.push({
+          id: `sku-${db.skus.length + 1}`,
+          code,
+          name: value.name.trim(),
+          uom: value.uom.trim().toUpperCase(),
+          weightKg: value.weightKg,
+          volumeM3: value.volumeM3,
+          lotTracked: value.lotTracked,
+          serialTracked: value.serialTracked,
+          storageClass: value.storageClass,
+        });
+        db.balances.push({
+          id: `bal-${db.balances.length + 1}`,
+          skuCode: code,
+          lot: value.lotTracked ? value.lot?.trim().toUpperCase() : undefined,
+          locationPath: location.path,
+          warehouseCode: value.warehouseCode,
+          quantity: value.quantity,
+          status: StockStatus.Available,
+          version: 1,
+        });
+        const row = skuStockFor(code, [value.warehouseCode]);
+        if (!row) throw new ApiError('validation', translate('svc.createdNotReadable'));
+        return row;
+      }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -154,6 +218,7 @@ export class InventoryService {
           version: balance.version,
         };
       }),
+      this.persistence.afterWrite(),
     );
   }
 }

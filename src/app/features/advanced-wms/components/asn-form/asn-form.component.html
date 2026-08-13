@@ -59,13 +59,42 @@
       </label>
     </div>
 
+    <div class="form__row">
+      <label class="field">
+        <span class="field__label">{{ i18n.t('common.product') }} <span class="req">*</span></span>
+        <select formControlName="skuCode">
+          @for (sku of skus; track sku.code) {
+            <option [value]="sku.code">{{ sku.code }} — {{ sku.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">{{ i18n.t('asn.expectedQuantity') }} <span class="req">*</span></span>
+        <input formControlName="expectedQuantity" type="number" min="1" step="1" [class.invalid]="invalid('expectedQuantity')" />
+        @if (invalid('expectedQuantity')) {
+          <span class="field__error" role="alert">{{ i18n.t('asn.quantityError') }}</span>
+        }
+      </label>
+
+      @if (selectedSku()?.lotTracked) {
+        <label class="field">
+          <span class="field__label">{{ i18n.t('common.lot') }} <span class="req">*</span></span>
+          <input formControlName="lot" type="text" maxlength="24" [attr.placeholder]="i18n.t('asn.lotExample')" [class.invalid]="invalid('lot')" />
+          @if (invalid('lot')) {
+            <span class="field__error" role="alert">{{ i18n.t('svc.lotRequired') }}</span>
+          }
+        </label>
+      }
+    </div>
+
     @if (submitError()) {
       <div class="form__error" role="alert">{{ submitError() }}</div>
     }
 
     <div class="form__actions">
       <button class="btn" type="button" (click)="dismissed.emit()">{{ i18n.t('common.cancel') }}</button>
-      <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending">
+      <button class="btn btn--primary" type="submit" [disabled]="submitting() || form.pending || form.invalid">
         {{ submitting() ? i18n.t('common.saving') : i18n.t('asn.submit') }}
       </button>
     </div>

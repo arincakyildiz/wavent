@@ -80,6 +80,12 @@ export class WarehouseScopeService {
     this.selection.set(ALL_WAREHOUSES);
   }
 
+  syncAvailable(warehouses: WarehouseOption[]): void {
+    this.registeredWarehouses.set(
+      warehouses.filter((warehouse) => !WAREHOUSES.some((item) => item.code === warehouse.code)),
+    );
+  }
+
   /** True when a row belonging to `code` is in scope. */
   includes(code: string): boolean {
     return this.activeCodes().includes(code);

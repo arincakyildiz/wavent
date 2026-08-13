@@ -41,8 +41,10 @@ export type Permission =
   | 'cycleCount.create'
   | 'cycleCount.execute'
   | 'inventory.adjust'
+  | 'inventory.create'
   | 'exception.resolve'
   | 'reservation.override'
+  | 'reservation.create'
   | 'settings.manage';
 
 const ALL_VIEWS: Permission[] = [
@@ -105,8 +107,10 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'cycleCount.create',
     'cycleCount.execute',
     'inventory.adjust',
+    'inventory.create',
     'exception.resolve',
     'reservation.override',
+    'reservation.create',
     'putaway.accept',
   ],
   // Owns package, carrier, loading and shipment closure.
@@ -139,6 +143,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'wave.release',
     'wave.editReleased',
     'reservation.override',
+    'reservation.create',
   ],
   // Full access, including configuration and the audit trail.
   'warehouse-manager': [
@@ -159,8 +164,10 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'cycleCount.create',
     'cycleCount.execute',
     'inventory.adjust',
+    'inventory.create',
     'exception.resolve',
     'reservation.override',
+    'reservation.create',
     'settings.manage',
   ],
 };

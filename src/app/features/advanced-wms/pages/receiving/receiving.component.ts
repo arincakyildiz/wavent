@@ -93,6 +93,8 @@ export class ReceivingComponent {
 
   onCreated(asn: AsnRow): void {
     this.formOpen.set(false);
+    this.search.set(asn.number);
+    this.page.set(1);
     this.audit.record({
       actionType: 'ASN Created',
       targetType: 'ASN',

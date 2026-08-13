@@ -53,6 +53,64 @@ test('shows a newly created warehouse in the list and global scope', async ({ pa
   await expect(page.getByRole('cell', { name: 'Ankara Dağıtım Merkezi' })).toBeVisible();
   await page.getByRole('button', { name: /Depo kapsamı/ }).click();
   await expect(page.getByRole('menuitem', { name: /ANK-01.*Ankara Dağıtım Merkezi/ })).toBeVisible();
+
+  await page.reload();
+  await page.getByRole('button', { name: /Depo Yöneticisi/ }).click();
+  await page.getByRole('link', { name: 'Depolar', exact: true }).click();
+  await expect(page.getByRole('cell', { name: 'ANK-01' })).toBeVisible();
+  await page.getByRole('button', { name: /Depo kapsamı/ }).click();
+  await expect(page.getByRole('menuitem', { name: /ANK-01.*Ankara Dağıtım Merkezi/ })).toBeVisible();
+});
+
+test('creates persistent product stock and allocates a sales order', async ({ page }) => {
+  await loadSampleData(page);
+  await page.getByRole('link', { name: 'Envanter', exact: true }).click();
+  await page.getByRole('button', { name: 'Ürün ekle' }).click();
+  const productDialog = page.getByRole('dialog');
+  await productDialog.getByRole('textbox', { name: 'Ürün kodu' }).fill('SKU-ANK01');
+  await productDialog.getByRole('textbox', { name: 'Ürün', exact: true }).fill('Ankara Test Ürünü');
+  await productDialog.getByRole('spinbutton', { name: 'Başlangıç miktarı' }).fill('25');
+  await productDialog.getByRole('button', { name: 'Ürün ekle' }).click();
+  await expect(page.getByRole('cell', { name: 'SKU-ANK01' })).toBeVisible();
+
+  await page.getByRole('link', { name: 'Rezervasyonlar', exact: true }).click();
+  await page.getByRole('button', { name: 'Sipariş oluştur' }).click();
+  const orderDialog = page.getByRole('dialog');
+  await orderDialog.getByRole('textbox', { name: 'Sipariş' }).fill('SO-2026999');
+  await orderDialog.getByRole('combobox', { name: 'Ürün' }).selectOption('SKU-ANK01');
+  await orderDialog.getByRole('spinbutton', { name: 'Miktar' }).fill('10');
+  await orderDialog.getByRole('textbox', { name: 'Rota' }).fill('ANKARA');
+  await orderDialog.getByRole('button', { name: 'Sipariş oluştur' }).click();
+  await expect(page.getByRole('cell', { name: 'SO-2026999' })).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem('wavent.wms-db-v1')?.includes('SO-2026999') ?? false))
+    .toBe(true);
+
+  await page.reload();
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem('wavent.wms-db-v1')?.includes('SO-2026999') ?? false))
+    .toBe(true);
+  await page.getByRole('button', { name: /Depo Yöneticisi/ }).click();
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem('wavent.wms-db-v1')?.includes('SO-2026999') ?? false))
+    .toBe(true);
+  await page.getByRole('link', { name: 'Rezervasyonlar', exact: true }).click();
+  await page.getByPlaceholder('Sipariş, SKU veya lot ara...').fill('SO-2026999');
+  await expect(page.getByRole('cell', { name: 'SO-2026999' })).toBeVisible();
+});
+
+test('keeps the product creation workflow usable on mobile', async ({ page }) => {
+  await loadSampleData(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Menüyü aç' }).click();
+  await page.getByRole('link', { name: 'Envanter', exact: true }).click();
+  await page.getByRole('button', { name: 'Ürün ekle' }).click();
+
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('textbox', { name: 'Ürün kodu' })).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
 });
 
 test('clears the sample dataset from settings after confirmation', async ({ page }) => {

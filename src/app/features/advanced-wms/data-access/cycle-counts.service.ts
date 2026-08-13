@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { CycleCountRec, db } from './mock-data';
 import { VARIANCE_THRESHOLD_PCT, requiresSecondCount, variancePct } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export interface CycleCountRow extends CycleCountRec {
   variance: number;
@@ -35,6 +36,7 @@ const ACCESSOR = (row: CycleCountRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class CycleCountsService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(
     scope: string[],
@@ -80,6 +82,7 @@ export class CycleCountsService {
         db.cycleCounts.unshift(record);
         return toRow(record, VARIANCE_THRESHOLD_PCT);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -118,6 +121,7 @@ export class CycleCountsService {
         void oldQuantity;
         return toRow(record, VARIANCE_THRESHOLD_PCT);
       }),
+      this.persistence.afterWrite(),
     );
   }
 }

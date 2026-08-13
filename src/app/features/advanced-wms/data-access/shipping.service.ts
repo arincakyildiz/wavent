@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { PackageRec, ShipmentRec, db } from './mock-data';
 import { translate } from '../../../core/i18n/i18n.service';
 import { withinWeightTolerance } from './selectors';
+import { DbPersistenceService } from './db-persistence.service';
 
 export interface ShipmentRow extends ShipmentRec {
   packageCount: number;
@@ -25,6 +26,7 @@ const ACCESSOR = (row: ShipmentRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class ShippingService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<ShipmentRow>> {
     const source = db.shipments
@@ -76,6 +78,7 @@ export class ShippingService {
         shipment.version += 1;
         return toRow(shipment);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -97,6 +100,7 @@ export class ShippingService {
         shipment.version += 1;
         return toRow(shipment);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -122,6 +126,7 @@ export class ShippingService {
         }
         return toRow(shipment);
       }),
+      this.persistence.afterWrite(),
     );
   }
 

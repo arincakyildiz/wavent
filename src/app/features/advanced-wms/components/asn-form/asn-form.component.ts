@@ -1,5 +1,7 @@
 import { Component, inject, output, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { startWith } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
@@ -40,6 +42,7 @@ export class AsnFormComponent {
   readonly dismissed = output<void>();
 
   readonly suppliers = SUPPLIERS;
+  readonly skus = this.receivingService.availableSkus();
   readonly warehouses = this.scope.permitted;
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
@@ -60,7 +63,27 @@ export class AsnFormComponent {
       nonNullable: true,
       validators: [Validators.required, notInPast],
     }),
+    skuCode: new FormControl(this.skus[0]?.code ?? '', { nonNullable: true, validators: [Validators.required] }),
+    expectedQuantity: new FormControl(1, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)],
+    }),
+    lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24)] }),
   });
+
+  readonly selectedSku = () => this.skus.find((sku) => sku.code === this.form.controls.skuCode.value);
+
+  constructor() {
+    this.form.controls.skuCode.valueChanges
+      .pipe(startWith(this.form.controls.skuCode.value), takeUntilDestroyed())
+      .subscribe(() => {
+        const validators = this.selectedSku()?.lotTracked
+          ? [Validators.required, Validators.maxLength(24)]
+          : [Validators.maxLength(24)];
+        this.form.controls.lot.setValidators(validators);
+        this.form.controls.lot.updateValueAndValidity({ emitEvent: false });
+      });
+  }
 
   get numberControl() {
     return this.form.controls.number;

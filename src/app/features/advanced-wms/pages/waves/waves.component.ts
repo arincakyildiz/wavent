@@ -118,6 +118,8 @@ export class WavesComponent {
 
   onCreated(wave: WaveRow): void {
     this.formOpen.set(false);
+    this.search.set(wave.name);
+    this.page.set(1);
     this.audit.record({
       actionType: 'Wave Created',
       targetType: 'Wave',

@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
+import { LocalStorageService } from '../storage/local-storage.service';
 
 export interface AuditRecord {
   id: string;
@@ -24,6 +25,7 @@ export interface AuditInput {
 }
 
 let counter = 0;
+const AUDIT_STORAGE_KEY = 'audit-live-v1';
 
 function normalise(value: string | number | null | undefined): string | undefined {
   if (value === null || value === undefined) return undefined;
@@ -38,10 +40,20 @@ function normalise(value: string | number | null | undefined): string | undefine
 @Injectable({ providedIn: 'root' })
 export class AuditService {
   private readonly auth = inject(AuthService);
+  private readonly storage = inject(LocalStorageService);
   private readonly recorded = signal<AuditRecord[]>([]);
 
   readonly events = this.recorded.asReadonly();
   readonly sessionCount = computed(() => this.recorded().length);
+
+  constructor() {
+    const saved = this.storage.read<(Omit<AuditRecord, 'at'> & { at: string })[]>(AUDIT_STORAGE_KEY, []);
+    this.recorded.set(
+      saved
+        .filter((record) => record && typeof record.id === 'string' && typeof record.at === 'string')
+        .map((record) => ({ ...record, at: new Date(record.at) })),
+    );
+  }
 
   record(input: AuditInput): AuditRecord {
     const record: AuditRecord = {
@@ -56,10 +68,12 @@ export class AuditService {
       reason: input.reason,
     };
     this.recorded.update((list) => [record, ...list]);
+    this.storage.write(AUDIT_STORAGE_KEY, this.recorded());
     return record;
   }
 
   clear(): void {
     this.recorded.set([]);
+    this.storage.remove(AUDIT_STORAGE_KEY);
   }
 }

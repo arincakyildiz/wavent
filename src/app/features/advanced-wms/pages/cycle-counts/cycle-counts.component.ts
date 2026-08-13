@@ -97,6 +97,8 @@ export class CycleCountsComponent {
 
   onCreated(count: CycleCountRow): void {
     this.formOpen.set(false);
+    this.search.set(count.code);
+    this.page.set(1);
     this.audit.record({
       actionType: 'Cycle Count Scheduled',
       targetType: 'CycleCount',

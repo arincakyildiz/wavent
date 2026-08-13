@@ -6,6 +6,7 @@ import { PickTaskRec, db } from './mock-data';
 import { ApiError } from '../../../core/api/api-error';
 import { translate } from '../../../core/i18n/i18n.service';
 import { ExceptionType } from '../models/entities';
+import { DbPersistenceService } from './db-persistence.service';
 
 export const PICK_OPERATORS = ['Murat Çelik', 'Ayşe Kaya', 'Mehmet Yılmaz', 'Zeynep Aydın', 'Can Öztürk', 'Elif Demir'];
 
@@ -28,6 +29,7 @@ const ACCESSOR = (row: PickTaskRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class PickingService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<PickTaskRow>> {
     const source = db.pickTasks
@@ -67,6 +69,7 @@ export class PickingService {
         task.version += 1;
         return toRow(task);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -90,6 +93,7 @@ export class PickingService {
         task.version += 1;
         return toRow(task);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -106,6 +110,7 @@ export class PickingService {
         this.openException(task, type, type === 'damage' ? 'seed.exception.damaged' : 'seed.exception.shortPick');
         return toRow(task);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -131,5 +136,8 @@ export class PickingService {
       createdAt: new Date().toISOString(),
       version: 1,
     });
+    // Wrong-barcode intentionally returns a validation error after opening the case,
+    // so persist here instead of relying only on the successful-write operator.
+    this.persistence.persist();
   }
 }

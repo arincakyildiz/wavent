@@ -15,6 +15,7 @@ import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { LotCandidate, ReservationRow, ReservationsService } from '../../data-access/reservations.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { SalesOrderFormComponent } from '../../components/sales-order-form/sales-order-form.component';
 
 const DEFAULT_PAGE_SIZE = 20;
 const EMPTY_TOTALS = { total: 0, partial: 0, backorder: 0, overrides: 0 };
@@ -26,6 +27,7 @@ const EMPTY_TOTALS = { total: 0, partial: 0, backorder: 0, overrides: 0 };
     PaginationComponent,
     HasPermissionDirective,
     AllocationBreakdownComponent,
+    SalesOrderFormComponent,
   ],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.scss',
@@ -43,6 +45,7 @@ export class ReservationsComponent {
   readonly candidates = signal<LotCandidate[]>([]);
   readonly candidatesLoading = signal(false);
   readonly overriding = signal(false);
+  readonly formOpen = signal(false);
 
   readonly search = signal('');
   readonly filter = signal('all');
@@ -113,6 +116,14 @@ export class ReservationsComponent {
 
   fulfilmentLabel(value: ReservationRow['fulfilment']): string {
     return this.i18n.t(`st.fulfil.${value}`);
+  }
+
+  onCreated(row: ReservationRow): void {
+    this.formOpen.set(false);
+    this.search.set(row.orderNumber);
+    this.page.set(1);
+    this.notifications.success(this.i18n.t('orderForm.created'), row.orderNumber);
+    this.list.reload();
   }
 
   /* ---------- Manual lot override (§4 / §11) ---------- */

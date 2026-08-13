@@ -14,6 +14,7 @@ import {
   serialIsAvailable,
 } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export type { LotHealth, LotRow, SerialIssue };
 
@@ -33,6 +34,7 @@ const ACCESSOR = (row: LotRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class LotSerialService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<LotRow>> {
     return this.api.simulate(lotRows(scope), { delayMs: 320 }).pipe(
@@ -108,6 +110,7 @@ export class LotSerialService {
         if (!row) throw new ApiError('validation', translate('svc.createdNotReadable'));
         return row;
       }),
+      this.persistence.afterWrite(),
     );
   }
 }

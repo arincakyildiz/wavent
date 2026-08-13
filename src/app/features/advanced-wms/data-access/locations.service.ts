@@ -6,6 +6,7 @@ import { LocationRec, db } from './mock-data';
 import { locationCapacityPct } from './selectors';
 import { ApiError } from '../../../core/api/api-error';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export interface LocationDraft {
   warehouseCode: string;
@@ -27,6 +28,7 @@ const ACCESSOR = (row: LocationRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class LocationsService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<LocationRow>> {
     const source: LocationRow[] = db.locations
@@ -66,6 +68,7 @@ export class LocationsService {
         db.locations.push(record);
         return { ...record, capacityPct: 0 };
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -79,6 +82,7 @@ export class LocationsService {
         record.version += 1;
         return { ...record, capacityPct: locationCapacityPct(record) };
       }),
+      this.persistence.afterWrite(),
     );
   }
 }

@@ -4,6 +4,7 @@
       <h1>{{ i18n.t('inventory.title') }}</h1>
       <p class="muted">{{ i18n.t('inventory.subtitle') }}</p>
     </div>
+    <button class="btn btn--primary" type="button" (click)="formOpen.set(true)" *appHasPermission="'inventory.create'">{{ i18n.t('inventoryForm.submit') }}</button>
   </div>
 
   @if (list.loading()) {
@@ -106,4 +107,5 @@
       <div class="state state--empty">{{ i18n.t('inventory.empty') }}</div>
     }
   }
+  @if (formOpen()) { <app-inventory-item-form (created)="onCreated($event)" (dismissed)="formOpen.set(false)" /> }
 </div>

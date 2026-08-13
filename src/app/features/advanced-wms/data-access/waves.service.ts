@@ -7,6 +7,7 @@ import { WaveStatus } from '../models/entities';
 import { WaveRec, db } from './mock-data';
 import { WaveOrderStatus, waveOrderStatuses } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export type { WaveOrderStatus };
 
@@ -69,6 +70,7 @@ const ACCESSOR = (row: WaveRow, key: string): unknown => (row as unknown as Reco
 @Injectable({ providedIn: 'root' })
 export class WavesService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<WaveRow>> {
     const source = db.waves.filter((w) => !scope.length || scope.includes(w.warehouseCode)).map(toRow);
@@ -141,6 +143,7 @@ export class WavesService {
         db.waves.unshift(record);
         return toRow(record);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -178,6 +181,7 @@ export class WavesService {
 
         return { wave: toRow(record), released, failed };
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -214,6 +218,7 @@ export class WavesService {
         order.status = wave.status === 'released' ? 'picking' : 'waved';
         return toRow(wave);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -231,6 +236,7 @@ export class WavesService {
         if (order) order.status = 'allocated';
         return toRow(wave);
       }),
+      this.persistence.afterWrite(),
     );
   }
 

@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { PackageRec, db } from './mock-data';
 import { withinWeightTolerance } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export interface PackageRow extends PackageRec {
   weightOk: boolean;
@@ -26,6 +27,7 @@ const ACCESSOR = (row: PackageRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class PackingService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<PackageRow>> {
     const source = db.packages
@@ -72,6 +74,7 @@ export class PackingService {
 
         return toRow(record);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -101,6 +104,7 @@ export class PackingService {
         record.version += 1;
         return toRow(record);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -115,6 +119,7 @@ export class PackingService {
         record.version += 1;
         return toRow(record);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -156,8 +161,9 @@ export class PackingService {
           shipment.packageCodes.splice(index + 1, 0, second.code);
           shipment.version += 1;
         }
-        return [toRow(record), toRow(second)];
+        return [toRow(record), toRow(second)] as [PackageRow, PackageRow];
       }),
+      this.persistence.afterWrite(),
     );
   }
 }

@@ -5,6 +5,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-query';
 import { ExceptionRec, db } from './mock-data';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export type ExceptionRow = ExceptionRec;
 
@@ -31,6 +32,7 @@ const ACCESSOR = (row: ExceptionRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class ExceptionsService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<ExceptionRow>> {
     const source = db.exceptions.filter((e) => !scope.length || scope.includes(e.warehouseCode));
@@ -78,6 +80,7 @@ export class ExceptionsService {
         record.version += 1;
         return { ...record };
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -164,6 +167,7 @@ export class ExceptionsService {
 
         return { ...record };
       }),
+      this.persistence.afterWrite(),
     );
   }
 }

@@ -1,0 +1,26 @@
+<app-form-dialog [title]="i18n.t('inventoryForm.title')" [subtitle]="i18n.t('inventoryForm.subtitle')" (dismissed)="dismissed.emit()">
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="form__row">
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.code') }}</span><input formControlName="code" maxlength="12" placeholder="SKU-ANK01" /></label>
+      <label class="field"><span class="field__label">{{ i18n.t('common.product') }}</span><input formControlName="name" maxlength="80" /></label>
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.uom') }}</span><input formControlName="uom" maxlength="10" /></label>
+    </div>
+    <div class="form__row">
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.weight') }}</span><input formControlName="weightKg" type="number" min="0.001" step="0.001" /></label>
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.volume') }}</span><input formControlName="volumeM3" type="number" min="0.0001" step="0.0001" /></label>
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.class') }}</span><select formControlName="storageClass"><option value="ambient">Ambient</option><option value="chilled">Chilled</option><option value="frozen">Frozen</option><option value="hazmat">Hazmat</option></select></label>
+    </div>
+    <div class="form__row">
+      <label class="field"><span class="field__label">{{ i18n.t('common.warehouse') }}</span><select formControlName="warehouseCode" (change)="onWarehouseChange()">@for (warehouse of warehouses(); track warehouse.code) { <option [value]="warehouse.code">{{ warehouse.code }} — {{ warehouse.name }}</option> }</select></label>
+      <label class="field"><span class="field__label">{{ i18n.t('common.location') }}</span><select formControlName="locationPath">@for (location of locations(); track location.path) { <option [value]="location.path">{{ location.path }}</option> }</select></label>
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.initialQuantity') }}</span><input formControlName="quantity" type="number" min="0" step="1" /></label>
+    </div>
+    <div class="form__row">
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.lotTracked') }}</span><input formControlName="lotTracked" type="checkbox" /></label>
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.serialTracked') }}</span><input formControlName="serialTracked" type="checkbox" /></label>
+      @if (form.controls.lotTracked.value) { <label class="field"><span class="field__label">{{ i18n.t('common.lot') }}</span><input formControlName="lot" maxlength="24" /></label> }
+    </div>
+    @if (submitError()) { <div class="form__error" role="alert">{{ submitError() }}</div> }
+    <div class="form__actions"><button class="btn" type="button" (click)="dismissed.emit()">{{ i18n.t('common.cancel') }}</button><button class="btn btn--primary" type="submit" [disabled]="submitting() || form.invalid">{{ submitting() ? i18n.t('common.saving') : i18n.t('inventoryForm.submit') }}</button></div>
+  </form>
+</app-form-dialog>

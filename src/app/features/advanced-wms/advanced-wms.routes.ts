@@ -1,12 +1,5 @@
-import { inject } from '@angular/core';
-import { CanActivateFn, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { requirePermission } from '../../core/auth/permission.guard';
-import { DemoDataService } from './data-access/demo-data.service';
-
-const initializeDemoData: CanActivateFn = () => {
-  inject(DemoDataService).initialize();
-  return true;
-};
 
 /**
  * Every screen is guarded by the capability it needs, so an unauthorised role cannot
@@ -146,7 +139,6 @@ const WMS_ROUTES: Routes = [
 export const ADVANCED_WMS_ROUTES: Routes = [
   {
     path: '',
-    canActivate: [initializeDemoData],
     children: WMS_ROUTES,
   },
 ];

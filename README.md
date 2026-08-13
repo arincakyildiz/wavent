@@ -4,8 +4,8 @@ Angular 20 (standalone + Signals) tabanlı ileri seviye WMS kontrol paneli. Bird
 depo/lokasyonda ürün, lot/seri, son kullanma, rezervasyon, sayım, dalga toplama, paketleme ve
 sevkiyat istisnalarını yönetir.
 
-Backend yoktur: mock transport katmanı gecikme, hata, yetkisiz erişim ve çakışma senaryolarını
-simüle eder.
+Backend yoktur: tarayıcıda kalıcı çalışan ilişkisel mock veri katmanı; gecikme, hata, yetkisiz
+erişim ve çakışma senaryolarını simüle eder.
 
 ## Kurulum ve Çalıştırma
 
@@ -46,6 +46,12 @@ Yeni bir tarayıcı profili operasyonel veri olmadan, boş çalışma alanıyla 
 grafiğini tek işlemle yükler. Seçim tarayıcıda saklanır; aynı alandaki **Tüm verileri temizle**
 işlemi çalışma alanını yeniden ilk açılıştaki boş durumuna döndürür.
 
+Depo, lokasyon, ürün ve başlangıç stoğu, satış siparişi, ASN kabul satırı, lot/seri, dalga ve sayım
+kayıtları arayüzden oluşturulabilir. Bunlardan türeyen rezervasyon, görev, paket, sevkiyat,
+hareket, istisna ve denetim kayıtları ilgili operasyon tamamlandıkça aynı veri grafiğine yazılır.
+Başarılı her yazma işlemi tarayıcıdaki sürümlü WMS anlık görüntüsüne kaydedilir ve sayfa yenileme
+veya yeniden giriş sonrasında geri yüklenir.
+
 ## Mimari Kararlar
 
 - **Standalone components + Signals** — NgModule yok; state Signals ile, asenkron akışlar RxJS ile.
@@ -66,6 +72,9 @@ işlemi çalışma alanını yeniden ilk açılıştaki boş durumuna döndürü
 - **Tek kaynaklı veri** — `data-access/mock-data.ts` sabit tohumlu bir üreteçle tüm ilişkili veri
   grafiğini kurar (depo → lokasyon → SKU → bakiye → sipariş → **gerçek FEFO/FIFO tahsis motoru** →
   dalga → görev → paket → sevkiyat). Ekranlar arası sayılar bu yüzden tutarlıdır.
+- **Kalıcı mock veritabanı** — bütün başarılı yazmalar tek ilişkisel grafiği günceller ve
+  `DbPersistenceService` tarafından sürümlü olarak `localStorage`'a alınır; uygulama başlatıcısı
+  route ve liste isteklerinden önce bu grafiği geri yükler.
 - **Tek türetme katmanı** — hesaplanan değerler ve iş kuralı kararları yalnızca
   `data-access/selectors.ts` içinde; Inventory, SKU detayı ve Control Tower asla farklı sayı
   gösteremez.
@@ -198,8 +207,9 @@ ekranda kullanılır; bunlara ek olarak tartı simülasyonu için `ScaleInput` (
 
 ## Bilinen Sınırlar
 
-- Tüm veriler mock; gerçek backend entegrasyonu yok ve oturum içi değişiklikler kalıcı değildir.
-  Mock veri her sayfa yenilemesinde sabit tohumdan yeniden üretilir.
+- Tüm veriler tarayıcıda kalıcı mock veridir; gerçek bir uzak backend, çok kullanıcılı ortak
+  veritabanı veya cihazlar arası senkronizasyon yoktur. Tarayıcı verisi temizlenirse yerel çalışma
+  alanı da sıfırlanır.
 - Fiziksel cihaz **bağlantısı** yoktur; cihazlar yazılımda simüle edilir: barkod okuma Putaway'de
   `BarcodeInput` (yinelenen okumaları yutar, eşleşmeyen barkod istisna üretir), tartı Packing'de
   `ScaleInput` (load cell oturma süresi, kalibrasyon sapması; kararsız okuma kaydedilemez),

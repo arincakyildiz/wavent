@@ -9,12 +9,15 @@ import { createListResource } from '../../../../shared/utils/list-resource';
 import { bindQueryParams, parseNumber, parseString } from '../../../../shared/utils/query-params';
 import { InventoryRow, InventoryService } from '../../data-access/inventory.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { InventoryItemFormComponent } from '../../components/inventory-item-form/inventory-item-form.component';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { NotificationService } from '../../../../core/observability/notification.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-inventory',
-  imports: [SortableDirective, PaginationComponent, ActivatableDirective],
+  imports: [SortableDirective, PaginationComponent, ActivatableDirective, InventoryItemFormComponent, HasPermissionDirective],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss',
 })
@@ -23,6 +26,8 @@ export class InventoryComponent {
   private readonly inventoryService = inject(InventoryService);
   private readonly scope = inject(WarehouseScopeService);
   private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
+  readonly formOpen = signal(false);
 
   readonly search = signal('');
   readonly page = signal(1);
@@ -71,5 +76,13 @@ export class InventoryComponent {
 
   availabilityPct(row: InventoryRow): number {
     return row.onHand ? Math.round((row.available / row.onHand) * 100) : 0;
+  }
+
+  onCreated(row: InventoryRow): void {
+    this.formOpen.set(false);
+    this.search.set(row.skuCode);
+    this.page.set(1);
+    this.notifications.success(this.i18n.t('inventoryForm.created'), row.skuCode);
+    this.list.reload();
   }
 }

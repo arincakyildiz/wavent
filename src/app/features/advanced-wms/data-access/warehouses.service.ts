@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { WarehouseRec, db } from './mock-data';
 import { inventoryByWarehouse, locationCount, warehouseCapacityPct } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export interface WarehouseSummary {
   id: string;
@@ -66,6 +67,7 @@ const ACCESSOR = (row: WarehouseSummary, key: string): unknown => {
 @Injectable({ providedIn: 'root' })
 export class WarehousesService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   /** Server-like query: scope, search, filter, sort and page all applied remotely. */
   query(scope: string[], query: ListQuery): Observable<ListResult<WarehouseSummary>> {
@@ -116,6 +118,7 @@ export class WarehousesService {
           db.warehouses.push(record);
           return toSummary(record);
         }),
+        this.persistence.afterWrite(),
       );
   }
 }

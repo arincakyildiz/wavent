@@ -127,6 +127,8 @@ export class WarehousesComponent {
 
   onCreated(created: WarehouseSummary): void {
     this.formOpen.set(false);
+    this.search.set(created.code);
+    this.page.set(1);
     this.scope.register({ code: created.code, name: created.name });
     this.audit.record({
       actionType: 'Warehouse Created',

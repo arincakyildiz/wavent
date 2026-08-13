@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { PutawayRec, db } from './mock-data';
 import { capacityVerdict } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export interface PutawaySuggestionRow extends PutawayRec {
   skuName: string;
@@ -43,6 +44,7 @@ const ACCESSOR = (row: PutawaySuggestionRow, key: string): unknown =>
 @Injectable({ providedIn: 'root' })
 export class PutawayService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<PutawaySuggestionRow>> {
     const source = db.putaway
@@ -81,6 +83,7 @@ export class PutawayService {
         record.version += 1;
         return toRow(record);
       }),
+      this.persistence.afterWrite(),
     );
   }
 }

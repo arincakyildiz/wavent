@@ -73,10 +73,6 @@ export class ShellComponent {
   readonly notificationHistory = this.notifications.history;
   readonly notificationCount = computed(() => this.notificationHistory().length);
 
-  constructor() {
-    this.demoData.initialize();
-  }
-
   private readonly allGroups: NavGroup[] = [
     {
       labelKey: null,

@@ -6,6 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { ASNStatus, ReceiptLineStatus } from '../models/entities';
 import { AsnRec, ReceiptLineRec, db } from './mock-data';
 import { translate } from '../../../core/i18n/i18n.service';
+import { DbPersistenceService } from './db-persistence.service';
 
 export interface AsnRow {
   id: string;
@@ -28,6 +29,9 @@ export interface AsnDraft {
   supplierName: string;
   warehouseCode: string;
   expectedDate: string;
+  skuCode: string;
+  expectedQuantity: number;
+  lot?: string;
 }
 
 export interface ReceiptInput {
@@ -57,6 +61,7 @@ const ACCESSOR = (row: AsnRow, key: string): unknown => (row as unknown as Recor
 @Injectable({ providedIn: 'root' })
 export class ReceivingService {
   private readonly api = inject(MockApiService);
+  private readonly persistence = inject(DbPersistenceService);
 
   query(scope: string[], query: ListQuery): Observable<ListResult<AsnRow>> {
     const source = db.asns.filter((a) => !scope.length || scope.includes(a.warehouseCode)).map(toRow);
@@ -98,6 +103,10 @@ export class ReceivingService {
     return this.api.simulate(!taken, { delayMs: 400 });
   }
 
+  availableSkus(): { code: string; name: string; lotTracked: boolean }[] {
+    return db.skus.map(({ code, name, lotTracked }) => ({ code, name, lotTracked }));
+  }
+
   create(draft: AsnDraft): Observable<AsnRow> {
     return this.api.simulate(draft, { delayMs: 500, kind: 'write' }).pipe(
       map((d) => {
@@ -113,9 +122,29 @@ export class ReceivingService {
           status: 'expected',
           version: 1,
         };
+        const sku = db.skus.find((item) => item.code === d.skuCode);
+        if (!sku) throw new ApiError('validation', translate('svc.skuNotFound'));
+        if (!Number.isInteger(d.expectedQuantity) || d.expectedQuantity <= 0) {
+          throw new ApiError('validation', translate('svc.invalidExpectedQuantity'));
+        }
+        if (sku.lotTracked && !d.lot?.trim()) {
+          throw new ApiError('validation', translate('svc.lotRequired'));
+        }
         db.asns.unshift(record);
+        db.receiptLines.unshift({
+          id: `rl-${db.receiptLines.length + 1}`,
+          asnNumber: record.number,
+          skuCode: sku.code,
+          lot: sku.lotTracked ? d.lot?.trim().toUpperCase() : undefined,
+          expectedQuantity: d.expectedQuantity,
+          receivedQuantity: 0,
+          damagedQuantity: 0,
+          status: 'pending',
+          version: 1,
+        });
         return toRow(record);
       }),
+      this.persistence.afterWrite(),
     );
   }
 
@@ -202,6 +231,7 @@ export class ReceivingService {
         const skuName = db.skus.find((record) => record.code === line.skuCode)?.name ?? line.skuCode;
         return { ...line, skuName };
       }),
+      this.persistence.afterWrite(),
     );
   }
 }
