@@ -1,21 +1,23 @@
 @if (entries().length) {
-  <div class="ledger" role="table" [attr.aria-rowcount]="entries().length">
-    <div class="ledger__head" role="row">
-      <span role="columnheader">{{ i18n.t('common.date') }}</span>
-      <span role="columnheader">{{ i18n.t('ledger.type') }}</span>
-      <span role="columnheader">{{ i18n.t('common.quantity') }}</span>
-      <span role="columnheader">{{ i18n.t('ledger.balance') }}</span>
-      <span role="columnheader">{{ i18n.t('ledger.reference') }}</span>
-    </div>
-    <cdk-virtual-scroll-viewport class="ledger__viewport" [itemSize]="rowHeight">
-      <div class="ledger__row" role="row" *cdkVirtualFor="let e of entries(); trackBy: trackById">
-        <span role="cell">{{ e.date }}</span>
-        <span role="cell">{{ e.type }}</span>
-        <span role="cell" [class]="e.quantity < 0 ? 'negative' : 'positive'">{{ e.quantity > 0 ? '+' : '' }}{{ i18n.n(e.quantity) }}</span>
-        <span role="cell" class="ledger__balance">{{ i18n.n(e.runningBalance) }}</span>
-        <span role="cell" class="muted small">{{ e.reasonCode }}</span>
+  <div class="ledger-scroll">
+    <div class="ledger" role="table" [attr.aria-rowcount]="entries().length">
+      <div class="ledger__head" role="row">
+        <span role="columnheader">{{ i18n.t('common.date') }}</span>
+        <span role="columnheader">{{ i18n.t('ledger.type') }}</span>
+        <span role="columnheader">{{ i18n.t('common.quantity') }}</span>
+        <span role="columnheader">{{ i18n.t('ledger.balance') }}</span>
+        <span role="columnheader">{{ i18n.t('ledger.reference') }}</span>
       </div>
-    </cdk-virtual-scroll-viewport>
+      <cdk-virtual-scroll-viewport class="ledger__viewport" [itemSize]="rowHeight">
+        <div class="ledger__row" role="row" *cdkVirtualFor="let e of entries(); trackBy: trackById">
+          <span role="cell">{{ i18n.d(e.date) }}</span>
+          <span role="cell">{{ i18n.t('st.' + e.type) }}</span>
+          <span role="cell" [class]="e.quantity < 0 ? 'negative' : 'positive'">{{ e.quantity > 0 ? '+' : '' }}{{ i18n.n(e.quantity) }}</span>
+          <span role="cell" class="ledger__balance">{{ i18n.n(e.runningBalance) }}</span>
+          <span role="cell" class="muted small">{{ e.reasonCode }}</span>
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </div>
   </div>
 } @else {
   <div class="state state--empty">{{ emptyMessage() || i18n.t('ledger.empty') }}</div>

@@ -4,7 +4,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+.ledger-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .ledger {
+  width: 100%;
   min-width: 680px;
   border: 1px solid var(--border-subtle);
   overflow: hidden;
@@ -13,7 +19,7 @@
 .ledger__head,
 .ledger__row {
   display: grid;
-  grid-template-columns: 150px 1fr 110px 110px 1fr;
+  grid-template-columns: 160px minmax(0, 1fr) 110px 110px minmax(140px, 1fr);
   gap: 12px;
   align-items: center;
   padding: 0 14px;

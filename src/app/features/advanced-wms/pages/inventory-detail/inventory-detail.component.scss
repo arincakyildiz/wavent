@@ -15,3 +15,37 @@
   border: 1px solid var(--border-subtle);
   background: var(--surface-1);
 }
+
+.inventory-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.inventory-detail-panel {
+  overflow: hidden;
+}
+
+.lots-table {
+  min-width: 840px;
+
+  th,
+  td {
+    white-space: nowrap;
+  }
+
+  th:nth-child(3),
+  td:nth-child(3) {
+    width: 100%;
+  }
+
+  .btn {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .inventory-detail-panel {
+    padding: 14px;
+  }
+}

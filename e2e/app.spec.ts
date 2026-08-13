@@ -136,6 +136,31 @@ test('keeps the product creation workflow usable on mobile', async ({ page }) =>
     .toBe(true);
 });
 
+test('keeps inventory detail tables aligned on desktop and mobile', async ({ page }) => {
+  await loadSampleData(page);
+  await page.goto('/wms/inventory/SKU-1001');
+  await expect(page.getByRole('heading', { name: 'SKU-1001' })).toBeVisible();
+  await expect(page.getByText('Kullanılabilir', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('.lots-table .status-pill').first()).toHaveText('Kullanılabilir');
+  await expect(page.getByText('Yerleştirme', { exact: true }).first()).toBeVisible();
+
+  const panels = page.locator('.inventory-detail-panel');
+  await expect(panels).toHaveCount(2);
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
+  await expect
+    .poll(() => panels.evaluateAll((items) => items.every((item) => item.getBoundingClientRect().right <= window.innerWidth)))
+    .toBe(true);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
+  await expect(page.locator('.table-scroll')).toHaveCSS('overflow-x', 'auto');
+  await expect(page.locator('.ledger-scroll')).toHaveCSS('overflow-x', 'auto');
+});
+
 test('clears the sample dataset from settings after confirmation', async ({ page }) => {
   await loadSampleData(page);
   await page.getByRole('link', { name: 'Ayarlar' }).click();

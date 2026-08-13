@@ -60,8 +60,8 @@
           </div>
         </div>
 
-        <div class="grid-2">
-          <div class="panel">
+        <div class="inventory-detail-grid">
+          <section class="panel inventory-detail-panel">
             <h2>{{ i18n.t('inventory.lotLocationBreakdown') }}</h2>
             @if (activeLot(); as active) {
               <form class="form adjustment-form" [formGroup]="adjustmentForm" (ngSubmit)="saveAdjustment()">
@@ -75,7 +75,7 @@
             }
             @if (lots().length) {
               <div class="table-scroll">
-                <table class="data-table">
+                <table class="data-table lots-table">
                   <thead>
                     <tr>
                       <th>{{ i18n.t('common.lot') }}</th>
@@ -94,7 +94,7 @@
                         <td>{{ l.serial ?? '—' }}</td>
                         <td>{{ l.warehouseCode }} · {{ l.locationPath }}</td>
                         <td>{{ i18n.n(l.quantity) }}</td>
-                        <td><span class="status-pill" [class]="statusTone(l.status)">{{ l.status }}</span></td>
+                        <td><span class="status-pill" [class]="statusTone(l.status)">{{ i18n.t('st.' + l.status) }}</span></td>
                         <td>{{ l.expiryDate ?? '—' }}</td>
                         <td *appHasPermission="'inventory.adjust'"><button class="btn" type="button" (click)="editBalance(l)">{{ i18n.t('inventoryDetail.adjust') }}</button></td>
                       </tr>
@@ -105,12 +105,12 @@
             } @else {
               <div class="state state--empty">{{ i18n.t('inventoryDetail.empty') }}</div>
             }
-          </div>
+          </section>
 
-          <div class="panel">
+          <section class="panel inventory-detail-panel">
             <h2>{{ i18n.t('inventory.ledger') }}</h2>
             <app-inventory-ledger [entries]="ledger()" />
-          </div>
+          </section>
         </div>
       }
     }
