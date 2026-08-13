@@ -17,12 +17,12 @@ export interface ExceptionEvidence {
 
 /** Everyone an exception may be reassigned to. */
 export const EXCEPTION_OWNERS = [
-  'John Doe',
-  'Sarah Lee',
-  'Michael Brown',
-  'Jessica Park',
-  'David Wu',
-  'Elif Kaya',
+  'Murat Çelik',
+  'Ayşe Kaya',
+  'Mehmet Yılmaz',
+  'Zeynep Aydın',
+  'Can Öztürk',
+  'Elif Demir',
 ];
 
 const ACCESSOR = (row: ExceptionRow, key: string): unknown =>

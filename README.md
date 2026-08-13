@@ -39,7 +39,7 @@ role göre daralır. Settings ekranından rol değiştirilerek uygulama o rolün
 | Planlama Uzmanı (`planner`) | Sipariş önceliği, dalga kuralı, kapasite | Tüm ağ |
 | Depo Yöneticisi (`warehouse-manager`) | Tümü + ayarlar + audit | Tüm ağ |
 
-Varsayılan demo kullanıcı: **John Doe / Depo Yöneticisi**.
+Varsayılan demo kullanıcı: **Murat Çelik / Depo Yöneticisi**.
 
 Yeni bir tarayıcı profili operasyonel veri olmadan, boş çalışma alanıyla açılır. Genel Bakış'taki
 **Örnek verileri yükle** düğmesi veya Ayarlar → Örnek Veri Yönetimi alanı, ilişkili demo veri

@@ -6,38 +6,45 @@
     </div>
 
     <div class="page__actions">
-      <label class="select-control">
-        <select
-          [value]="selectedScope()"
-          (change)="selectScope($any($event.target).value)"
-          [disabled]="!canChooseScope()"
-          [attr.aria-label]="i18n.t('overview.scopeAria')"
-        >
-          <option value="all">{{ i18n.t('nav.allWarehouses') }}</option>
-          @for (w of warehouses(); track w.code) {
-            <option [value]="w.code">{{ w.name }}</option>
-          }
-        </select>
-        <app-icon name="chevronDown" [size]="15" />
-      </label>
+      @if (!demoData.loaded()) {
+        <button class="btn btn--primary" type="button" (click)="loadSampleData()">
+          <app-icon name="plus" [size]="15" />
+          {{ i18n.t('demoData.load') }}
+        </button>
+      } @else {
+        <label class="select-control">
+          <select
+            [value]="selectedScope()"
+            (change)="selectScope($any($event.target).value)"
+            [disabled]="!canChooseScope()"
+            [attr.aria-label]="i18n.t('overview.scopeAria')"
+          >
+            <option value="all">{{ i18n.t('nav.allWarehouses') }}</option>
+            @for (w of warehouses(); track w.code) {
+              <option [value]="w.code">{{ w.name }}</option>
+            }
+          </select>
+          <app-icon name="chevronDown" [size]="15" />
+        </label>
 
-      <label class="select-control">
-        <app-icon name="calendar" [size]="15" />
-        <select [value]="period()" (change)="period.set($any($event.target).value)" [attr.aria-label]="i18n.t('overview.periodAria')">
-          @for (p of periods; track p) {
-            <option [value]="p">{{ periodLabels[p] }}</option>
-          }
-        </select>
-      </label>
+        <label class="select-control">
+          <app-icon name="calendar" [size]="15" />
+          <select [value]="period()" (change)="period.set($any($event.target).value)" [attr.aria-label]="i18n.t('overview.periodAria')">
+            @for (p of periods; track p) {
+              <option [value]="p">{{ periodLabels[p] }}</option>
+            }
+          </select>
+        </label>
 
-      <button class="btn btn--primary" type="button" (click)="go('/wms/waves')">
-        <app-icon name="plus" [size]="15" />
-        {{ i18n.t('overview.newWave') }}
-      </button>
+        <button class="btn btn--primary" type="button" (click)="go('/wms/waves')">
+          <app-icon name="plus" [size]="15" />
+          {{ i18n.t('overview.newWave') }}
+        </button>
 
-      <button class="btn" type="button" (click)="reload()" [attr.aria-label]="i18n.t('common.refresh')">
-        <app-icon name="refresh" [size]="14" />
-      </button>
+        <button class="btn" type="button" (click)="reload()" [attr.aria-label]="i18n.t('common.refresh')">
+          <app-icon name="refresh" [size]="14" />
+        </button>
+      }
     </div>
   </div>
 
@@ -48,10 +55,6 @@
         <h2>{{ i18n.t('demoData.emptyTitle') }}</h2>
         <p class="muted">{{ i18n.t('demoData.emptyBody') }}</p>
       </div>
-      <button class="btn btn--primary" type="button" (click)="loadSampleData()">
-        <app-icon name="plus" [size]="15" />
-        {{ i18n.t('demoData.load') }}
-      </button>
     </section>
   } @else if (loading()) {
     <div class="state state--loading">{{ i18n.t('common.loading') }}</div>

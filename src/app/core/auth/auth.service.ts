@@ -19,12 +19,12 @@ export interface CurrentUser {
 
 /** One demo persona per role, so logging in as a different role also feels like a different person. */
 const DEMO_USERS: Record<Role, CurrentUser> = {
-  'warehouse-operator': { id: 'u-op', name: 'Mehmet Yıldız', role: 'warehouse-operator', homeWarehouseCode: 'NYC-01' },
+  'warehouse-operator': { id: 'u-op', name: 'Mehmet Yılmaz', role: 'warehouse-operator', homeWarehouseCode: 'NYC-01' },
   'shift-lead': { id: 'u-lead', name: 'Ayşe Kaya', role: 'shift-lead', homeWarehouseCode: 'NYC-01' },
   'inventory-controller': { id: 'u-inv', name: 'Elif Demir', role: 'inventory-controller', homeWarehouseCode: 'NYC-01' },
   'shipping-specialist': { id: 'u-ship', name: 'Can Öztürk', role: 'shipping-specialist', homeWarehouseCode: 'NYC-01' },
   planner: { id: 'u-plan', name: 'Zeynep Aydın', role: 'planner', homeWarehouseCode: 'NYC-01' },
-  'warehouse-manager': { id: 'u-1', name: 'John Doe', role: 'warehouse-manager', homeWarehouseCode: 'NYC-01' },
+  'warehouse-manager': { id: 'u-1', name: 'Murat Çelik', role: 'warehouse-manager', homeWarehouseCode: 'NYC-01' },
 };
 
 @Injectable({ providedIn: 'root' })

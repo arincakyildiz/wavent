@@ -7,7 +7,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { translate } from '../../../core/i18n/i18n.service';
 import { ExceptionType } from '../models/entities';
 
-export const PICK_OPERATORS = ['John Doe', 'Sarah Lee', 'Michael Brown', 'Jessica Park', 'David Wu', 'Elif Kaya'];
+export const PICK_OPERATORS = ['Murat Çelik', 'Ayşe Kaya', 'Mehmet Yılmaz', 'Zeynep Aydın', 'Can Öztürk', 'Elif Demir'];
 
 export interface PickTaskRow extends PickTaskRec {
   locationCount: number;

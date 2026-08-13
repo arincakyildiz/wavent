@@ -304,7 +304,7 @@ export interface AuditRec {
  * Seed constants
  * ------------------------------------------------------------------ */
 
-const OPERATORS = ['John Doe', 'Sarah Lee', 'Michael Brown', 'Jessica Park', 'David Wu', 'Elif Kaya'];
+const OPERATORS = ['Murat Çelik', 'Ayşe Kaya', 'Mehmet Yılmaz', 'Zeynep Aydın', 'Can Öztürk', 'Elif Demir'];
 const CARRIERS = ['DHL Express', 'UPS', 'FedEx', 'Maersk', 'Aramex'];
 const SUPPLIERS = [
   'FreshFarm Co.',
