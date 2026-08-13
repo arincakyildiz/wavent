@@ -22,7 +22,6 @@ test('starts empty and persists the sample dataset after loading it', async ({ p
   await expect(page.getByRole('heading', { name: 'Henüz depo verisi bulunmuyor' })).toBeVisible();
   await loadSampleData(page);
   await page.reload();
-  await page.getByRole('button', { name: /Depo Yöneticisi/ }).click();
   await expect(page).toHaveURL(/\/wms\/overview/);
 
   await expect(page.getByRole('heading', { name: 'Henüz depo verisi bulunmuyor' })).toHaveCount(0);
@@ -36,8 +35,8 @@ test('opens the notification center and keeps recent notifications', async ({ pa
   const panel = page.getByRole('dialog', { name: 'Bildirimler' });
   await expect(panel).toBeVisible();
   await expect(panel.getByText('Örnek veriler yüklendi')).toBeVisible();
-  await panel.getByRole('button', { name: 'Tümünü temizle' }).click();
-  await expect(panel.getByText('Henüz bildirim yok')).toBeVisible();
+  await page.getByRole('heading', { name: 'Genel Bakış' }).click();
+  await expect(panel).toBeHidden();
 });
 
 test('shows a newly created warehouse in the list and global scope', async ({ page }) => {
@@ -55,7 +54,6 @@ test('shows a newly created warehouse in the list and global scope', async ({ pa
   await expect(page.getByRole('menuitem', { name: /ANK-01.*Ankara Dağıtım Merkezi/ })).toBeVisible();
 
   await page.reload();
-  await page.getByRole('button', { name: /Depo Yöneticisi/ }).click();
   await page.getByRole('link', { name: 'Depolar', exact: true }).click();
   await expect(page.getByRole('cell', { name: 'ANK-01' })).toBeVisible();
   await page.getByRole('button', { name: /Depo kapsamı/ }).click();
@@ -90,13 +88,38 @@ test('creates persistent product stock and allocates a sales order', async ({ pa
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem('wavent.wms-db-v1')?.includes('SO-2026999') ?? false))
     .toBe(true);
-  await page.getByRole('button', { name: /Depo Yöneticisi/ }).click();
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem('wavent.wms-db-v1')?.includes('SO-2026999') ?? false))
     .toBe(true);
   await page.getByRole('link', { name: 'Rezervasyonlar', exact: true }).click();
   await page.getByPlaceholder('Sipariş, SKU veya lot ara...').fill('SO-2026999');
   await expect(page.getByRole('cell', { name: 'SO-2026999' })).toBeVisible();
+});
+
+test('changes role from settings and keeps the session after refresh', async ({ page }) => {
+  await page.getByRole('link', { name: 'Ayarlar' }).click();
+  await page.getByRole('radio', { name: /Planlama Uzmanı/ }).click();
+
+  await expect(page).toHaveURL(/\/wms\/overview/);
+  await expect(page.locator('.topbar').getByText('Zeynep Aydın', { exact: true })).toBeVisible();
+  await expect(page.getByText('Aktif rol değiştirildi')).toBeVisible();
+
+  await page.reload();
+  await expect(page).toHaveURL(/\/wms\/overview/);
+  await expect(page.locator('.topbar').getByText('Zeynep Aydın', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Giriş yap' })).toHaveCount(0);
+});
+
+test('opens role selection from the unauthorized screen without looping', async ({ page }) => {
+  await page.getByRole('link', { name: 'Ayarlar' }).click();
+  await page.getByRole('radio', { name: /Depo Operatörü/ }).click();
+  await page.goto('/wms/settings');
+  await expect(page.getByRole('heading', { name: '403 — Yetkiniz yok' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Rolü değiştir' }).click();
+  await expect(page).toHaveURL(/\/login\?returnUrl=%2Fwms%2Foverview/);
+  await page.getByRole('button', { name: /Depo Yöneticisi/ }).click();
+  await expect(page).toHaveURL(/\/wms\/overview/);
 });
 
 test('keeps the product creation workflow usable on mobile', async ({ page }) => {

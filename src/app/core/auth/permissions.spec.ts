@@ -51,6 +51,8 @@ describe('AuthService capabilities', () => {
     auth = TestBed.inject(AuthService);
   });
 
+  afterEach(() => auth.logout());
+
   it('answers `can` from the active role', () => {
     auth.setRole('warehouse-operator');
     expect(auth.can('putaway.accept')).toBe(true);
@@ -72,6 +74,14 @@ describe('AuthService capabilities', () => {
     auth.setRole('planner');
     expect(auth.warehouseScope()).toBe('all');
   });
+
+  it('persists login and clears the session on logout', () => {
+    auth.login('planner');
+    expect(localStorage.getItem('wavent.auth-session-v1')).toBe('"planner"');
+
+    auth.logout();
+    expect(localStorage.getItem('wavent.auth-session-v1')).toBeNull();
+  });
 });
 
 describe('requirePermission guard', () => {
@@ -83,6 +93,8 @@ describe('requirePermission guard', () => {
     auth = TestBed.inject(AuthService);
     router = TestBed.inject(Router);
   });
+
+  afterEach(() => auth.logout());
 
   function run(permission: Parameters<typeof requirePermission>[0]) {
     const guard = requirePermission(permission);

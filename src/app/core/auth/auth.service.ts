@@ -1,5 +1,6 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Permission, ROLE_PERMISSIONS, ROLE_WAREHOUSE_SCOPE } from './permissions';
+import { LocalStorageService } from '../storage/local-storage.service';
 
 export type Role =
   | 'warehouse-operator'
@@ -27,10 +28,20 @@ const DEMO_USERS: Record<Role, CurrentUser> = {
   'warehouse-manager': { id: 'u-1', name: 'Murat Çelik', role: 'warehouse-manager', homeWarehouseCode: 'NYC-01' },
 };
 
+const AUTH_SESSION_KEY = 'auth-session-v1';
+
+function isRole(value: unknown): value is Role {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(DEMO_USERS, value);
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly user = signal<CurrentUser>(DEMO_USERS['warehouse-manager']);
-  private readonly authenticated = signal(false);
+  private readonly storage = inject(LocalStorageService);
+  private readonly storedRole = this.storage.read<unknown>(AUTH_SESSION_KEY, null);
+  private readonly user = signal<CurrentUser>(
+    isRole(this.storedRole) ? DEMO_USERS[this.storedRole] : DEMO_USERS['warehouse-manager'],
+  );
+  private readonly authenticated = signal(isRole(this.storedRole));
 
   readonly currentUser = this.user.asReadonly();
   readonly role = computed(() => this.user().role);
@@ -56,16 +67,20 @@ export class AuthService {
 
   /** Demo affordance: lets the Settings screen preview the app as another role. */
   setRole(role: Role): void {
-    this.user.update((user) => ({ ...user, role }));
+    this.user.set(DEMO_USERS[role]);
+    this.authenticated.set(true);
+    this.storage.write(AUTH_SESSION_KEY, role);
   }
 
   /** Login screen: picking a role signs in as that role's demo persona. */
   login(role: Role): void {
     this.user.set(DEMO_USERS[role]);
     this.authenticated.set(true);
+    this.storage.write(AUTH_SESSION_KEY, role);
   }
 
   logout(): void {
     this.authenticated.set(false);
+    this.storage.remove(AUTH_SESSION_KEY);
   }
 }

@@ -31,7 +31,8 @@ export class UnauthorizedComponent {
     this.router.navigate(['/wms/overview']);
   }
 
-  goSettings(): void {
-    this.router.navigate(['/wms/settings']);
+  changeRole(): void {
+    this.auth.logout();
+    this.router.navigate(['/login'], { queryParams: { returnUrl: '/wms/overview' } });
   }
 }

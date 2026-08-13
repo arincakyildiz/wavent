@@ -60,7 +60,7 @@ export class SettingsComponent {
 
   switchAccount(): void {
     this.auth.logout();
-    this.router.navigateByUrl('/login');
+    this.router.navigate(['/login'], { queryParams: { returnUrl: '/wms/overview' } });
   }
 
   setRole(role: string): void {
@@ -73,7 +73,11 @@ export class SettingsComponent {
       oldValue: previous,
       newValue: role,
     });
-    this.flagSaved();
+    this.notifications.success(
+      this.i18n.t('settings.roleChanged'),
+      this.i18n.t('settings.roleChangedBody', { role: this.i18n.t(`role.${role}`) }),
+    );
+    this.router.navigateByUrl('/wms/overview');
   }
 
   setTheme(theme: string): void {

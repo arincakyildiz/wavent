@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Permission } from '../../../core/auth/permissions';
@@ -44,6 +44,7 @@ interface NavGroup {
 export class ShellComponent {
   @ViewChild('sidebarEl') private sidebarEl?: ElementRef<HTMLElement>;
   @ViewChild('navEl') private navEl?: ElementRef<HTMLElement>;
+  @ViewChild('notificationCenter') private notificationCenter?: ElementRef<HTMLElement>;
 
   private readonly auth = inject(AuthService);
   private readonly themeService = inject(ThemeService);
@@ -173,6 +174,15 @@ export class ShellComponent {
     this.notificationPanelOpen.update((open) => !open);
     this.scopeMenuOpen.set(false);
     this.userMenuOpen.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeNotificationsOnOutsideClick(event: MouseEvent): void {
+    if (!this.notificationPanelOpen()) return;
+    const target = event.target;
+    if (target instanceof Node && !this.notificationCenter?.nativeElement.contains(target)) {
+      this.notificationPanelOpen.set(false);
+    }
   }
 
   loadSampleData(): void {
