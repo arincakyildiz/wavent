@@ -34,7 +34,7 @@ role göre daralır. Settings ekranından rol değiştirilerek uygulama o rolün
 | --- | --- | --- |
 | Depo Operatörü (`warehouse-operator`) | Kabul, putaway, toplama, paketleme, sayım | Kendi deposu |
 | Vardiya Lideri (`shift-lead`) | Dalga planı/yayınlama, istisna kararı, ağırlık onayı | Kendi deposu |
-| Stok Kontrol Uzmanı (`inventory-controller`) | Lot/seri, sayım, karantina, düzeltme, override | Tüm ağ |
+| Stok Kontrol Uzmanı (`inventory-controller`) | Lot/seri kaydı, sayım, karantina, düzeltme, override | Tüm ağ |
 | Sevkiyat Uzmanı (`shipping-specialist`) | Paket, taşıyıcı, yükleme, kapanış | Tüm ağ |
 | Planlama Uzmanı (`planner`) | Sipariş önceliği, dalga kuralı, kapasite | Tüm ağ |
 | Depo Yöneticisi (`warehouse-manager`) | Tümü + ayarlar + audit | Tüm ağ |
@@ -51,6 +51,11 @@ kayıtları arayüzden oluşturulabilir. Bunlardan türeyen rezervasyon, görev,
 hareket, istisna ve denetim kayıtları ilgili operasyon tamamlandıkça aynı veri grafiğine yazılır.
 Başarılı her yazma işlemi tarayıcıdaki sürümlü WMS anlık görüntüsüne kaydedilir ve sayfa yenileme
 veya yeniden giriş sonrasında geri yüklenir.
+
+Seri takipli ürünlerde açılış miktarı bilerek `0` ile sınırlandırılır; her fiziksel birim benzersiz
+seri numarasıyla Lot / Seri ekranından kaydedilir. Bir kabul satırı yalnızca bir kez işlenebilir.
+Ardından üretilen putaway önerisi kabul edildiğinde stok hedef bakiyeye eklenir, lokasyonun ağırlık
+ve hacim kullanımı güncellenir ve stok hareketi oluşur.
 
 ## Mimari Kararlar
 
@@ -183,8 +188,11 @@ Beş ana kullanıcı akışı component/integration seviyesinde uçtan uca kapl�
 - `data-access/putaway.service.spec.ts` — kapasite override gerekçesinin servis sınırında doğrulanması
 - `shared/utils/list-resource.spec.ts` — ilk istek ve yeniden yüklemede loading durumunun doğruluğu
 
-Playwright E2E paketi; canlı dil geçişi, gerekçeli kapasite override, sanal listeden toplama görevi,
-zorunlu ikinci sayım ve hiyerarşik lokasyon oluşturma akışlarını gerçek Chromium üzerinde doğrular.
+Playwright E2E paketi; canlı dil geçişi, kalıcı veri oluşturma, seri kaydı, ASN oluşturma/işleme,
+gerekçeli kapasite override, sanal listeden toplama görevi, zorunlu ikinci sayım ve hiyerarşik
+lokasyon oluşturma akışlarını gerçek Chromium üzerinde doğrular. Altı rolün menü kapsamı, doğrudan
+URL ile yetkisiz erişimi ve ekranı görebildiği halde yazma yetkisi olmayan rollerin aksiyon
+kontrolleri de ayrı bir rol matrisiyle test edilir.
 Aynı build, lint, unit, audit ve E2E adımları `.github/workflows/ci.yml` ile her push ve pull
 request'te çalışır.
 

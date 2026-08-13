@@ -32,4 +32,42 @@ describe('ShippingService workflow', () => {
     shipment.loadedPackageCodes = shipmentSnapshot.loadedPackageCodes;
     Object.assign(pkg, packageSnapshot);
   });
+
+  it('assigns a door, loads verified packages in order and closes the shipment', async () => {
+    TestBed.configureTestingModule({});
+    const service = TestBed.inject(ShippingService);
+    TestBed.inject(FaultInjectionService).reset();
+    const shipment = db.shipments.find((row) => row.status === 'staged' || row.status === 'loading' || row.status === 'exception');
+    if (!shipment || !shipment.packageCodes.length) return pending('no mutable shipment with packages');
+    const shipmentSnapshot = { ...shipment, packageCodes: [...shipment.packageCodes], loadedPackageCodes: [...shipment.loadedPackageCodes] };
+    const packages = db.packages.filter((row) => shipment.packageCodes.includes(row.code));
+    const packageSnapshots = packages.map((row) => ({ row, snapshot: { ...row } }));
+
+    try {
+      shipment.status = 'staged';
+      shipment.loadedPackageCodes = [];
+      shipment.progressPct = 0;
+      for (const pkg of packages) {
+        pkg.contentVerified = true;
+        pkg.weightKg = pkg.expectedWeightKg;
+        pkg.status = 'sealed';
+      }
+
+      let current = await firstValueFrom(service.assignDoor(shipment.id, shipment.version, 'd-09'));
+      expect(current.door).toBe('D-09');
+      for (const code of shipment.packageCodes) {
+        current = await firstValueFrom(service.loadNextPackage(shipment.id, current.version));
+        expect(current.loadedPackageCodes.at(-1)).toBe(code);
+      }
+      const closed = await firstValueFrom(service.close(shipment.id, current.version, 'Araç ve mühür kontrol edildi'));
+      expect(closed.status).toBe('in-transit');
+      expect(closed.progressPct).toBe(100);
+      expect(packages.every((pkg) => pkg.status === 'shipped')).toBe(true);
+    } finally {
+      Object.assign(shipment, shipmentSnapshot);
+      shipment.packageCodes = shipmentSnapshot.packageCodes;
+      shipment.loadedPackageCodes = shipmentSnapshot.loadedPackageCodes;
+      for (const { row, snapshot } of packageSnapshots) Object.assign(row, snapshot);
+    }
+  });
 });

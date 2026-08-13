@@ -86,6 +86,9 @@ export class InventoryService {
           throw new ApiError('validation', translate('svc.invalidAdjustmentQuantity'));
         }
         if (value.lotTracked && !value.lot?.trim()) throw new ApiError('validation', translate('svc.lotRequired'));
+        if (value.serialTracked && value.quantity !== 0) {
+          throw new ApiError('validation', translate('svc.serialOpeningStockMustBeZero'));
+        }
         db.skus.push({
           id: `sku-${db.skus.length + 1}`,
           code,

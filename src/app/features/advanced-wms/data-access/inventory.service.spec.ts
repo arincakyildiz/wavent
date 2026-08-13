@@ -58,4 +58,21 @@ describe('InventoryService - controlled stock adjustments', () => {
 
     expect(isApiError(error) && error.kind).toBe('validation');
   });
+
+  it('requires serial-tracked opening stock to be registered unit by unit', async () => {
+    const warehouse = db.warehouses[0];
+    const location = db.locations.find((row) => row.warehouseCode === warehouse.code)!;
+    let error: unknown;
+    try {
+      await firstValueFrom(service.createItem({
+        code: 'SKU-SERIAL9', name: 'Seri Takipli Test Ürünü', uom: 'ADET', weightKg: 1,
+        volumeM3: 0.01, lotTracked: false, serialTracked: true, storageClass: location.locationClass,
+        warehouseCode: warehouse.code, locationPath: location.path, quantity: 2,
+      }));
+    } catch (caught) {
+      error = caught;
+    }
+    expect(isApiError(error) && error.kind).toBe('validation');
+    expect(db.skus.some((row) => row.code === 'SKU-SERIAL9')).toBe(false);
+  });
 });

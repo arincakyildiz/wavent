@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { AuthService, Role } from './auth.service';
 import { requirePermission } from './permission.guard';
-import { ROLE_PERMISSIONS, ROLE_WAREHOUSE_SCOPE } from './permissions';
+import { Permission, ROLE_PERMISSIONS, ROLE_WAREHOUSE_SCOPE } from './permissions';
 
 const ROLES: Role[] = [
   'warehouse-operator',
@@ -11,6 +11,14 @@ const ROLES: Role[] = [
   'shipping-specialist',
   'planner',
   'warehouse-manager',
+];
+
+const ACTION_PERMISSIONS: Permission[] = [
+  'warehouse.create', 'location.manage', 'wave.create', 'wave.release', 'wave.editReleased',
+  'putaway.accept', 'receiving.create', 'receiving.process', 'picking.execute', 'picking.assign',
+  'packing.verify', 'packing.approveWeight', 'shipping.manage', 'cycleCount.create',
+  'cycleCount.execute', 'inventory.adjust', 'inventory.create', 'lot.manage', 'exception.resolve',
+  'reservation.override', 'reservation.create', 'settings.manage',
 ];
 
 describe('permission map', () => {
@@ -40,6 +48,23 @@ describe('permission map', () => {
   it('pins floor roles to their home warehouse', () => {
     expect(ROLE_WAREHOUSE_SCOPE['warehouse-operator']).toBe('home');
     expect(ROLE_WAREHOUSE_SCOPE['warehouse-manager']).toBe('all');
+  });
+
+  it('matches the complete action matrix for all six roles', () => {
+    const expected: Record<Role, Permission[]> = {
+      'warehouse-operator': ['putaway.accept', 'receiving.process', 'picking.execute', 'packing.verify', 'cycleCount.execute'],
+      'shift-lead': ['wave.create', 'wave.release', 'wave.editReleased', 'putaway.accept', 'receiving.process', 'picking.execute', 'picking.assign', 'packing.verify', 'packing.approveWeight', 'exception.resolve'],
+      'inventory-controller': ['putaway.accept', 'cycleCount.create', 'cycleCount.execute', 'inventory.adjust', 'inventory.create', 'lot.manage', 'exception.resolve', 'reservation.override', 'reservation.create'],
+      'shipping-specialist': ['packing.verify', 'packing.approveWeight', 'shipping.manage'],
+      planner: ['wave.create', 'wave.release', 'wave.editReleased', 'reservation.override', 'reservation.create'],
+      'warehouse-manager': ACTION_PERMISSIONS,
+    };
+
+    for (const role of ROLES) {
+      expect(ROLE_PERMISSIONS[role].filter((permission) => ACTION_PERMISSIONS.includes(permission)).sort())
+        .withContext(role)
+        .toEqual(expected[role].sort());
+    }
   });
 });
 

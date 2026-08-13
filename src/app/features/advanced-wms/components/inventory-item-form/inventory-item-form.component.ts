@@ -49,6 +49,11 @@ export class InventoryItemFormComponent {
         );
         this.form.controls.lot.updateValueAndValidity({ emitEvent: false });
       });
+    this.form.controls.serialTracked.valueChanges
+      .pipe(startWith(this.form.controls.serialTracked.value), takeUntilDestroyed())
+      .subscribe((tracked) => {
+        if (tracked) this.form.controls.quantity.setValue(0);
+      });
   }
 
   locations(): { path: string }[] {

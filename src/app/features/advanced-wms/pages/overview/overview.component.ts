@@ -19,6 +19,9 @@ import {
 } from '../../data-access/dashboard.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { DemoDataService } from '../../data-access/demo-data.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { Permission } from '../../../../core/auth/permissions';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 
 /** Beyond this the snapshot is too old to be worth showing at all. */
 const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1000;
@@ -45,6 +48,7 @@ const TONE_HEX: Record<string, string> = {
     DonutChartComponent,
     BarChartComponent,
     WorldMapComponent,
+    HasPermissionDirective,
   ],
   templateUrl: './overview.component.html',
   styleUrl: './overview.component.scss',
@@ -56,6 +60,7 @@ export class OverviewComponent {
   private readonly scope = inject(WarehouseScopeService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
 
   readonly period = signal<Period>('today');
   readonly periodLabels = PERIOD_LABELS;
@@ -145,7 +150,25 @@ export class OverviewComponent {
   }
 
   go(link: string): void {
+    if (!this.canNavigate(link)) return;
     this.router.navigateByUrl(link);
+  }
+
+  canNavigate(link: string): boolean {
+    const permissions: Record<string, Permission> = {
+      '/wms/warehouses': 'warehouse.view',
+      '/wms/inventory': 'inventory.view',
+      '/wms/reservations': 'reservation.view',
+      '/wms/receiving': 'receiving.view',
+      '/wms/putaway': 'putaway.view',
+      '/wms/waves': 'wave.view',
+      '/wms/picking/tasks': 'picking.view',
+      '/wms/packing': 'packing.view',
+      '/wms/shipping': 'shipping.view',
+      '/wms/exceptions': 'exception.view',
+    };
+    const permission = permissions[link];
+    return permission ? this.auth.can(permission) : false;
   }
 
   toneHex(tone: string): string {

@@ -154,6 +154,9 @@ export class ReceivingService {
         const line = db.receiptLines.find((record) => record.id === id);
         if (!line) throw new ApiError('not-found', translate('svc.receiptLineNotFound'));
         this.api.assertVersion(expectedVersion, line.version);
+        if (line.status !== 'pending') {
+          throw new ApiError('validation', translate('svc.receiptLineProcessed'));
+        }
         if (!Number.isInteger(input.receivedQuantity) || input.receivedQuantity < 0) {
           throw new ApiError('validation', translate('svc.invalidReceivedQuantity'));
         }
@@ -176,7 +179,10 @@ export class ReceivingService {
 
         const asn = db.asns.find((record) => record.number === line.asnNumber);
         if (asn && asn.status !== 'closed') {
-          asn.status = 'receiving';
+          const allProcessed = db.receiptLines
+            .filter((record) => record.asnNumber === line.asnNumber)
+            .every((record) => record.status !== 'pending');
+          asn.status = allProcessed ? 'closed' : 'receiving';
           asn.version += 1;
         }
 

@@ -103,6 +103,7 @@
                       type="button"
                       [attr.aria-expanded]="weighingRow()?.id === p.id"
                       (click)="toggleScale(p)"
+                      *appHasPermission="'packing.verify'"
                     >
                       {{ i18n.t(weighingRow()?.id === p.id ? 'common.close' : 'packing.weigh') }}
                     </button>

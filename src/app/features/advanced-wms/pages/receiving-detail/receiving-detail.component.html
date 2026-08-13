@@ -107,7 +107,11 @@
                     <td>{{ i18n.n(l.damagedQuantity) }}</td>
                     <td><span class="status-pill" [class]="lineTone(l.status)">{{ i18n.t('st.' + l.status) }}</span></td>
                     <td *appHasPermission="'receiving.process'">
-                      <button class="btn" type="button" (click)="editLine(l)">{{ i18n.t('receivingDetail.process') }}</button>
+                      @if (l.status === 'pending') {
+                        <button class="btn" type="button" (click)="editLine(l)">{{ i18n.t('receivingDetail.process') }}</button>
+                      } @else {
+                        <span class="muted small">{{ i18n.t('receivingDetail.processed') }}</span>
+                      }
                     </td>
                   </tr>
                 }

@@ -31,7 +31,7 @@
           </select>
         </label>
 
-        <button class="btn btn--primary" type="button" (click)="go('/wms/waves')">
+        <button class="btn btn--primary" type="button" (click)="go('/wms/waves')" *appHasPermission="'wave.create'">
           <app-icon name="plus" [size]="15" />
           {{ i18n.t('overview.newWave') }}
         </button>
@@ -79,7 +79,7 @@
     <!-- KPI row -->
     <div class="kpi-row">
       @for (kpi of data.kpis; track kpi.label) {
-        <button class="kpi-card kpi-card--rich kpi-card--link" type="button" (click)="go(kpi.link)">
+        <button class="kpi-card kpi-card--rich kpi-card--link" type="button" (click)="go(kpi.link)" [disabled]="!canNavigate(kpi.link)">
           <div class="kpi-card__head">
             <span class="icon-tile" [class]="'tone-' + kpi.tone">
               <app-icon [name]="kpi.icon" [size]="19" />
@@ -102,10 +102,10 @@
       <section class="panel">
         <div class="panel__head">
           <h2>{{ i18n.t('overview.inventoryByWarehouse') }}</h2>
-          <button class="link-action" type="button" (click)="go('/wms/warehouses')">
+          @if (canNavigate('/wms/warehouses')) { <button class="link-action" type="button" (click)="go('/wms/warehouses')">
             {{ i18n.t('overview.viewAll') }}
             <app-icon name="arrowRight" [size]="13" />
-          </button>
+          </button> }
         </div>
         @if (data.mapPoints.length) {
           <app-world-map [points]="data.mapPoints" />
@@ -130,19 +130,19 @@
             }
           </ul>
         </div>
-        <button class="link-action wave__link" type="button" (click)="go('/wms/waves')">
+        @if (canNavigate('/wms/waves')) { <button class="link-action wave__link" type="button" (click)="go('/wms/waves')">
           {{ i18n.t('overview.viewAllWaves') }}
           <app-icon name="arrowRight" [size]="13" />
-        </button>
+        </button> }
       </section>
 
       <section class="panel">
         <div class="panel__head">
           <h2>{{ i18n.t('overview.exceptions') }}</h2>
-          <button class="link-action" type="button" (click)="go('/wms/exceptions')">
+          @if (canNavigate('/wms/exceptions')) { <button class="link-action" type="button" (click)="go('/wms/exceptions')">
             {{ i18n.t('overview.viewAll') }}
             <app-icon name="arrowRight" [size]="13" />
-          </button>
+          </button> }
         </div>
         @if (data.exceptions.length) {
           <ul class="feed">
@@ -193,10 +193,10 @@
       <section class="panel">
         <div class="panel__head">
           <h2>{{ i18n.t('overview.taskPerformance') }}</h2>
-          <button class="link-action" type="button" (click)="go('/wms/picking/tasks')">
+          @if (canNavigate('/wms/picking/tasks')) { <button class="link-action" type="button" (click)="go('/wms/picking/tasks')">
             {{ i18n.t('overview.viewReport') }}
             <app-icon name="arrowRight" [size]="13" />
-          </button>
+          </button> }
         </div>
         @if (data.performance.bars.length) {
           <div class="muted small perf__unit">{{ data.performance.unitLabel }}</div>
@@ -222,10 +222,10 @@
       <section class="panel">
         <div class="panel__head">
           <h2>{{ i18n.t('overview.shipments') }}</h2>
-          <button class="link-action" type="button" (click)="go('/wms/shipping')">
+          @if (canNavigate('/wms/shipping')) { <button class="link-action" type="button" (click)="go('/wms/shipping')">
             {{ i18n.t('overview.viewAll') }}
             <app-icon name="arrowRight" [size]="13" />
-          </button>
+          </button> }
         </div>
         @if (data.shipments.length) {
           <div class="table-scroll">
@@ -266,7 +266,7 @@
     <!-- Today counters -->
     <div class="row row--today">
       @for (t of data.today; track t.label) {
-        <button class="today-card" type="button" (click)="go(t.link)">
+        <button class="today-card" type="button" (click)="go(t.link)" [disabled]="!canNavigate(t.link)">
           <span class="icon-tile" [class]="'tone-' + t.tone">
             <app-icon [name]="t.icon" [size]="19" />
           </span>

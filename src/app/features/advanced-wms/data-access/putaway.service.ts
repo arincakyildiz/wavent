@@ -7,6 +7,7 @@ import { PutawayRec, db } from './mock-data';
 import { capacityVerdict } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
+import { StockStatus } from '../models/entities';
 
 export interface PutawaySuggestionRow extends PutawayRec {
   skuName: string;
@@ -16,7 +17,7 @@ export interface PutawaySuggestionRow extends PutawayRec {
   capacityViolations: string[];
 }
 
-/** One putaway drop is capped at 40 units, matching the suggestion generator. */
+/** Capacity is evaluated per handling-unit drop; the accepted suggestion still moves its full quantity. */
 function dropQuantity(p: PutawayRec): number {
   return Math.min(p.quantity, 40);
 }
@@ -73,11 +74,66 @@ export class PutawayService {
         if (!record) throw new ApiError('not-found', translate('svc.putawayNotFound'));
 
         this.api.assertVersion(expectedVersion, record.version);
+        if (record.accepted) {
+          throw new ApiError('validation', translate('svc.putawayAlreadyAccepted'));
+        }
 
         const row = toRow(record);
         if (!row.capacityOk && (overrideReason?.trim().length ?? 0) < 6) {
           throw new ApiError('validation', translate('svc.overrideReasonRequired'));
         }
+
+        const sku = db.skus.find((item) => item.code === record.skuCode);
+        const location = db.locations.find(
+          (item) =>
+            item.warehouseCode === record.warehouseCode &&
+            item.path === record.suggestedLocationPath,
+        );
+        if (!sku || !location) {
+          throw new ApiError('validation', translate('svc.putawayTargetMissing'));
+        }
+
+        const quantity = record.quantity;
+        const existing = db.balances.find(
+          (balance) =>
+            balance.skuCode === record.skuCode &&
+            balance.lot === record.lot &&
+            balance.warehouseCode === record.warehouseCode &&
+            balance.locationPath === record.suggestedLocationPath &&
+            balance.status === StockStatus.Available &&
+            !balance.serial,
+        );
+        if (existing) {
+          existing.quantity += quantity;
+          existing.version += 1;
+        } else {
+          db.balances.push({
+            id: `bal-putaway-${db.balances.length + 1}`,
+            skuCode: record.skuCode,
+            lot: record.lot,
+            locationPath: record.suggestedLocationPath,
+            warehouseCode: record.warehouseCode,
+            quantity,
+            status: StockStatus.Available,
+            version: 1,
+          });
+        }
+        location.usedWeightKg += sku.weightKg * quantity;
+        location.usedVolumeM3 += sku.volumeM3 * quantity;
+        location.version += 1;
+        db.movements.unshift({
+          id: `mv-live-${db.movements.length + 1}`,
+          at: new Date().toISOString(),
+          skuCode: record.skuCode,
+          lot: record.lot,
+          warehouseCode: record.warehouseCode,
+          quantity,
+          fromLocation: 'STAGE/IN',
+          toLocation: record.suggestedLocationPath,
+          type: 'putaway',
+          reasonCode: record.asnNumber,
+          performedBy: 'Current user',
+        });
 
         record.accepted = true;
         record.version += 1;

@@ -42,6 +42,7 @@ export type Permission =
   | 'cycleCount.execute'
   | 'inventory.adjust'
   | 'inventory.create'
+  | 'lot.manage'
   | 'exception.resolve'
   | 'reservation.override'
   | 'reservation.create'
@@ -108,6 +109,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'cycleCount.execute',
     'inventory.adjust',
     'inventory.create',
+    'lot.manage',
     'exception.resolve',
     'reservation.override',
     'reservation.create',
@@ -165,6 +167,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'cycleCount.execute',
     'inventory.adjust',
     'inventory.create',
+    'lot.manage',
     'exception.resolve',
     'reservation.override',
     'reservation.create',
