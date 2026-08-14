@@ -35,12 +35,14 @@ export class InventoryItemFormComponent {
     serialTracked: new FormControl(false, { nonNullable: true }),
     storageClass: new FormControl<'ambient' | 'chilled' | 'frozen' | 'hazmat'>('ambient', { nonNullable: true }),
     warehouseCode: new FormControl(this.firstWarehouse, { nonNullable: true, validators: [Validators.required] }),
-    locationPath: new FormControl(this.inventory.locations(this.firstWarehouse)[0]?.path ?? '', { nonNullable: true, validators: [Validators.required] }),
+    locationPath: new FormControl(this.inventory.locations(this.firstWarehouse)[0]?.path ?? '', { nonNullable: true }),
     quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)] }),
     lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24)] }),
   });
 
   constructor() {
+    if (!this.form.controls.locationPath.value) this.form.controls.quantity.setValue(0);
+
     this.form.controls.lotTracked.valueChanges
       .pipe(startWith(this.form.controls.lotTracked.value), takeUntilDestroyed())
       .subscribe((tracked) => {
@@ -60,18 +62,30 @@ export class InventoryItemFormComponent {
     return this.inventory.locations(this.form.controls.warehouseCode.value);
   }
 
+  hasLocations(): boolean {
+    return this.locations().length > 0;
+  }
+
   onWarehouseChange(): void {
-    this.form.controls.locationPath.setValue(this.locations()[0]?.path ?? '');
+    const firstLocation = this.locations()[0]?.path ?? '';
+    this.form.controls.locationPath.setValue(firstLocation);
+    if (!firstLocation) this.form.controls.quantity.setValue(0);
   }
 
   submit(): void {
+    const raw = this.form.getRawValue();
+    if (raw.quantity > 0 && !raw.locationPath.trim()) {
+      this.submitError.set(this.i18n.t('inventoryForm.locationRequiredForOpeningStock'));
+      this.form.controls.locationPath.markAsTouched();
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
     this.submitting.set(true);
     this.submitError.set(null);
-    this.inventory.createItem(this.form.getRawValue()).subscribe({
+    this.inventory.createItem(raw).subscribe({
       next: (row) => {
         this.submitting.set(false);
         this.created.emit(row);

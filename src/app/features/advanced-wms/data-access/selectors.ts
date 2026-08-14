@@ -73,7 +73,13 @@ export function skuStock(codes: string[] = []): SkuStock[] {
         warehouseCodes: [...new Set(rows.map((r) => r.warehouseCode))],
       } satisfies SkuStock;
     })
-    .filter((s) => s.onHand > 0 || !codes.length || s.warehouseCodes.some((code) => codes.includes(code)));
+    .filter(
+      (s) =>
+        s.onHand > 0 ||
+        !codes.length ||
+        s.warehouseCodes.length === 0 ||
+        s.warehouseCodes.some((code) => codes.includes(code)),
+    );
 }
 
 export function skuStockFor(skuCode: string, codes: string[] = []): SkuStock | undefined {

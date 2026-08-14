@@ -45,7 +45,7 @@ export interface InventoryItemDraft {
   serialTracked: boolean;
   storageClass: LocationClass;
   warehouseCode: string;
-  locationPath: string;
+  locationPath?: string;
   quantity: number;
   lot?: string;
 }
@@ -78,10 +78,6 @@ export class InventoryService {
       map((value) => {
         const code = value.code.trim().toUpperCase();
         if (db.skus.some((sku) => sku.code === code)) throw new ApiError('conflict', translate('svc.skuCodeTaken'));
-        const location = db.locations.find(
-          (item) => item.warehouseCode === value.warehouseCode && item.path === value.locationPath,
-        );
-        if (!location) throw new ApiError('validation', translate('svc.locationNotFound'));
         if (!Number.isInteger(value.quantity) || value.quantity < 0) {
           throw new ApiError('validation', translate('svc.invalidAdjustmentQuantity'));
         }
@@ -89,6 +85,11 @@ export class InventoryService {
         if (value.serialTracked && value.quantity !== 0) {
           throw new ApiError('validation', translate('svc.serialOpeningStockMustBeZero'));
         }
+        const locationPath = value.locationPath?.trim();
+        const location = locationPath
+          ? db.locations.find((item) => item.warehouseCode === value.warehouseCode && item.path === locationPath)
+          : undefined;
+        if (value.quantity > 0 && !location) throw new ApiError('validation', translate('svc.locationRequiredForOpeningStock'));
         db.skus.push({
           id: `sku-${db.skus.length + 1}`,
           code,
@@ -100,16 +101,18 @@ export class InventoryService {
           serialTracked: value.serialTracked,
           storageClass: value.storageClass,
         });
-        db.balances.push({
-          id: `bal-${db.balances.length + 1}`,
-          skuCode: code,
-          lot: value.lotTracked ? value.lot?.trim().toUpperCase() : undefined,
-          locationPath: location.path,
-          warehouseCode: value.warehouseCode,
-          quantity: value.quantity,
-          status: StockStatus.Available,
-          version: 1,
-        });
+        if (location) {
+          db.balances.push({
+            id: `bal-${db.balances.length + 1}`,
+            skuCode: code,
+            lot: value.lotTracked ? value.lot?.trim().toUpperCase() : undefined,
+            locationPath: location.path,
+            warehouseCode: value.warehouseCode,
+            quantity: value.quantity,
+            status: StockStatus.Available,
+            version: 1,
+          });
+        }
         const row = skuStockFor(code, [value.warehouseCode]);
         if (!row) throw new ApiError('validation', translate('svc.createdNotReadable'));
         return row;

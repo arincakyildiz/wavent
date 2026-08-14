@@ -3,13 +3,14 @@ import { firstValueFrom } from 'rxjs';
 import { isApiError } from '../../../core/api/api-error';
 import { FaultInjectionService } from '../../../core/api/fault-injection.service';
 import { StockStatus } from '../models/entities';
-import { db } from './mock-data';
+import { clearDb, db, resetDbToSampleData } from './mock-data';
 import { InventoryService } from './inventory.service';
 
 describe('InventoryService - controlled stock adjustments', () => {
   let service: InventoryService;
 
   beforeEach(() => {
+    resetDbToSampleData();
     TestBed.configureTestingModule({});
     service = TestBed.inject(InventoryService);
     TestBed.inject(FaultInjectionService).reset();
@@ -74,5 +75,31 @@ describe('InventoryService - controlled stock adjustments', () => {
     }
     expect(isApiError(error) && error.kind).toBe('validation');
     expect(db.skus.some((row) => row.code === 'SKU-SERIAL9')).toBe(false);
+  });
+
+  it('creates a zero-stock product card when no warehouse locations exist yet', async () => {
+    clearDb();
+
+    const row = await firstValueFrom(service.createItem({
+      code: 'SKU-EMPTY1',
+      name: 'Boş Başlangıç Ürünü',
+      uom: 'ADET',
+      weightKg: 1,
+      volumeM3: 0.01,
+      lotTracked: false,
+      serialTracked: false,
+      storageClass: 'ambient',
+      warehouseCode: 'NYC-01',
+      locationPath: '',
+      quantity: 0,
+    }));
+
+    expect(row.skuCode).toBe('SKU-EMPTY1');
+    expect(row.onHand).toBe(0);
+    expect(db.skus.some((sku) => sku.code === 'SKU-EMPTY1')).toBe(true);
+    expect(db.balances.some((balance) => balance.skuCode === 'SKU-EMPTY1')).toBe(false);
+
+    const list = await firstValueFrom(service.query(['NYC-01'], { page: 1, pageSize: 20 }));
+    expect(list.rows.some((item) => item.skuCode === 'SKU-EMPTY1')).toBe(true);
   });
 });

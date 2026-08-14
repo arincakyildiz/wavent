@@ -12,8 +12,8 @@
     </div>
     <div class="form__row">
       <label class="field"><span class="field__label">{{ i18n.t('common.warehouse') }}</span><select formControlName="warehouseCode" (change)="onWarehouseChange()">@for (warehouse of warehouses(); track warehouse.code) { <option [value]="warehouse.code">{{ warehouse.code }} — {{ warehouse.name }}</option> }</select></label>
-      <label class="field"><span class="field__label">{{ i18n.t('common.location') }}</span><select formControlName="locationPath">@for (location of locations(); track location.path) { <option [value]="location.path">{{ location.path }}</option> }</select></label>
-      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.initialQuantity') }}</span><input formControlName="quantity" type="number" min="0" step="1" [readonly]="form.controls.serialTracked.value" />@if (form.controls.serialTracked.value) { <span class="muted small">{{ i18n.t('inventoryForm.serialQuantityHint') }}</span> }</label>
+      <label class="field"><span class="field__label">{{ i18n.t('common.location') }}</span><select formControlName="locationPath" [disabled]="!hasLocations()">@for (location of locations(); track location.path) { <option [value]="location.path">{{ location.path }}</option> }</select>@if (!hasLocations()) { <span class="muted small">{{ i18n.t('inventoryForm.noLocationHint') }}</span> }</label>
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.initialQuantity') }}</span><input formControlName="quantity" type="number" min="0" step="1" [readonly]="form.controls.serialTracked.value || !hasLocations()" />@if (form.controls.serialTracked.value) { <span class="muted small">{{ i18n.t('inventoryForm.serialQuantityHint') }}</span> } @else if (!hasLocations()) { <span class="muted small">{{ i18n.t('inventoryForm.zeroStockHint') }}</span> }</label>
     </div>
     <div class="form__row">
       <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.lotTracked') }}</span><input formControlName="lotTracked" type="checkbox" /></label>
