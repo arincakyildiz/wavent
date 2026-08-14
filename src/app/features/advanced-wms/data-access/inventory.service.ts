@@ -9,7 +9,7 @@ import { LocationClass } from '../models/entities';
 import { SkuStock, balancesInScope, skuStock, skuStockFor } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
-import { LOT_CODE_PATTERN, SKU_CODE_PATTERN } from '../../../shared/validators/wms-validators';
+import { LOT_CODE_PATTERN, MAX_VOLUME_M3, MIN_VOLUME_M3, SKU_CODE_PATTERN } from '../../../shared/validators/wms-validators';
 
 export type InventoryRow = SkuStock;
 
@@ -82,6 +82,9 @@ export class InventoryService {
         if (db.skus.some((sku) => sku.code === code)) throw new ApiError('conflict', translate('svc.skuCodeTaken'));
         if (!Number.isInteger(value.quantity) || value.quantity < 0) {
           throw new ApiError('validation', translate('svc.invalidAdjustmentQuantity'));
+        }
+        if (!Number.isFinite(value.volumeM3) || value.volumeM3 < MIN_VOLUME_M3 || value.volumeM3 > MAX_VOLUME_M3) {
+          throw new ApiError('validation', translate('svc.invalidVolume'));
         }
         if (value.lotTracked && !value.lot?.trim()) throw new ApiError('validation', translate('svc.lotRequired'));
         if (value.lot?.trim() && !LOT_CODE_PATTERN.test(value.lot.trim().toUpperCase())) {

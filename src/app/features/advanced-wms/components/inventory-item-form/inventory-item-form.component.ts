@@ -7,7 +7,7 @@ import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.se
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { InventoryRow, InventoryService } from '../../data-access/inventory.service';
-import { codePattern, LOT_CODE_PATTERN, SKU_CODE_PATTERN } from '../../../../shared/validators/wms-validators';
+import { codePattern, LOT_CODE_PATTERN, MAX_VOLUME_M3, MIN_VOLUME_M3, SKU_CODE_PATTERN } from '../../../../shared/validators/wms-validators';
 
 @Component({
   selector: 'app-inventory-item-form',
@@ -31,7 +31,7 @@ export class InventoryItemFormComponent {
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(80)] }),
     uom: new FormControl('ADET', { nonNullable: true, validators: [Validators.required, Validators.maxLength(10)] }),
     weightKg: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.001)] }),
-    volumeM3: new FormControl(0.01, { nonNullable: true, validators: [Validators.required, Validators.min(0.0001)] }),
+    volumeM3: new FormControl(0.01, { nonNullable: true, validators: [Validators.required, Validators.min(MIN_VOLUME_M3), Validators.max(MAX_VOLUME_M3)] }),
     lotTracked: new FormControl(false, { nonNullable: true }),
     serialTracked: new FormControl(false, { nonNullable: true }),
     storageClass: new FormControl<'ambient' | 'chilled' | 'frozen' | 'hazmat'>('ambient', { nonNullable: true }),

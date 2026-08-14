@@ -17,6 +17,8 @@ export const SERIAL_NUMBER_PATTERN = /^SN-[A-Z0-9-]{1,37}$/;
 export const LOT_CODE_PATTERN = /^(?:L-\d{5}|LOT-[A-Z0-9]+(?:-[A-Z0-9]+)+)$/;
 export const LOCATION_SEGMENT_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
 export const LOCATION_PATH_PATTERN = /^(?:[A-Z0-9]+(?:-[A-Z0-9]+)*)(?:\/[A-Z0-9]+(?:-[A-Z0-9]+)*)*$/;
+export const MIN_VOLUME_M3 = 0.0001;
+export const MAX_VOLUME_M3 = 1000;
 
 /** Minutes since midnight, or null when the value is not a HH:mm string. */
 function toMinutes(value: unknown): number | null {

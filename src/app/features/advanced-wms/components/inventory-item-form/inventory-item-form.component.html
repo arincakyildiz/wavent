@@ -7,7 +7,7 @@
     </div>
     <div class="form__row">
       <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.weight') }}</span><input formControlName="weightKg" type="number" min="0.001" step="0.001" /></label>
-      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.volume') }}</span><input formControlName="volumeM3" type="number" min="0.0001" step="0.0001" /></label>
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.volume') }}</span><input formControlName="volumeM3" type="number" min="0.0001" max="1000" step="0.0001" />@if (form.controls.volumeM3.hasError('max')) { <span class="field__error" role="alert">{{ i18n.t('inventoryForm.volumeMax') }}</span> } @else { <span class="field__hint">{{ i18n.t('inventoryForm.volumeHint') }}</span> }</label>
       <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.class') }}</span><select formControlName="storageClass"><option value="ambient">Ambient</option><option value="chilled">Chilled</option><option value="frozen">Frozen</option><option value="hazmat">Hazmat</option></select></label>
     </div>
     <div class="form__row">
