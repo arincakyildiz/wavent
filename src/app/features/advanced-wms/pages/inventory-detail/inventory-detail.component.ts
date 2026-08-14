@@ -19,6 +19,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { NotificationService } from '../../../../core/observability/notification.service';
 import { AuditService } from '../../../../core/observability/audit.service';
 import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
+import { MAX_STOCK_QUANTITY } from '../../../../shared/validators/wms-validators';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -48,7 +49,7 @@ export class InventoryDetailComponent {
   readonly saving = signal(false);
   readonly stockStatuses = Object.values(StockStatus);
   readonly adjustmentForm = new FormGroup({
-    quantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    quantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(MAX_STOCK_QUANTITY)] }),
     status: new FormControl<StockStatus>(StockStatus.Available, { nonNullable: true, validators: [Validators.required] }),
   });
 

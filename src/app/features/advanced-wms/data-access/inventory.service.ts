@@ -9,7 +9,15 @@ import { LocationClass } from '../models/entities';
 import { SkuStock, balancesInScope, skuStock, skuStockFor } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
-import { LOT_CODE_PATTERN, MAX_VOLUME_M3, MIN_VOLUME_M3, SKU_CODE_PATTERN } from '../../../shared/validators/wms-validators';
+import {
+  LOT_CODE_PATTERN,
+  MAX_PRODUCT_WEIGHT_KG,
+  MAX_STOCK_QUANTITY,
+  MAX_VOLUME_M3,
+  MIN_VOLUME_M3,
+  MIN_WEIGHT_KG,
+  SKU_CODE_PATTERN,
+} from '../../../shared/validators/wms-validators';
 
 export type InventoryRow = SkuStock;
 
@@ -80,8 +88,11 @@ export class InventoryService {
         const code = value.code.trim().toUpperCase();
         if (!SKU_CODE_PATTERN.test(code)) throw new ApiError('validation', translate('svc.invalidSkuCode'));
         if (db.skus.some((sku) => sku.code === code)) throw new ApiError('conflict', translate('svc.skuCodeTaken'));
-        if (!Number.isInteger(value.quantity) || value.quantity < 0) {
+        if (!Number.isInteger(value.quantity) || value.quantity < 0 || value.quantity > MAX_STOCK_QUANTITY) {
           throw new ApiError('validation', translate('svc.invalidAdjustmentQuantity'));
+        }
+        if (!Number.isFinite(value.weightKg) || value.weightKg < MIN_WEIGHT_KG || value.weightKg > MAX_PRODUCT_WEIGHT_KG) {
+          throw new ApiError('validation', translate('svc.invalidWeight'));
         }
         if (!Number.isFinite(value.volumeM3) || value.volumeM3 < MIN_VOLUME_M3 || value.volumeM3 > MAX_VOLUME_M3) {
           throw new ApiError('validation', translate('svc.invalidVolume'));
@@ -199,7 +210,7 @@ export class InventoryService {
         const balance = db.balances.find((record) => record.id === id);
         if (!balance) throw new ApiError('not-found', translate('svc.balanceNotFound'));
         this.api.assertVersion(expectedVersion, balance.version);
-        if (!Number.isInteger(quantity) || quantity < 0) {
+        if (!Number.isInteger(quantity) || quantity < 0 || quantity > MAX_STOCK_QUANTITY) {
           throw new ApiError('validation', translate('svc.invalidAdjustmentQuantity'));
         }
         if (reason.trim().length < 6) throw new ApiError('validation', translate('svc.reasonTooShort'));

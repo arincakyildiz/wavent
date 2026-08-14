@@ -15,7 +15,13 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { NotificationService } from '../../../../core/observability/notification.service';
 import { AuditService } from '../../../../core/observability/audit.service';
 import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
-import { codePattern, LOCATION_PATH_PATTERN, LOCATION_SEGMENT_PATTERN, MAX_VOLUME_M3 } from '../../../../shared/validators/wms-validators';
+import {
+  codePattern,
+  LOCATION_PATH_PATTERN,
+  LOCATION_SEGMENT_PATTERN,
+  MAX_LOCATION_WEIGHT_KG,
+  MAX_VOLUME_M3,
+} from '../../../../shared/validators/wms-validators';
 
 const DEFAULT_PAGE_SIZE = 20;
 /** The tree needs the whole hierarchy, not the current page of it. */
@@ -52,7 +58,7 @@ export class LocationsComponent {
     code: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(12), codePattern(LOCATION_SEGMENT_PATTERN, 'segmentPattern')] }),
     type: new FormControl<LocationDraft['type']>('bin', { nonNullable: true, validators: [Validators.required] }),
     locationClass: new FormControl<LocationDraft['locationClass']>('ambient', { nonNullable: true, validators: [Validators.required] }),
-    maxWeightKg: new FormControl(500, { nonNullable: true, validators: [Validators.min(0)] }),
+    maxWeightKg: new FormControl(500, { nonNullable: true, validators: [Validators.min(0), Validators.max(MAX_LOCATION_WEIGHT_KG)] }),
     maxVolumeM3: new FormControl(4, { nonNullable: true, validators: [Validators.min(0), Validators.max(MAX_VOLUME_M3)] }),
   });
 

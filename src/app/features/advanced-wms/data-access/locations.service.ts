@@ -7,7 +7,12 @@ import { locationCapacityPct } from './selectors';
 import { ApiError } from '../../../core/api/api-error';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
-import { LOCATION_PATH_PATTERN, LOCATION_SEGMENT_PATTERN, MAX_VOLUME_M3 } from '../../../shared/validators/wms-validators';
+import {
+  LOCATION_PATH_PATTERN,
+  LOCATION_SEGMENT_PATTERN,
+  MAX_LOCATION_WEIGHT_KG,
+  MAX_VOLUME_M3,
+} from '../../../shared/validators/wms-validators';
 
 export interface LocationDraft {
   warehouseCode: string;
@@ -56,6 +61,9 @@ export class LocationsService {
         }
         if (!Number.isFinite(value.maxVolumeM3) || value.maxVolumeM3 < 0 || value.maxVolumeM3 > MAX_VOLUME_M3) {
           throw new ApiError('validation', translate('svc.invalidVolume'));
+        }
+        if (!Number.isFinite(value.maxWeightKg) || value.maxWeightKg < 0 || value.maxWeightKg > MAX_LOCATION_WEIGHT_KG) {
+          throw new ApiError('validation', translate('svc.invalidWeight'));
         }
         const path = [parentPath, code].filter(Boolean).join('/');
         if (!path || db.locations.some((l) => l.warehouseCode === value.warehouseCode && l.path === path)) {

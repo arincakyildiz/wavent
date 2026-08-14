@@ -71,7 +71,7 @@
 
       <label class="field">
         <span class="field__label">{{ i18n.t('asn.expectedQuantity') }} <span class="req">*</span></span>
-        <input formControlName="expectedQuantity" type="number" min="1" step="1" [class.invalid]="invalid('expectedQuantity')" />
+        <input formControlName="expectedQuantity" type="number" min="1" max="1000000" step="1" [class.invalid]="invalid('expectedQuantity')" />
         @if (invalid('expectedQuantity')) {
           <span class="field__error" role="alert">{{ i18n.t('asn.quantityError') }}</span>
         }

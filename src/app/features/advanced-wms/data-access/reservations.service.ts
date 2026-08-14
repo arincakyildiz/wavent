@@ -6,7 +6,7 @@ import { ListQuery, ListResult, runQuery } from '../../../shared/utils/list-quer
 import { AllocationRec, BalanceRec, db } from './mock-data';
 import { fefoViolation, isReservable } from './stock-rules';
 import { translate } from '../../../core/i18n/i18n.service';
-import { SALES_ORDER_NUMBER_PATTERN } from '../../../shared/validators/wms-validators';
+import { MAX_STOCK_QUANTITY, SALES_ORDER_NUMBER_PATTERN } from '../../../shared/validators/wms-validators';
 import { DbPersistenceService } from './db-persistence.service';
 
 export interface ReservationRow {
@@ -145,7 +145,7 @@ export class ReservationsService {
         if (db.orders.some((order) => order.number === number)) throw new ApiError('conflict', translate('svc.orderNumberTaken'));
         const sku = db.skus.find((item) => item.code === value.skuCode);
         if (!sku) throw new ApiError('validation', translate('svc.skuNotFound'));
-        if (!Number.isInteger(value.quantity) || value.quantity <= 0) throw new ApiError('validation', translate('svc.invalidExpectedQuantity'));
+        if (!Number.isInteger(value.quantity) || value.quantity <= 0 || value.quantity > MAX_STOCK_QUANTITY) throw new ApiError('validation', translate('svc.invalidExpectedQuantity'));
 
         const strategy: 'FEFO' | 'FIFO' = sku.lotTracked ? 'FEFO' : 'FIFO';
         const pool = db.balances

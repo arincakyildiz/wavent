@@ -62,11 +62,11 @@
             <div class="form__row">
               <label class="field">
                 <span class="field__label">{{ i18n.t('receivingDetail.received') }}</span>
-                <input type="number" min="0" step="1" formControlName="receivedQuantity" />
+                <input type="number" min="0" max="1000000" step="1" formControlName="receivedQuantity" />
               </label>
               <label class="field">
                 <span class="field__label">{{ i18n.t('receivingDetail.damaged') }}</span>
-                <input type="number" min="0" step="1" formControlName="damagedQuantity" />
+                <input type="number" min="0" max="1000000" step="1" formControlName="damagedQuantity" />
               </label>
               <label class="field field--check">
                 <input type="checkbox" formControlName="quarantine" />

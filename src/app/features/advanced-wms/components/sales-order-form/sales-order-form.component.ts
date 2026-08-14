@@ -3,7 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { describeError } from '../../../../core/api/api-error';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
-import { codePattern, SALES_ORDER_NUMBER_PATTERN } from '../../../../shared/validators/wms-validators';
+import { codePattern, MAX_STOCK_QUANTITY, SALES_ORDER_NUMBER_PATTERN } from '../../../../shared/validators/wms-validators';
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
 import { ReservationRow, ReservationsService } from '../../data-access/reservations.service';
 
@@ -26,7 +26,7 @@ export class SalesOrderFormComponent {
     route: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2)] }),
     cutOffTime: new FormControl('17:00', { nonNullable: true, validators: [Validators.required] }),
     skuCode: new FormControl(this.options.skus[0]?.code ?? '', { nonNullable: true, validators: [Validators.required] }),
-    quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)] }),
+    quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(1), Validators.max(MAX_STOCK_QUANTITY), Validators.pattern(/^\d+$/)] }),
   });
   submit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }

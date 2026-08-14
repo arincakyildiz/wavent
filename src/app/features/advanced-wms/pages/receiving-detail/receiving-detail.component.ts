@@ -9,6 +9,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { NotificationService } from '../../../../core/observability/notification.service';
 import { AuditService } from '../../../../core/observability/audit.service';
+import { MAX_STOCK_QUANTITY } from '../../../../shared/validators/wms-validators';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -33,8 +34,8 @@ export class ReceivingDetailComponent {
   readonly activeLine = signal<ReceiptLineRow | null>(null);
   readonly saving = signal(false);
   readonly receiptForm = new FormGroup({
-    receivedQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
-    damagedQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    receivedQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(MAX_STOCK_QUANTITY)] }),
+    damagedQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(MAX_STOCK_QUANTITY)] }),
     quarantine: new FormControl(false, { nonNullable: true }),
   });
 

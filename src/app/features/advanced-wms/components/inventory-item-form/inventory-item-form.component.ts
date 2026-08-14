@@ -7,7 +7,16 @@ import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.se
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { InventoryRow, InventoryService } from '../../data-access/inventory.service';
-import { codePattern, LOT_CODE_PATTERN, MAX_VOLUME_M3, MIN_VOLUME_M3, SKU_CODE_PATTERN } from '../../../../shared/validators/wms-validators';
+import {
+  codePattern,
+  LOT_CODE_PATTERN,
+  MAX_PRODUCT_WEIGHT_KG,
+  MAX_STOCK_QUANTITY,
+  MAX_VOLUME_M3,
+  MIN_VOLUME_M3,
+  MIN_WEIGHT_KG,
+  SKU_CODE_PATTERN,
+} from '../../../../shared/validators/wms-validators';
 
 @Component({
   selector: 'app-inventory-item-form',
@@ -30,14 +39,14 @@ export class InventoryItemFormComponent {
     code: new FormControl('', { nonNullable: true, validators: [Validators.required, codePattern(SKU_CODE_PATTERN)] }),
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(80)] }),
     uom: new FormControl('ADET', { nonNullable: true, validators: [Validators.required, Validators.maxLength(10)] }),
-    weightKg: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.001)] }),
+    weightKg: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(MIN_WEIGHT_KG), Validators.max(MAX_PRODUCT_WEIGHT_KG)] }),
     volumeM3: new FormControl(0.01, { nonNullable: true, validators: [Validators.required, Validators.min(MIN_VOLUME_M3), Validators.max(MAX_VOLUME_M3)] }),
     lotTracked: new FormControl(false, { nonNullable: true }),
     serialTracked: new FormControl(false, { nonNullable: true }),
     storageClass: new FormControl<'ambient' | 'chilled' | 'frozen' | 'hazmat'>('ambient', { nonNullable: true }),
     warehouseCode: new FormControl(this.firstWarehouse, { nonNullable: true, validators: [Validators.required] }),
     locationPath: new FormControl(this.inventory.locations(this.firstWarehouse)[0]?.path ?? '', { nonNullable: true }),
-    quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)] }),
+    quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(MAX_STOCK_QUANTITY), Validators.pattern(/^\d+$/)] }),
     lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24), codePattern(LOT_CODE_PATTERN, 'lotPattern')] }),
   });
 

@@ -5,7 +5,7 @@ import { startWith } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
-import { ASN_NUMBER_PATTERN, codePattern, LOT_CODE_PATTERN, uniqueValue } from '../../../../shared/validators/wms-validators';
+import { ASN_NUMBER_PATTERN, codePattern, LOT_CODE_PATTERN, MAX_STOCK_QUANTITY, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { AsnRow, ReceivingService } from '../../data-access/receiving.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 
@@ -66,7 +66,7 @@ export class AsnFormComponent {
     skuCode: new FormControl(this.skus[0]?.code ?? '', { nonNullable: true, validators: [Validators.required] }),
     expectedQuantity: new FormControl(1, {
       nonNullable: true,
-      validators: [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)],
+      validators: [Validators.required, Validators.min(1), Validators.max(MAX_STOCK_QUANTITY), Validators.pattern(/^\d+$/)],
     }),
     lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24), codePattern(LOT_CODE_PATTERN, 'lotPattern')] }),
   });

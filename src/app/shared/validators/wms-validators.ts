@@ -19,6 +19,10 @@ export const LOCATION_SEGMENT_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
 export const LOCATION_PATH_PATTERN = /^(?:[A-Z0-9]+(?:-[A-Z0-9]+)*)(?:\/[A-Z0-9]+(?:-[A-Z0-9]+)*)*$/;
 export const MIN_VOLUME_M3 = 0.0001;
 export const MAX_VOLUME_M3 = 1000;
+export const MIN_WEIGHT_KG = 0.001;
+export const MAX_PRODUCT_WEIGHT_KG = 10_000;
+export const MAX_LOCATION_WEIGHT_KG = 100_000;
+export const MAX_STOCK_QUANTITY = 1_000_000;
 
 /** Minutes since midnight, or null when the value is not a HH:mm string. */
 function toMinutes(value: unknown): number | null {

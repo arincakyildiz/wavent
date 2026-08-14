@@ -7,7 +7,7 @@ import { ASNStatus, ReceiptLineStatus } from '../models/entities';
 import { AsnRec, ReceiptLineRec, db } from './mock-data';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
-import { ASN_NUMBER_PATTERN, LOT_CODE_PATTERN } from '../../../shared/validators/wms-validators';
+import { ASN_NUMBER_PATTERN, LOT_CODE_PATTERN, MAX_STOCK_QUANTITY } from '../../../shared/validators/wms-validators';
 
 export interface AsnRow {
   id: string;
@@ -128,7 +128,7 @@ export class ReceivingService {
         };
         const sku = db.skus.find((item) => item.code === d.skuCode);
         if (!sku) throw new ApiError('validation', translate('svc.skuNotFound'));
-        if (!Number.isInteger(d.expectedQuantity) || d.expectedQuantity <= 0) {
+        if (!Number.isInteger(d.expectedQuantity) || d.expectedQuantity <= 0 || d.expectedQuantity > MAX_STOCK_QUANTITY) {
           throw new ApiError('validation', translate('svc.invalidExpectedQuantity'));
         }
         if (sku.lotTracked && !d.lot?.trim()) {
@@ -164,10 +164,10 @@ export class ReceivingService {
         if (line.status !== 'pending') {
           throw new ApiError('validation', translate('svc.receiptLineProcessed'));
         }
-        if (!Number.isInteger(input.receivedQuantity) || input.receivedQuantity < 0) {
+        if (!Number.isInteger(input.receivedQuantity) || input.receivedQuantity < 0 || input.receivedQuantity > MAX_STOCK_QUANTITY) {
           throw new ApiError('validation', translate('svc.invalidReceivedQuantity'));
         }
-        if (!Number.isInteger(input.damagedQuantity) || input.damagedQuantity < 0 || input.damagedQuantity > input.receivedQuantity) {
+        if (!Number.isInteger(input.damagedQuantity) || input.damagedQuantity < 0 || input.damagedQuantity > MAX_STOCK_QUANTITY || input.damagedQuantity > input.receivedQuantity) {
           throw new ApiError('validation', translate('svc.invalidDamagedQuantity'));
         }
 
