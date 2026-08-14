@@ -15,6 +15,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { NotificationService } from '../../../../core/observability/notification.service';
 import { AuditService } from '../../../../core/observability/audit.service';
 import { ConfirmDialogService } from '../../../../core/state/confirm-dialog.service';
+import { codePattern, LOCATION_PATH_PATTERN, LOCATION_SEGMENT_PATTERN } from '../../../../shared/validators/wms-validators';
 
 const DEFAULT_PAGE_SIZE = 20;
 /** The tree needs the whole hierarchy, not the current page of it. */
@@ -47,8 +48,8 @@ export class LocationsComponent {
   readonly warehouses = this.scope.permitted;
   readonly locationForm = new FormGroup({
     warehouseCode: new FormControl(this.scope.permitted()[0]?.code ?? '', { nonNullable: true, validators: [Validators.required] }),
-    parentPath: new FormControl('', { nonNullable: true }),
-    code: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^[A-Z0-9-]{1,12}$/)] }),
+    parentPath: new FormControl('', { nonNullable: true, validators: [codePattern(LOCATION_PATH_PATTERN, 'pathPattern')] }),
+    code: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(12), codePattern(LOCATION_SEGMENT_PATTERN, 'segmentPattern')] }),
     type: new FormControl<LocationDraft['type']>('bin', { nonNullable: true, validators: [Validators.required] }),
     locationClass: new FormControl<LocationDraft['locationClass']>('ambient', { nonNullable: true, validators: [Validators.required] }),
     maxWeightKg: new FormControl(500, { nonNullable: true, validators: [Validators.min(0)] }),
@@ -134,6 +135,11 @@ export class LocationsComponent {
   onPageSize(size: number): void {
     this.pageSize.set(size);
     this.page.set(1);
+  }
+
+  invalid(name: keyof typeof this.locationForm.controls): boolean {
+    const control = this.locationForm.controls[name];
+    return control.invalid && (control.dirty || control.touched);
   }
 
   createLocation(): void {

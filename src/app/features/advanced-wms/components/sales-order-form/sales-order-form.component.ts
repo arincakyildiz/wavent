@@ -3,6 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { describeError } from '../../../../core/api/api-error';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
+import { codePattern, SALES_ORDER_NUMBER_PATTERN } from '../../../../shared/validators/wms-validators';
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
 import { ReservationRow, ReservationsService } from '../../data-access/reservations.service';
 
@@ -18,7 +19,7 @@ export class SalesOrderFormComponent {
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
   readonly form = new FormGroup({
-    number: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^SO-\d{4,8}$/)] }),
+    number: new FormControl('', { nonNullable: true, validators: [Validators.required, codePattern(SALES_ORDER_NUMBER_PATTERN)] }),
     warehouseCode: new FormControl(this.warehouses()[0]?.code ?? '', { nonNullable: true, validators: [Validators.required] }),
     priority: new FormControl(2, { nonNullable: true, validators: [Validators.required, Validators.min(1), Validators.max(5)] }),
     carrier: new FormControl(this.options.carriers[0] ?? '', { nonNullable: true, validators: [Validators.required] }),

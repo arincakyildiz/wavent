@@ -10,6 +10,7 @@ import { ReleaseResult, WaveOrderCandidate, WaveOrderStatus, WaveRow, WavesServi
 import { WavePlanningStore } from '../../state/wave-planning.store';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { codePattern, SALES_ORDER_NUMBER_PATTERN } from '../../../../shared/validators/wms-validators';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -37,7 +38,7 @@ export class WaveDetailComponent {
   readonly editing = signal(false);
   readonly candidates = signal<WaveOrderCandidate[]>([]);
   readonly orderForm = new FormGroup({
-    orderNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    orderNumber: new FormControl('', { nonNullable: true, validators: [Validators.required, codePattern(SALES_ORDER_NUMBER_PATTERN)] }),
   });
   /** Per-order outcome of the last publish attempt (§11 partial result). */
   readonly lastRelease = signal<ReleaseResult | null>(null);

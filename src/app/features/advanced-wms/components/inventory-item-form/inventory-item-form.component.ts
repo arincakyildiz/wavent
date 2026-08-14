@@ -7,6 +7,7 @@ import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.se
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { InventoryRow, InventoryService } from '../../data-access/inventory.service';
+import { codePattern, LOT_CODE_PATTERN, SKU_CODE_PATTERN } from '../../../../shared/validators/wms-validators';
 
 @Component({
   selector: 'app-inventory-item-form',
@@ -26,7 +27,7 @@ export class InventoryItemFormComponent {
 
   private readonly firstWarehouse = this.warehouses()[0]?.code ?? '';
   readonly form = new FormGroup({
-    code: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^SKU-[A-Z0-9]{3,8}$/)] }),
+    code: new FormControl('', { nonNullable: true, validators: [Validators.required, codePattern(SKU_CODE_PATTERN)] }),
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3), Validators.maxLength(80)] }),
     uom: new FormControl('ADET', { nonNullable: true, validators: [Validators.required, Validators.maxLength(10)] }),
     weightKg: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.001)] }),
@@ -37,7 +38,7 @@ export class InventoryItemFormComponent {
     warehouseCode: new FormControl(this.firstWarehouse, { nonNullable: true, validators: [Validators.required] }),
     locationPath: new FormControl(this.inventory.locations(this.firstWarehouse)[0]?.path ?? '', { nonNullable: true }),
     quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)] }),
-    lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24)] }),
+    lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24), codePattern(LOT_CODE_PATTERN, 'lotPattern')] }),
   });
 
   constructor() {

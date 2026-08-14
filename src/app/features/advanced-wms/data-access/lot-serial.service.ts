@@ -15,6 +15,7 @@ import {
 } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
+import { LOT_CODE_PATTERN, SERIAL_NUMBER_PATTERN } from '../../../shared/validators/wms-validators';
 
 export type { LotHealth, LotRow, SerialIssue };
 
@@ -81,6 +82,12 @@ export class LotSerialService {
           throw new ApiError('validation', translate('svc.notSerialTracked', { code: sku.code }));
         }
         if (!serial) throw new ApiError('validation', translate('svc.serialRequired'));
+        if (!SERIAL_NUMBER_PATTERN.test(serial.toUpperCase())) {
+          throw new ApiError('validation', translate('svc.invalidSerial'));
+        }
+        if (draft.lot?.trim() && !LOT_CODE_PATTERN.test(draft.lot.trim().toUpperCase())) {
+          throw new ApiError('validation', translate('svc.invalidLot'));
+        }
 
         // Re-check against live data: the form validated an earlier snapshot.
         if (!serialIsAvailable(draft.skuCode, serial)) {

@@ -5,7 +5,7 @@ import { startWith } from 'rxjs';
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
-import { codePattern, uniqueValue } from '../../../../shared/validators/wms-validators';
+import { ASN_NUMBER_PATTERN, codePattern, LOT_CODE_PATTERN, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { AsnRow, ReceivingService } from '../../data-access/receiving.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 
@@ -50,7 +50,7 @@ export class AsnFormComponent {
   readonly form = new FormGroup({
     number: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(8), codePattern(/^ASN-\d{4}$/)],
+      validators: [Validators.required, Validators.maxLength(8), codePattern(ASN_NUMBER_PATTERN)],
       asyncValidators: [uniqueValue((v) => this.receivingService.isNumberAvailable(v))],
       updateOn: 'blur',
     }),
@@ -68,7 +68,7 @@ export class AsnFormComponent {
       nonNullable: true,
       validators: [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)],
     }),
-    lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24)] }),
+    lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24), codePattern(LOT_CODE_PATTERN, 'lotPattern')] }),
   });
 
   readonly selectedSku = () => this.skus.find((sku) => sku.code === this.form.controls.skuCode.value);

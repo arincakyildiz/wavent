@@ -6,6 +6,7 @@ import {
   codePattern,
   operatingHoursRange,
   uniqueValue,
+  WAREHOUSE_CODE_PATTERN,
 } from '../../../../shared/validators/wms-validators';
 import { WarehouseSummary, WarehousesService } from '../../data-access/warehouses.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
@@ -49,7 +50,7 @@ export class WarehouseFormComponent {
     {
       code: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, Validators.maxLength(7), codePattern(/^[A-Z]{2,4}-\d{2}$/)],
+        validators: [Validators.required, Validators.maxLength(7), codePattern(WAREHOUSE_CODE_PATTERN)],
         asyncValidators: [uniqueValue((v) => this.warehousesService.isCodeAvailable(v))],
         updateOn: 'blur',
       }),

@@ -1,7 +1,7 @@
 <app-form-dialog [title]="i18n.t('inventoryForm.title')" [subtitle]="i18n.t('inventoryForm.subtitle')" (dismissed)="dismissed.emit()">
   <form class="form" [formGroup]="form" (ngSubmit)="submit()">
     <div class="form__row">
-      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.code') }}</span><input formControlName="code" maxlength="12" placeholder="SKU-ANK01" /></label>
+      <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.code') }} <span class="req">*</span></span><input formControlName="code" maxlength="12" placeholder="SKU-ANK01" [class.invalid]="form.controls.code.invalid && form.controls.code.touched" />@if (form.controls.code.touched && form.controls.code.invalid) { <span class="field__error" role="alert">{{ i18n.t('inventoryForm.codeHint') }}</span> } @else { <span class="field__hint">{{ i18n.t('inventoryForm.codeHint') }}</span> }</label>
       <label class="field"><span class="field__label">{{ i18n.t('common.product') }}</span><input formControlName="name" maxlength="80" /></label>
       <label class="field"><span class="field__label">{{ i18n.t('inventoryForm.uom') }}</span><input formControlName="uom" maxlength="10" /></label>
     </div>

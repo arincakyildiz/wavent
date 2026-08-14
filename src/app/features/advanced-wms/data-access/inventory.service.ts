@@ -9,6 +9,7 @@ import { LocationClass } from '../models/entities';
 import { SkuStock, balancesInScope, skuStock, skuStockFor } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
+import { LOT_CODE_PATTERN, SKU_CODE_PATTERN } from '../../../shared/validators/wms-validators';
 
 export type InventoryRow = SkuStock;
 
@@ -77,11 +78,15 @@ export class InventoryService {
     return this.api.simulate(draft, { delayMs: 520, kind: 'write' }).pipe(
       map((value) => {
         const code = value.code.trim().toUpperCase();
+        if (!SKU_CODE_PATTERN.test(code)) throw new ApiError('validation', translate('svc.invalidSkuCode'));
         if (db.skus.some((sku) => sku.code === code)) throw new ApiError('conflict', translate('svc.skuCodeTaken'));
         if (!Number.isInteger(value.quantity) || value.quantity < 0) {
           throw new ApiError('validation', translate('svc.invalidAdjustmentQuantity'));
         }
         if (value.lotTracked && !value.lot?.trim()) throw new ApiError('validation', translate('svc.lotRequired'));
+        if (value.lot?.trim() && !LOT_CODE_PATTERN.test(value.lot.trim().toUpperCase())) {
+          throw new ApiError('validation', translate('svc.invalidLot'));
+        }
         if (value.serialTracked && value.quantity !== 0) {
           throw new ApiError('validation', translate('svc.serialOpeningStockMustBeZero'));
         }

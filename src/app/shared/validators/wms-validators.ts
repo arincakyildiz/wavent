@@ -7,6 +7,17 @@ import {
 import { Observable, of } from 'rxjs';
 import { catchError, debounceTime, first, map, switchMap } from 'rxjs/operators';
 
+/** Shared identifier formats used by both forms and write-boundary validation. */
+export const WAREHOUSE_CODE_PATTERN = /^[A-Z]{2,4}-\d{2}$/;
+export const SKU_CODE_PATTERN = /^SKU-[A-Z0-9]{3,8}$/;
+export const ASN_NUMBER_PATTERN = /^ASN-\d{4}$/;
+export const SALES_ORDER_NUMBER_PATTERN = /^SO-\d{4,8}$/;
+export const CYCLE_COUNT_CODE_PATTERN = /^CC-\d{3}$/;
+export const SERIAL_NUMBER_PATTERN = /^SN-[A-Z0-9-]{1,37}$/;
+export const LOT_CODE_PATTERN = /^(?:L-\d{5}|LOT-[A-Z0-9]+(?:-[A-Z0-9]+)+)$/;
+export const LOCATION_SEGMENT_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
+export const LOCATION_PATH_PATTERN = /^(?:[A-Z0-9]+(?:-[A-Z0-9]+)*)(?:\/[A-Z0-9]+(?:-[A-Z0-9]+)*)*$/;
+
 /** Minutes since midnight, or null when the value is not a HH:mm string. */
 function toMinutes(value: unknown): number | null {
   if (typeof value !== 'string') return null;

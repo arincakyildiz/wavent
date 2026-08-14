@@ -7,6 +7,7 @@ import { locationCapacityPct } from './selectors';
 import { ApiError } from '../../../core/api/api-error';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
+import { LOCATION_PATH_PATTERN, LOCATION_SEGMENT_PATTERN } from '../../../shared/validators/wms-validators';
 
 export interface LocationDraft {
   warehouseCode: string;
@@ -48,7 +49,12 @@ export class LocationsService {
   create(draft: LocationDraft): Observable<LocationRow> {
     return this.api.simulate(draft, { delayMs: 460, kind: 'write' }).pipe(
       map((value) => {
-        const path = [value.parentPath.trim(), value.code.trim().toUpperCase()].filter(Boolean).join('/');
+        const parentPath = value.parentPath.trim().toUpperCase();
+        const code = value.code.trim().toUpperCase();
+        if ((parentPath && !LOCATION_PATH_PATTERN.test(parentPath)) || !LOCATION_SEGMENT_PATTERN.test(code)) {
+          throw new ApiError('validation', translate('svc.invalidLocationPath'));
+        }
+        const path = [parentPath, code].filter(Boolean).join('/');
         if (!path || db.locations.some((l) => l.warehouseCode === value.warehouseCode && l.path === path)) {
           throw new ApiError('conflict', translate('svc.locationExists'));
         }

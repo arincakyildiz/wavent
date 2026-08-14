@@ -3,7 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
-import { codePattern, uniqueValue } from '../../../../shared/validators/wms-validators';
+import { codePattern, LOT_CODE_PATTERN, SERIAL_NUMBER_PATTERN, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { LocationsService } from '../../data-access/locations.service';
 import { LotRow, LotSerialService } from '../../data-access/lot-serial.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
@@ -52,14 +52,14 @@ export class SerialFormComponent {
       validators: [
         Validators.required,
         Validators.maxLength(40),
-        codePattern(/^[A-Z0-9][A-Z0-9-]{3,39}$/i, 'serialPattern'),
+        codePattern(SERIAL_NUMBER_PATTERN, 'serialPattern'),
       ],
       asyncValidators: [
         uniqueValue((value) => this.lotSerialService.isSerialAvailable(this.selectedSku(), value)),
       ],
       updateOn: 'blur',
     }),
-    lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(20)] }),
+    lot: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(24), codePattern(LOT_CODE_PATTERN, 'lotPattern')] }),
     warehouseCode: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required],

@@ -7,6 +7,7 @@ import { WarehouseRec, db } from './mock-data';
 import { inventoryByWarehouse, locationCount, warehouseCapacityPct } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
+import { WAREHOUSE_CODE_PATTERN } from '../../../shared/validators/wms-validators';
 
 export interface WarehouseSummary {
   id: string;
@@ -96,6 +97,9 @@ export class WarehousesService {
       .simulate(draft, { delayMs: 520, kind: 'write' })
       .pipe(
         map((d) => {
+          if (!WAREHOUSE_CODE_PATTERN.test(d.code.trim().toUpperCase())) {
+            throw new ApiError('validation', translate('svc.invalidWarehouseCode'));
+          }
           // Server-side re-check: the async validator can go stale between blur and submit.
           if (db.warehouses.some((w) => w.code.toLowerCase() === d.code.toLowerCase())) {
             throw new ApiError('conflict', translate('svc.warehouseCodeTaken', { code: d.code }));

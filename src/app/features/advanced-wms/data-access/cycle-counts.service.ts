@@ -7,6 +7,7 @@ import { CycleCountRec, db } from './mock-data';
 import { VARIANCE_THRESHOLD_PCT, requiresSecondCount, variancePct } from './selectors';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
+import { CYCLE_COUNT_CODE_PATTERN } from '../../../shared/validators/wms-validators';
 
 export interface CycleCountRow extends CycleCountRec {
   variance: number;
@@ -65,6 +66,9 @@ export class CycleCountsService {
   create(draft: CycleCountDraft): Observable<CycleCountRow> {
     return this.api.simulate(draft, { delayMs: 480, kind: 'write' }).pipe(
       map((d) => {
+        if (!CYCLE_COUNT_CODE_PATTERN.test(d.code.trim().toUpperCase())) {
+          throw new ApiError('validation', translate('svc.invalidCycleCountCode'));
+        }
         if (db.cycleCounts.some((c) => c.code.toLowerCase() === d.code.toLowerCase())) {
           throw new ApiError('conflict', translate('svc.codeTaken', { code: d.code }));
         }

@@ -3,7 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { describeError } from '../../../../core/api/api-error';
 import { WarehouseScopeService } from '../../../../core/state/warehouse-scope.service';
 import { FormDialogComponent } from '../../../../shared/components/form-dialog/form-dialog.component';
-import { codePattern, positiveInteger, uniqueValue } from '../../../../shared/validators/wms-validators';
+import { CYCLE_COUNT_CODE_PATTERN, codePattern, positiveInteger, uniqueValue } from '../../../../shared/validators/wms-validators';
 import { CycleCountRow, CycleCountsService } from '../../data-access/cycle-counts.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 
@@ -39,7 +39,7 @@ export class CycleCountFormComponent {
   readonly form = new FormGroup({
     code: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(6), codePattern(/^CC-\d{3}$/)],
+      validators: [Validators.required, Validators.maxLength(6), codePattern(CYCLE_COUNT_CODE_PATTERN)],
       asyncValidators: [uniqueValue((v) => this.cycleCountsService.isCodeAvailable(v))],
       updateOn: 'blur',
     }),

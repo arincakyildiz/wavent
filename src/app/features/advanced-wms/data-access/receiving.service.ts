@@ -7,6 +7,7 @@ import { ASNStatus, ReceiptLineStatus } from '../models/entities';
 import { AsnRec, ReceiptLineRec, db } from './mock-data';
 import { translate } from '../../../core/i18n/i18n.service';
 import { DbPersistenceService } from './db-persistence.service';
+import { ASN_NUMBER_PATTERN, LOT_CODE_PATTERN } from '../../../shared/validators/wms-validators';
 
 export interface AsnRow {
   id: string;
@@ -110,6 +111,9 @@ export class ReceivingService {
   create(draft: AsnDraft): Observable<AsnRow> {
     return this.api.simulate(draft, { delayMs: 500, kind: 'write' }).pipe(
       map((d) => {
+        if (!ASN_NUMBER_PATTERN.test(d.number.trim().toUpperCase())) {
+          throw new ApiError('validation', translate('svc.invalidAsnNumber'));
+        }
         if (db.asns.some((a) => a.number.toLowerCase() === d.number.toLowerCase())) {
           throw new ApiError('conflict', translate('svc.asnNumberTaken', { number: d.number }));
         }
@@ -129,6 +133,9 @@ export class ReceivingService {
         }
         if (sku.lotTracked && !d.lot?.trim()) {
           throw new ApiError('validation', translate('svc.lotRequired'));
+        }
+        if (d.lot?.trim() && !LOT_CODE_PATTERN.test(d.lot.trim().toUpperCase())) {
+          throw new ApiError('validation', translate('svc.invalidLot'));
         }
         db.asns.unshift(record);
         db.receiptLines.unshift({
