@@ -40,7 +40,7 @@ export class DemoDataService {
 
   loadSampleData(): void {
     resetDbToSampleData();
-    this.warehouseScope.resetRegistered();
+    this.warehouseScope.syncAvailable(db.warehouses.map(({ code, name }) => ({ code, name })));
     this.persistence.persist();
     this.storage.write(SAMPLE_DATA_KEY, true);
     this.hasSampleData.set(true);

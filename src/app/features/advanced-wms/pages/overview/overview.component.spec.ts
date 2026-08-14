@@ -79,10 +79,8 @@ describe('OverviewComponent — offline snapshot fallback', () => {
     const keys = component.summary() ? 1 : 0;
     expect(keys).toBe(1);
 
-    // The cache is keyed per scope+period; whichever one this run used must be present.
-    const cached = await firstValueFrom(
-      db.read('dashboard:NYC-01,AMS-01,IST-01,DXB-01,GRU-01:today'),
-    );
+    // The cache is keyed per scope+period; an empty first-run scope is stored as "all".
+    const cached = await firstValueFrom(db.read(`dashboard:${component.selectedScope()}:today`));
     expect(cached).not.toBeNull();
   });
 

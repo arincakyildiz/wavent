@@ -8,14 +8,6 @@ export interface WarehouseOption {
 }
 
 /** Kept here (not in a feature service) because the shell and every list depend on it. */
-const WAREHOUSES: WarehouseOption[] = [
-  { code: 'NYC-01', name: 'New York DC' },
-  { code: 'AMS-01', name: 'Amsterdam Hub' },
-  { code: 'IST-01', name: 'Istanbul Merkez' },
-  { code: 'DXB-01', name: 'Dubai Logistics Park' },
-  { code: 'GRU-01', name: 'Sao Paulo Cross-dock' },
-];
-
 export const ALL_WAREHOUSES = 'all';
 
 /**
@@ -31,7 +23,7 @@ export class WarehouseScopeService {
   private readonly selection = signal<string>(ALL_WAREHOUSES);
   private readonly registeredWarehouses = signal<WarehouseOption[]>([]);
 
-  private readonly available = computed(() => [...WAREHOUSES, ...this.registeredWarehouses()]);
+  private readonly available = computed(() => this.registeredWarehouses());
 
   /** Warehouses the current role is allowed to see at all. */
   readonly permitted = computed<WarehouseOption[]>(() => {
@@ -81,9 +73,7 @@ export class WarehouseScopeService {
   }
 
   syncAvailable(warehouses: WarehouseOption[]): void {
-    this.registeredWarehouses.set(
-      warehouses.filter((warehouse) => !WAREHOUSES.some((item) => item.code === warehouse.code)),
-    );
+    this.registeredWarehouses.set(warehouses);
   }
 
   /** True when a row belonging to `code` is in scope. */

@@ -16,6 +16,8 @@ describe('InventoryService - controlled stock adjustments', () => {
     TestBed.inject(FaultInjectionService).reset();
   });
 
+  afterEach(() => resetDbToSampleData());
+
   it('records a versioned, justified adjustment and its movement', async () => {
     const balance = db.balances.find((row) => row.quantity > 0);
     if (!balance) return pending('no adjustable balance');
